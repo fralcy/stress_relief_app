@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:stress_relief_app/screens/component_showcase_screen.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_assets.dart';
 import 'core/utils/theme_storage.dart';
@@ -68,7 +69,7 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: AssetTestScreen(onLocaleChange: _changeLocale),
+      home: const ComponentShowcaseScreen(), // ← Test UI Components
     );
   }
 }
@@ -178,8 +179,8 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                   
                   // Scene preview
                   Container(
-                    width: 400,
-                    height: 400,
+                    width: double.infinity,
+                    height: 200,
                     decoration: BoxDecoration(
                       color: AppColors.border,
                       borderRadius: BorderRadius.circular(12),
