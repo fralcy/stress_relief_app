@@ -80,6 +80,10 @@ class SceneKey {
   final SceneType sceneType;
   
   SceneKey(this.sceneSet, this.sceneType);
+
+  // Getter
+  SceneSet get getSceneSet => sceneSet;
+  SceneType get getSceneType => sceneType;
   
   @override
   bool operator ==(Object other) {

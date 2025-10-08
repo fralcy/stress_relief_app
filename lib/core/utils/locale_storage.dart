@@ -1,32 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'data_manager.dart';
 
-/// Quản lý lưu trữ ngôn ngữ
+/// Quản lý ngôn ngữ thông qua DataManager
 class LocaleStorage {
-  static const String _localeKey = 'app_locale';
-  static const String _defaultLocale = 'vi'; // Tiếng Việt mặc định
-  
   /// Danh sách ngôn ngữ được hỗ trợ
   static const List<Locale> supportedLocales = [
     Locale('vi', 'VN'), // Tiếng Việt
     Locale('en', 'US'), // English
   ];
   
-  /// Lấy locale đã lưu (hoặc mặc định)
-  static Future<Locale> getLocale() async {
-    final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString(_localeKey) ?? _defaultLocale;
+  /// Lấy locale hiện tại
+  static Locale getLocale() {
+    final languageCode = DataManager().userSettings.currentLanguage;
     
     // Tìm locale tương ứng
     return supportedLocales.firstWhere(
       (locale) => locale.languageCode == languageCode,
-      orElse: () => const Locale('vi', 'VN'),
+      orElse: () => const Locale('vi', 'VN'), // Default
     );
   }
   
-  /// Lưu locale
-  static Future<void> saveLocale(Locale locale) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_localeKey, locale.languageCode);
+  /// Lưu locale mới
+  static void saveLocale(Locale locale) {
+    final currentSettings = DataManager().userSettings;
+    DataManager().saveUserSettings(
+      currentSettings.copyWith(currentLanguage: locale.languageCode),
+    );
   }
 }

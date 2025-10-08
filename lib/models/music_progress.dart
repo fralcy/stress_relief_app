@@ -52,3 +52,19 @@ class MusicTrack{
     );
     }
 }
+// Model cho tiến trình chơi nhạc
+class MusicProgress {
+  final List<MusicTrack> savedTracks;
+
+  MusicProgress({
+    required this.savedTracks,
+  });
+  
+  MusicProgress copyWith({
+    List<MusicTrack>? savedTracks,
+  }) {
+    return MusicProgress(
+      savedTracks: savedTracks ?? this.savedTracks,
+    );
+  }
+}

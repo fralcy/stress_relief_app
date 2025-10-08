@@ -1,25 +1,22 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'data_manager.dart';
 
-/// Quản lý lưu trữ theme preference
+/// Quản lý theme preference thông qua DataManager
 class ThemeStorage {
-  static const String _themeKey = 'app_theme';
-  static const String _defaultTheme = 'pastel_blue_breeze';
-  
-  /// Lấy theme ID đã lưu (hoặc default)
-  static Future<String> getThemeId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_themeKey) ?? _defaultTheme;
+  /// Lấy theme ID hiện tại
+  static String getThemeId() {
+    return DataManager().userSettings.currentTheme;
   }
   
-  /// Lưu theme ID
-  static Future<void> saveThemeId(String themeId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeKey, themeId);
+  /// Lưu theme ID mới
+  static void saveThemeId(String themeId) {
+    final currentSettings = DataManager().userSettings;
+    DataManager().saveUserSettings(
+      currentSettings.copyWith(currentTheme: themeId),
+    );
   }
   
-  /// Xóa theme (reset về default)
-  static Future<void> clearTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_themeKey);
+  /// Reset về theme mặc định
+  static void resetTheme() {
+    saveThemeId('pastel_blue_breeze');
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_assets.dart';
+
 // Model cho cài đặt ứng dụng của người dùng
 class UserSettings {
   // Display Settings
-  final String currentTheme;         // Theme hiện tại
-  final List<String> currentScenes;  // Mảng 5 phần tử: [living_room_id, garden_id, aquarium_id, painting_room_id, music_room_id]
+  final String currentTheme;         // Theme hiện tại (theme ID)
+  final String currentLanguage;      // Ngôn ngữ hiện tại (vi, en)
+  final List<SceneKey> currentScenes;  // Mảng 5 phần tử: [living_room_id, garden_id, aquarium_id, painting_room_id, music_room_id]
 
   // Audio Settings
   final String bgm;                  // Background music đang chọn
@@ -19,6 +22,7 @@ class UserSettings {
 
   UserSettings({
     required this.currentTheme,
+    required this.currentLanguage,
     required this.currentScenes,
     required this.bgm,
     required this.bgmVolume,
@@ -34,13 +38,14 @@ class UserSettings {
   factory UserSettings.initial() {
     return UserSettings(
       // Display Settings
-      currentTheme: 'default',
+      currentTheme: 'pastel_blue_breeze',
+      currentLanguage: 'vi', // Tiếng Việt mặc định
       currentScenes: [
-        'living_room_default',
-        'garden_default', 
-        'aquarium_default',
-        'painting_room_default',
-        'music_room_default'
+        SceneKey(SceneSet.defaultSet, SceneType.livingRoom),
+        SceneKey(SceneSet.defaultSet, SceneType.garden),
+        SceneKey(SceneSet.defaultSet, SceneType.aquarium),
+        SceneKey(SceneSet.defaultSet, SceneType.paintingRoom),
+        SceneKey(SceneSet.defaultSet, SceneType.musicRoom),
       ],
       
       // Audio Settings
@@ -60,7 +65,8 @@ class UserSettings {
   // Tạo bản sao với các thay đổi
   UserSettings copyWith({
     String? currentTheme,
-    List<String>? currentScenes,
+    String? currentLanguage,
+    List<SceneKey>? currentScenes,
     String? bgm,
     int? bgmVolume,
     bool? sfxEnabled,
@@ -72,7 +78,8 @@ class UserSettings {
   }) {
     return UserSettings(
       currentTheme: currentTheme ?? this.currentTheme,
-      currentScenes: currentScenes ?? List<String>.from(this.currentScenes),
+      currentLanguage: currentLanguage ?? this.currentLanguage,
+      currentScenes: currentScenes ?? List<SceneKey>.from(this.currentScenes),
       bgm: bgm ?? this.bgm,
       bgmVolume: bgmVolume ?? this.bgmVolume,
       sfxEnabled: sfxEnabled ?? this.sfxEnabled,
