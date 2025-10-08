@@ -72,3 +72,23 @@ enum MascotExpression {
   sleepy,    // Buồn ngủ
   surprised, // Ngạc nhiên
 }
+
+/// Lớp scene key cho việc lưu trữ
+/// Dùng để map scene set + type thành một key duy nhất
+class SceneKey {
+  final SceneSet sceneSet;
+  final SceneType sceneType;
+  
+  SceneKey(this.sceneSet, this.sceneType);
+  
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SceneKey &&
+        other.sceneSet == sceneSet &&
+        other.sceneType == sceneType;
+  }
+  
+  @override
+  int get hashCode => sceneSet.hashCode ^ sceneType.hashCode;
+}    
