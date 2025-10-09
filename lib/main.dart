@@ -8,8 +8,12 @@ import 'core/utils/locale_storage.dart';
 import 'core/utils/asset_loader.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/l10n/app_localizations_delegate.dart';
+import 'core/utils/data_manager.dart';
+import 'package:stress_relief_app/screens/mobile_portrait_screen.dart';
 
 void main() {
+  DataManager().initialize();
+
   runApp(const MyApp());
 }
 
@@ -29,8 +33,8 @@ class _MyAppState extends State<MyApp> {
     _loadLocale();
   }
 
-  Future<void> _loadLocale() async {
-    final locale = await LocaleStorage.getLocale();
+  void _loadLocale() {
+    final locale = LocaleStorage.getLocale();
     setState(() {
       _locale = locale;
     });
@@ -69,7 +73,8 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const ComponentShowcaseScreen(), // ← Test UI Components
+      // home: const ComponentShowcaseScreen(), // ← Test UI Components
+      home: const MobilePortraitScreen(), // ← Test Mobile Layout
     );
   }
 }
