@@ -1,8 +1,18 @@
+import 'package:hive/hive.dart';
+
+part 'painting_progress.g.dart';
+
 // Model cho bức tranh
-class Painting{
+@HiveType(typeId: 14)
+class Painting {
+  @HiveField(0)
   final String name;
+  
+  @HiveField(1)
   final DateTime createdAt;
-  final List<List<String>> pixels; //Grid 64x64, mỗi cell là mã màu 8-bit
+  
+  @HiveField(2)
+  final List<List<String>> pixels; // Grid 64x64, mỗi cell là mã màu 8-bit
 
   Painting({
     required this.name,
@@ -22,8 +32,11 @@ class Painting{
     );
   }
 }
+
 // Model cho tiến trình mini-game vẽ tranh
+@HiveType(typeId: 6)
 class PaintingProgress {
+  @HiveField(0)
   final List<Painting>? savedPaintings;
 
   PaintingProgress({

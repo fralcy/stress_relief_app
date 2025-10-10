@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
-import '../core/constants/app_assets.dart';
+import '../models/scene_models.dart';
 import '../core/utils/asset_loader.dart';
 import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';

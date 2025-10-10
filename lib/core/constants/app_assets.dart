@@ -1,3 +1,5 @@
+import '../../models/scene_models.dart';
+
 /// Quản lý paths của tất cả assets trong app
 class AppAssets {
   // ==================== SCENES (5 phòng) ====================
@@ -45,54 +47,3 @@ class AppAssets {
     MascotExpression.surprised: mascotSurprised,
   };
 }
-
-// ==================== ENUMS ====================
-
-/// 5 loại phòng trong app
-enum SceneType {
-  livingRoom,
-  garden,
-  aquarium,
-  paintingRoom,
-  musicRoom,
-}
-
-/// Các bộ cảnh có thể unlock
-enum SceneSet {
-  defaultSet,  // Bộ mặc định ban đầu
-  // Có thể thêm: modernSet, vintageSet, etc.
-}
-
-/// Các biểu cảm của linh vật mèo
-enum MascotExpression {
-  idle,      // Trạng thái nghỉ
-  happy,     // Vui vẻ
-  calm,      // Bình tĩnh, thư giãn
-  sad,       // Buồn
-  sleepy,    // Buồn ngủ
-  surprised, // Ngạc nhiên
-}
-
-/// Lớp scene key cho việc lưu trữ
-/// Dùng để map scene set + type thành một key duy nhất
-class SceneKey {
-  final SceneSet sceneSet;
-  final SceneType sceneType;
-  
-  SceneKey(this.sceneSet, this.sceneType);
-
-  // Getter
-  SceneSet get getSceneSet => sceneSet;
-  SceneType get getSceneType => sceneType;
-  
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is SceneKey &&
-        other.sceneSet == sceneSet &&
-        other.sceneType == sceneType;
-  }
-  
-  @override
-  int get hashCode => sceneSet.hashCode ^ sceneType.hashCode;
-}    

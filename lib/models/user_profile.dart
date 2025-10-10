@@ -1,21 +1,43 @@
-import '../core/constants/app_assets.dart';
+import 'package:hive/hive.dart';
+import 'scene_models.dart';
+
+part 'user_profile.g.dart';
+
 // Model cho thông tin cá nhân và cài đặt người dùng
+@HiveType(typeId: 0)
 class UserProfile {
+  @HiveField(0)
   final String id;
+  
+  @HiveField(1)
   final String username;              // Username unique (để login)
+  
+  @HiveField(2)
   final String email;                 // Email (để login + recovery)
+  
+  @HiveField(3)
   final String name;                  // Tên người dùng
+  
+  @HiveField(4)
   final String mascotName;            // Tên linh vật
+  
+  @HiveField(5)
   final DateTime createdAt;
+  
+  @HiveField(6)
   final DateTime lastSyncedAt;        // Timestamp lần sync gần nhất
   
   // Progress
+  @HiveField(7)
   final Map<SceneKey, bool> unlockedScenes;  // Các cảnh đã mở khóa
   
   // Points
+  @HiveField(8)
   final int currentPoints;            // Điểm hiện có để tiêu
-  final int totalPoints;              // Tổng điểm tích lũy (lifetime)
   
+  @HiveField(9)
+  final int totalPoints;              // Tổng điểm tích lũy (lifetime)
+
   UserProfile({
     required this.id,
     required this.username,
@@ -46,12 +68,12 @@ class UserProfile {
       createdAt: DateTime.now(),
       lastSyncedAt: DateTime.now(),
       unlockedScenes: <SceneKey, bool>{
-            SceneKey(SceneSet.defaultSet, SceneType.livingRoom): true,
-            SceneKey(SceneSet.defaultSet, SceneType.garden): true,
-            SceneKey(SceneSet.defaultSet, SceneType.aquarium): true,
-            SceneKey(SceneSet.defaultSet, SceneType.paintingRoom): true,
-            SceneKey(SceneSet.defaultSet, SceneType.musicRoom): true,
-          }, // Mở khóa cảnh mặc định
+        SceneKey(SceneSet.defaultSet, SceneType.livingRoom): true,
+        SceneKey(SceneSet.defaultSet, SceneType.garden): true,
+        SceneKey(SceneSet.defaultSet, SceneType.aquarium): true,
+        SceneKey(SceneSet.defaultSet, SceneType.paintingRoom): true,
+        SceneKey(SceneSet.defaultSet, SceneType.musicRoom): true,
+      }, // Mở khóa cảnh mặc định
       currentPoints: 0,
       totalPoints: 0,
     );

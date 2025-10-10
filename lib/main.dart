@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:stress_relief_app/screens/component_showcase_screen.dart';
 import 'core/constants/app_colors.dart';
-import 'core/constants/app_assets.dart';
+import 'models/scene_models.dart';
 import 'core/utils/theme_storage.dart';
 import 'core/utils/locale_storage.dart';
 import 'core/utils/asset_loader.dart';
@@ -11,10 +11,13 @@ import 'core/l10n/app_localizations_delegate.dart';
 import 'core/utils/data_manager.dart';
 import 'package:stress_relief_app/screens/mobile_portrait_screen.dart';
 
-void main() {
-  DataManager().initialize();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final dataManager = DataManager();
+  await dataManager.initialize();
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget {

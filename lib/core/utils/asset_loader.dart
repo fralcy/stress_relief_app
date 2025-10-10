@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/scene_models.dart';
 import '../constants/app_assets.dart';
 
 /// Utility class để load assets một cách type-safe

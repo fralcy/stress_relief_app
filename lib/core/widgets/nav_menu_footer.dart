@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_assets.dart';
+import '../../models/scene_models.dart';
 
 /// Navigation footer - 5 phòng cố định
 /// 
