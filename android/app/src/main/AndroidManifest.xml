@@ -30,6 +30,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Awesome Notifications Receivers -->
+        <receiver 
+            android:name="me.carda.awesome_notifications.core.broadcasters.receivers.ScheduledNotificationReceiver"
+            android:enabled="true"
+            android:exported="false" />
+            
+        <receiver 
+            android:name="me.carda.awesome_notifications.core.broadcasters.receivers.DismissedNotificationReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

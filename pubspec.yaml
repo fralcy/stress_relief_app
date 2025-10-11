@@ -43,6 +43,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  awesome_notifications: ^0.10.1
 
 dev_dependencies:
   flutter_test:
