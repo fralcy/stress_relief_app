@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../../screens/modals/settings_modal.dart';
 
 /// Header cố định ở top màn hình
 /// 
@@ -9,13 +10,11 @@ import '../constants/app_colors.dart';
 class AppHeader extends StatelessWidget {
   final int coins;
   final VoidCallback onSceneShopPressed;
-  final VoidCallback onSettingsPressed;
 
   const AppHeader({
     super.key,
     required this.coins,
     required this.onSceneShopPressed,
-    required this.onSettingsPressed,
   });
 
   @override
@@ -35,10 +34,10 @@ class AppHeader extends StatelessWidget {
           // Coin Display
           _buildCoinDisplay(),
           
-          // Settings Button
+          // Settings Button - Opens Settings Modal
           _buildHeaderButton(
             icon: Icons.settings,
-            onPressed: onSettingsPressed,
+            onPressed: () => SettingsModal.show(context),
           ),
         ],
       ),

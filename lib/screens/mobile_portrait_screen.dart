@@ -73,7 +73,6 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 child: AppHeader(
                   coins: _coins,
                   onSceneShopPressed: () => _showToast('Scene Shop'),
-                  onSettingsPressed: () => _showToast('Settings'),
                 ),
               ),
               

@@ -79,7 +79,7 @@ class UserSettings {
       ],
       
       // Audio Settings
-      bgm: 'default_bgm',
+      bgm: 'Lofi Beats',
       bgmVolume: 50,
       sfxEnabled: true,
       sfxVolume: 50,
