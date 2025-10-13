@@ -5,7 +5,7 @@ import '../core/utils/asset_loader.dart';
 import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
-
+import 'modals/schedule_task_modal.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -185,7 +185,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.calendar_today,
             label: 'Tasks',
-            onPressed: () => _showToast('Tasks'),
+            onPressed: () => ScheduleTaskModal.show(context),
           ),
           FeatureButton(
             icon: Icons.mood,

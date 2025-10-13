@@ -112,4 +112,22 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String get resetConfirmation => 'Are you sure you want to reset all settings?';
+
+  @override
+  String get scheduleTask => 'Schedule Task';
+  
+  @override
+  String get taskName => 'Task name';
+  
+  @override
+  String get addTask => 'Add task';
+  
+  @override
+  String get editTask => 'Edit';
+  
+  @override
+  String get completed => 'Completed';
+  
+  @override
+  String get earnPoints => 'Earn';
 }

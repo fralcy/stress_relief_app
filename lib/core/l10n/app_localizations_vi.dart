@@ -112,4 +112,22 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String get resetConfirmation => 'Bạn có chắc muốn đặt lại tất cả cài đặt?';
+
+  @override
+  String get scheduleTask => 'Lập lịch';
+  
+  @override
+  String get taskName => 'Tên công việc';
+  
+  @override
+  String get addTask => 'Thêm công việc';
+  
+  @override
+  String get editTask => 'Sửa';
+  
+  @override
+  String get completed => 'Hoàn thành';
+  
+  @override
+  String get earnPoints => 'Kiếm được';
 }

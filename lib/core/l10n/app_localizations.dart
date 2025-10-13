@@ -57,6 +57,14 @@ abstract class AppLocalizations {
   String get resetToDefault;
   String get cloudSyncComingSoon;
   String get resetConfirmation;
+
+  // Schedule Task
+  String get scheduleTask;
+  String get taskName;
+  String get addTask;
+  String get editTask;
+  String get completed;
+  String get earnPoints;
   
   // Helper method
   static AppLocalizations of(BuildContext context) {
