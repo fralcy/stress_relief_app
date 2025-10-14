@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../utils/data_manager.dart';
 import '../../screens/modals/settings_modal.dart';
 
 /// Header cố định ở top màn hình
@@ -8,33 +9,28 @@ import '../../screens/modals/settings_modal.dart';
 /// - Background: transparent
 /// - Items: primary bg, background text
 class AppHeader extends StatelessWidget {
-  final int coins;
   final VoidCallback onSceneShopPressed;
 
   const AppHeader({
     super.key,
-    required this.coins,
     required this.onSceneShopPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    final currentPoints = DataManager().userProfile.currentPoints;
+    
     return Container(
       height: 68,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Scene Shop Button
           _buildHeaderButton(
             icon: Icons.landscape,
             onPressed: onSceneShopPressed,
           ),
-          
-          // Coin Display
-          _buildCoinDisplay(),
-          
-          // Settings Button - Opens Settings Modal
+          _buildCoinDisplay(currentPoints),
           _buildHeaderButton(
             icon: Icons.settings,
             onPressed: () => SettingsModal.show(context),
@@ -58,17 +54,13 @@ class AppHeader extends StatelessWidget {
           width: 48,
           height: 48,
           alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 24,
-            color: AppColors.background,
-          ),
+          child: Icon(icon, size: 24, color: AppColors.background),
         ),
       ),
     );
   }
 
-  Widget _buildCoinDisplay() {
+  Widget _buildCoinDisplay(int points) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -78,14 +70,10 @@ class AppHeader extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.monetization_on,
-            size: 24,
-            color: AppColors.background,
-          ),
+          const Icon(Icons.monetization_on, size: 24, color: AppColors.background),
           const SizedBox(width: 8),
           Text(
-            coins.toString(),
+            points.toString(),
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

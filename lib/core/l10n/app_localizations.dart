@@ -11,6 +11,7 @@ abstract class AppLocalizations {
   String get cancel;
   String get save;
   String get reset;
+  String get edit;
   
   // Navigation - 5 phòng
   String get livingRoom;
@@ -65,6 +66,22 @@ abstract class AppLocalizations {
   String get editTask;
   String get completed;
   String get earnPoints;
+                     
+  String get noTasksYet;
+  String get enterTaskName;
+  String get taskAdded;
+  String get taskDeleted;
+  String get taskUpdated;
+  String get taskNameRequired;
+  String get expectedPoints;
+  String get endDayAndClaimPoints;
+  String get completedTasks;
+  String get alreadyClaimedToday;
+  String get noCompletedTasks;
+  String get pointsClaimed;
+  String get alreadyClaimedOrNoTasks;
+  String get sceneShop;
+  String get feature;
   
   // Helper method
   static AppLocalizations of(BuildContext context) {

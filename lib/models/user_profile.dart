@@ -38,6 +38,9 @@ class UserProfile {
   @HiveField(9)
   final int totalPoints;              // Tổng điểm tích lũy (lifetime)
 
+  @HiveField(10)
+  final DateTime? lastPointsClaimDate;  // Ngày cuối cùng nhận điểm thưởng
+
   UserProfile({
     required this.id,
     required this.username,
@@ -49,6 +52,7 @@ class UserProfile {
     required this.unlockedScenes,
     required this.currentPoints,
     required this.totalPoints,
+    this.lastPointsClaimDate,
   });
   
   // Constructor mặc định cho người dùng mới
@@ -76,6 +80,7 @@ class UserProfile {
       }, // Mở khóa cảnh mặc định
       currentPoints: 0,
       totalPoints: 0,
+      lastPointsClaimDate: null,
     );
   }
   
@@ -91,6 +96,7 @@ class UserProfile {
     Map<SceneKey, bool>? unlockedScenes,
     int? currentPoints,
     int? totalPoints,
+    DateTime? lastPointsClaimDate,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -103,6 +109,7 @@ class UserProfile {
       unlockedScenes: unlockedScenes ?? Map<SceneKey, bool>.from(this.unlockedScenes),
       currentPoints: currentPoints ?? this.currentPoints,
       totalPoints: totalPoints ?? this.totalPoints,
+      lastPointsClaimDate: lastPointsClaimDate ?? this.lastPointsClaimDate,
     );
   }
 }

@@ -130,4 +130,52 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String get earnPoints => 'Kiếm được';
+
+  @override
+  String get edit => 'Sửa';
+
+  @override
+  String get noTasksYet => 'Chưa có công việc nào';
+
+  @override
+  String get enterTaskName => 'Vui lòng nhập tên công việc';
+
+  @override
+  String get taskAdded => 'Đã thêm công việc';
+
+  @override
+  String get taskDeleted => 'Đã xóa công việc';
+
+  @override
+  String get taskUpdated => 'Đã cập nhật';
+
+  @override
+  String get taskNameRequired => 'Tên công việc không được để trống';
+
+  @override
+  String get expectedPoints => 'Điểm dự kiến:';
+
+  @override
+  String get endDayAndClaimPoints => 'Kết thúc ngày & nhận điểm';
+
+  @override
+  String get completedTasks => 'Hoàn thành {count} công việc';
+
+  @override
+  String get alreadyClaimedToday => 'Hôm nay đã nhận điểm rồi';
+
+  @override
+  String get noCompletedTasks => 'Chưa có công việc hoàn thành';
+
+  @override
+  String get pointsClaimed => 'Đã nhận {points} điểm! 🎉';
+
+  @override
+  String get alreadyClaimedOrNoTasks => 'Hôm nay đã nhận điểm rồi hoặc chưa có công việc hoàn thành';
+
+  @override
+  String get sceneShop => 'Cửa hàng cảnh';
+
+  @override
+  String get feature => 'Tính năng';
 }

@@ -25,7 +25,6 @@ class MobilePortraitScreen extends StatefulWidget {
 class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   SceneType _currentScene = SceneType.livingRoom;
   MascotExpression _currentExpression = MascotExpression.idle;
-  int _coins = 1234;
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +49,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
               // Main content: Scene + Mascot + Feature Buttons
               Column(
                 children: [
-                  const SizedBox(height: 68), // Space for header
-                  
+                  const SizedBox(height: 68),
                   Expanded(
                     child: Center(
                       child: _buildSceneWithMascot(context),
@@ -71,7 +69,6 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 left: 0,
                 right: 0,
                 child: AppHeader(
-                  coins: _coins,
                   onSceneShopPressed: () => _showToast('Scene Shop'),
                 ),
               ),

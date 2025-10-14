@@ -27,13 +27,14 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       unlockedScenes: (fields[7] as Map).cast<SceneKey, bool>(),
       currentPoints: fields[8] as int,
       totalPoints: fields[9] as int,
+      lastPointsClaimDate: fields[10] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(8)
       ..write(obj.currentPoints)
       ..writeByte(9)
-      ..write(obj.totalPoints);
+      ..write(obj.totalPoints)
+      ..writeByte(10)
+      ..write(obj.lastPointsClaimDate);
   }
 
   @override

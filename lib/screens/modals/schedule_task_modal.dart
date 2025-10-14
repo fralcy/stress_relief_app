@@ -4,6 +4,8 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/notifier.dart';
+import '../../core/utils/schedule_points_service.dart';
+import '../../core/utils/overlap_detector.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/schedule_task.dart';
 
@@ -20,9 +22,11 @@ class ScheduleTaskModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final hasOverlap = OverlapDetector.hasAnyOverlap(DataManager().scheduleTasks);
+    
     return AppModal.show(
       context: context,
-      title: l10n.scheduleTask,
+      title: hasOverlap ? '⚠️ ${l10n.scheduleTask}' : l10n.scheduleTask,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
       content: const ScheduleTaskModal(),
     );
@@ -35,6 +39,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   TimeOfDay _endTime = const TimeOfDay(hour: 7, minute: 0);
   
   List<ScheduleTask> _tasks = [];
+  Set<int> _overlappingIndexes = {};
+  
   final Map<int, bool> _editingMode = {};
   final Map<int, TextEditingController> _editControllers = {};
   final Map<int, TimeOfDay> _editStartTimes = {};
@@ -59,8 +65,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   void _loadTasks() {
     setState(() {
       _tasks = DataManager().scheduleTasks;
-      // Sắp xếp theo thời gian bắt đầu tăng dần
       _tasks.sort((a, b) => a.startTimeMinutes.compareTo(b.startTimeMinutes));
+      _overlappingIndexes = OverlapDetector.findOverlappingTasks(_tasks);
     });
   }
 
@@ -73,8 +79,10 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Future<void> _addTask() async {
+    final l10n = AppLocalizations.of(context);
+    
     if (_titleController.text.trim().isEmpty) {
-      _showToast('Vui lòng nhập tên công việc');
+      _showToast(l10n.enterTaskName);
       return;
     }
 
@@ -88,7 +96,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     _titleController.clear();
     _loadTasks();
     await _updateNotifications();
-    _showToast('Đã thêm công việc');
+    _showToast(l10n.taskAdded);
   }
 
   Future<void> _toggleTask(int index) async {
@@ -99,16 +107,20 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Future<void> _deleteTask(int index) async {
+    final l10n = AppLocalizations.of(context);
+    
     await DataManager().removeScheduleTask(index);
     _loadTasks();
     await _updateNotifications();
-    _showToast('Đã xóa công việc');
+    _showToast(l10n.taskDeleted);
   }
 
   Future<void> _updateTask(int index) async {
+    final l10n = AppLocalizations.of(context);
     final controller = _editControllers[index];
+    
     if (controller == null || controller.text.trim().isEmpty) {
-      _showToast('Tên công việc không được để trống');
+      _showToast(l10n.taskNameRequired);
       return;
     }
 
@@ -129,7 +141,25 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       _editEndTimes.remove(index);
     });
     _loadTasks();
-    _showToast('Đã cập nhật');
+    _showToast(l10n.taskUpdated);
+  }
+
+  Future<void> _claimPoints() async {
+    final l10n = AppLocalizations.of(context);
+    final points = await SchedulePointsService.claimDailyPoints();
+    
+    if (points == null) {
+      _showToast(l10n.alreadyClaimedOrNoTasks);
+      return;
+    }
+
+    _showToast('${l10n.pointsClaimed.replaceAll('{points}', '$points')} 🎉');
+    _loadTasks(); // Refresh để xóa completed tasks
+    
+    // Refresh header để update coins
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _showToast(String message) {
@@ -189,7 +219,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         const SizedBox(height: 16),
         
         // ========== FOOTER ==========
-        _buildFooter(),
+        _buildFooter(l10n),
       ],
     );
   }
@@ -225,44 +255,34 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         
         const SizedBox(height: 12),
         
-        // Time pickers
+        const SizedBox(height: 16),
         Row(
           children: [
-            Text(
-              '${l10n.time}: ',
-              style: const TextStyle(
-                color: AppColors.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            _buildTimePicker(
-              time: _startTime,
-              onTap: () => _pickTime(
-                initialTime: _startTime,
-                onPicked: (time) => _startTime = time,
+            Expanded(
+              child: _buildTimePicker(
+                time: _startTime,
+                onTap: () => _pickTime(
+                  initialTime: _startTime,
+                  onPicked: (time) => _startTime = time,
+                ),
               ),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                '-',
-                style: TextStyle(color: AppColors.text, fontSize: 18),
-              ),
+              child: Text('-', style: TextStyle(color: AppColors.text, fontSize: 18)),
             ),
-            _buildTimePicker(
-              time: _endTime,
-              onTap: () => _pickTime(
-                initialTime: _endTime,
-                onPicked: (time) => _endTime = time,
+            Expanded(
+              child: _buildTimePicker(
+                time: _endTime,
+                onTap: () => _pickTime(
+                  initialTime: _endTime,
+                  onPicked: (time) => _endTime = time,
+                ),
               ),
             ),
           ],
         ),
-        
         const SizedBox(height: 16),
-        
-        // Add button
         Center(
           child: AppButton(
             label: l10n.addTask,
@@ -279,6 +299,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -288,6 +309,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               _formatTime(time),
@@ -311,15 +333,13 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
 
   Widget _buildTaskList() {
     if (_tasks.isEmpty) {
-      return const Center(
+      final l10n = AppLocalizations.of(context);
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: const EdgeInsets.all(32),
           child: Text(
-            'Chưa có công việc nào',
-            style: TextStyle(
-              color: AppColors.text,
-              fontSize: 14,
-            ),
+            l10n.noTasksYet,
+            style: const TextStyle(color: AppColors.text, fontSize: 14),
           ),
         ),
       );
@@ -337,14 +357,15 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Widget _buildTaskItem(int index) {
+    final l10n = AppLocalizations.of(context);
     final task = _tasks[index];
     final isEditing = _editingMode[index] ?? false;
+    final hasOverlap = _overlappingIndexes.contains(index);
     
     if (!_editControllers.containsKey(index)) {
       _editControllers[index] = TextEditingController(text: task.title);
     }
     
-    // Lưu thời gian hiện tại cho edit mode
     if (isEditing && !_editStartTimes.containsKey(index)) {
       _editStartTimes[index] = task.startTime;
       _editEndTimes[index] = task.endTime;
@@ -355,14 +376,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.background,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(
+          color: hasOverlap ? Colors.orange : AppColors.border,
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              // Toggle complete button
               SizedBox(
                 width: 40,
                 height: 40,
@@ -373,10 +396,14 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   side: const BorderSide(color: AppColors.border, width: 1.5),
                 ),
               ),
-              
               const SizedBox(width: 8),
               
-              // Task name (editable if in edit mode)
+              // Warning icon if overlap
+              if (hasOverlap) ...[
+                const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                const SizedBox(width: 4),
+              ],
+              
               Expanded(
                 child: isEditing
                     ? TextField(
@@ -400,30 +427,20 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                         ),
                       ),
               ),
-              
               const SizedBox(width: 8),
-              
-              // Delete button
               IconButton(
                 icon: const Icon(Icons.close, color: AppColors.primary),
                 onPressed: () => _deleteTask(index),
-                constraints: const BoxConstraints(
-                  minWidth: 32,
-                  minHeight: 32,
-                ),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
               ),
             ],
           ),
-          
           const SizedBox(height: 8),
-          
-          // Time display and Edit button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (isEditing)
-                // Editable time pickers
                 Expanded(
                   child: Row(
                     children: [
@@ -457,29 +474,28 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   ),
                 )
               else
-                // Read-only time display
                 Text(
                   '${_formatTime(task.startTime)} - ${_formatTime(task.endTime)}',
-                  style: const TextStyle(
-                    color: AppColors.text,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: AppColors.text, fontSize: 14),
                 ),
-              
-              AppButton(
-                label: isEditing ? 'Lưu' : 'Sửa',
-                onPressed: () {
-                  if (isEditing) {
-                    _updateTask(index);
-                  } else {
+              if (isEditing)
+                AppButton(
+                  label: l10n.save,
+                  onPressed: () => _updateTask(index),
+                  width: 70,
+                  height: 32,
+                )
+              else
+                AppButton(
+                  label: l10n.edit,
+                  onPressed: () {
                     setState(() {
                       _editingMode[index] = true;
                     });
-                  }
-                },
-                width: 70,
-                height: 32,
-              ),
+                  },
+                  width: 70,
+                  height: 32,
+                ),
             ],
           ),
         ],
@@ -487,24 +503,55 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     );
   }
 
-  Widget _buildFooter() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildFooter(AppLocalizations l10n) {
+    final profile = DataManager().userProfile;
+    final pendingPoints = SchedulePointsService.getPendingPoints(_tasks);
+    final canClaim = SchedulePointsService.canClaimToday(profile.lastPointsClaimDate) && pendingPoints > 0;
+
+    return Column(
       children: [
-        Text(
-          'Hoàn thành: ${_completedCount()}/${_tasks.length}',
-          style: const TextStyle(
-            color: AppColors.text,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+        // Hiển thị điểm dự kiến
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.expectedPoints,
+              style: const TextStyle(
+                color: AppColors.text,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              '$pendingPoints',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 12),
+        
+        // Button claim điểm
+        AppButton(
+          label: l10n.endDayAndClaimPoints,
+          onPressed: canClaim ? _claimPoints : null,
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // Helper text
         Text(
-          'Kiếm được: 50',
+          canClaim 
+            ? '${l10n.completedTasks.replaceAll('{count}', '${_completedCount()}')}'
+            : profile.lastPointsClaimDate != null 
+              ? l10n.alreadyClaimedToday
+              : l10n.noCompletedTasks,
           style: const TextStyle(
-            color: AppColors.text,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            color: AppColors.border,
+            fontSize: 12,
           ),
         ),
       ],

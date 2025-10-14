@@ -130,4 +130,52 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String get earnPoints => 'Earn';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get noTasksYet => 'No tasks yet';
+
+  @override
+  String get enterTaskName => 'Please enter task name';
+
+  @override
+  String get taskAdded => 'Task added';
+
+  @override
+  String get taskDeleted => 'Task deleted';
+
+  @override
+  String get taskUpdated => 'Updated';
+
+  @override
+  String get taskNameRequired => 'Task name is required';
+
+  @override
+  String get expectedPoints => 'Expected points:';
+
+  @override
+  String get endDayAndClaimPoints => 'End day & claim points';
+
+  @override
+  String get completedTasks => 'Completed {count} tasks';
+
+  @override
+  String get alreadyClaimedToday => 'Already claimed today';
+
+  @override
+  String get noCompletedTasks => 'No completed tasks';
+
+  @override
+  String get pointsClaimed => 'Claimed {points} points! 🎉';
+
+  @override
+  String get alreadyClaimedOrNoTasks => 'Already claimed today or no completed tasks';
+
+  @override
+  String get sceneShop => 'Scene Shop';
+
+  @override
+  String get feature => 'Feature';
 }
