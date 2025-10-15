@@ -178,4 +178,77 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get feature => 'Tính năng';
+
+  // Emotion Diary
+  @override
+  String get emotionDiary => 'Nhật ký cảm xúc';
+
+  @override
+  String get historyLast2Weeks => 'Lịch sử (2 tuần gần nhất)';
+
+  @override
+  String get tapDayToViewDetails => 'Nhấn vào ngày để xem chi tiết ↑';
+
+  @override
+  String get todaysJournal => "NHẬT KÝ HÔM NAY";
+
+  @override
+  String get dailyJournal => "NHẬT KÝ TRONG NGÀY";
+
+  @override
+  String get howDoYouFeelOverall => '1. Hôm nay bạn cảm thấy thế nào?';
+
+  @override
+  String get howWasYourStressLevel => '2. Mức độ căng thẳng của bạn?';
+
+  @override
+  String get howProductiveWereYou => '3. Bạn làm việc hiệu quả như thế nào?';
+
+  @override
+  String get veryBad => 'Rất tệ';
+
+  @override
+  String get bad => 'Tệ';
+
+  @override
+  String get neutral => 'Bình thường';
+
+  @override
+  String get good => 'Tốt';
+
+  @override
+  String get great => 'Tuyệt vời';
+
+  @override
+  String get veryHigh => 'Rất cao';
+
+  @override
+  String get high => 'Cao';
+
+  @override
+  String get moderate => 'Trung bình';
+
+  @override
+  String get low => 'Thấp';
+
+  @override
+  String get relaxed => 'Thư giãn';
+
+  @override
+  String get none => 'Không';
+
+  @override
+  String get little => 'Ít';
+
+  @override
+  String get average => 'Trung bình';
+
+  @override
+  String get very => 'Rất tốt';
+
+  @override
+  String get writeYourThoughts => 'Viết suy nghĩ của bạn...';
+
+  @override
+  String get journalSaved => 'Đã lưu nhật ký! ✅';
 }

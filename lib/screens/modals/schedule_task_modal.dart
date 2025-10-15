@@ -104,6 +104,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
     await DataManager().updateScheduleTask(index, updatedTask);
     _loadTasks();
+    await _updateNotifications();
   }
 
   Future<void> _deleteTask(int index) async {

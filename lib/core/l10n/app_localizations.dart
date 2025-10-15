@@ -83,6 +83,32 @@ abstract class AppLocalizations {
   String get sceneShop;
   String get feature;
   
+  // Emotion Diary
+  String get emotionDiary;
+  String get historyLast2Weeks;
+  String get tapDayToViewDetails;
+  String get todaysJournal;
+  String get dailyJournal;
+  String get howDoYouFeelOverall;
+  String get howWasYourStressLevel;
+  String get howProductiveWereYou;
+  String get veryBad;
+  String get bad;
+  String get neutral;
+  String get good;
+  String get great;
+  String get veryHigh;
+  String get high;
+  String get moderate;
+  String get low;
+  String get relaxed;
+  String get none;
+  String get little;
+  String get average;
+  String get very;
+  String get writeYourThoughts;
+  String get journalSaved;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

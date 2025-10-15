@@ -6,6 +6,7 @@ import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
 import 'modals/schedule_task_modal.dart';
+import 'modals/emotion_diary_modal.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -187,7 +188,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.mood,
             label: 'Mood',
-            onPressed: () => _showToast('Mood'),
+            onPressed: () => EmotionDiaryModal.show(context),
           ),
         ];
       

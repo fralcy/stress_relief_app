@@ -178,4 +178,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feature => 'Feature';
+
+  // Emotion Diary
+  @override
+  String get emotionDiary => 'Mood';
+
+  @override
+  String get historyLast2Weeks => 'History (last 2 weeks)';
+
+  @override
+  String get tapDayToViewDetails => 'Tap a day to view details ↑';
+
+  @override
+  String get todaysJournal => "TODAY'S JOURNAL";
+
+  @override
+  String get dailyJournal => "DAILY JOURNAL";
+
+  @override
+  String get howDoYouFeelOverall => '1. How do you feel overall today?';
+
+  @override
+  String get howWasYourStressLevel => '2. How was your stress level?';
+
+  @override
+  String get howProductiveWereYou => '3. How productive were you?';
+
+  @override
+  String get veryBad => 'Very Bad';
+
+  @override
+  String get bad => 'Bad';
+
+  @override
+  String get neutral => 'Neutral';
+
+  @override
+  String get good => 'Good';
+
+  @override
+  String get great => 'Great';
+
+  @override
+  String get veryHigh => 'Very High';
+
+  @override
+  String get high => 'High';
+
+  @override
+  String get moderate => 'Moderate';
+
+  @override
+  String get low => 'Low';
+
+  @override
+  String get relaxed => 'Relaxed';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get little => 'Little';
+
+  @override
+  String get average => 'Average';
+
+  @override
+  String get very => 'Very';
+
+  @override
+  String get writeYourThoughts => 'Write your thoughts here...';
+
+  @override
+  String get journalSaved => 'Journal saved! ✅';
 }
