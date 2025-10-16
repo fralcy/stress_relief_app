@@ -251,4 +251,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journalSaved => 'Journal saved! ✅';
+
+  @override
+  String get saveToEarnPoints => '✨ Save to earn 10 points!';
+
+  @override
+  String get alreadySavedToday => '✅ Already saved today';
 }

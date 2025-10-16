@@ -251,4 +251,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get journalSaved => 'Đã lưu nhật ký! ✅';
+
+  @override
+  String get saveToEarnPoints => '✨ Lưu để nhận 10 điểm!';
+
+  @override
+  String get alreadySavedToday => '✅ Đã lưu hôm nay';
 }

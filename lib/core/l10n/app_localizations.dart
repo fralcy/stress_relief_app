@@ -108,6 +108,8 @@ abstract class AppLocalizations {
   String get very;
   String get writeYourThoughts;
   String get journalSaved;
+  String get saveToEarnPoints;
+  String get alreadySavedToday;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

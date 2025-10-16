@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/data_manager.dart';
+import '../../models/index.dart';
 
 /// Modal quản lý nhật ký cảm xúc
 class EmotionDiaryModal extends StatefulWidget {
@@ -38,6 +41,12 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   void initState() {
     super.initState();
     _selectedDayIndex = 14; // Default to today
+    _loadDiaryForSelectedDay();
+
+    // Listen to text changes for character counter
+    _diaryController.addListener(() {
+    setState(() {});
+  });
   }
 
   @override
@@ -56,17 +65,18 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     return '😊';
   }
 
-  // Mock data for history (replace with real data later)
-  List<Map<String, dynamic>> _getMockHistory() {
-    final now = DateTime.now();
+  // Get history data for the last 15 days
+  List<Map<String, dynamic>> _getHistory() {
+    final diaries = DataManager().emotionDiaries;
+    
     return List.generate(15, (index) {
-      final date = now.subtract(Duration(days: 14 - index));
-      final hasData = index < 10; // Mock: only last 10 days have data
+      final date = _getDateForIndex(index);
+      final diary = diaries.where((d) => _isSameDay(d.date, date)).firstOrNull;
       
       return {
         'date': date,
-        'hasData': hasData,
-        'avgScore': hasData ? 2.0 + (index % 5) * 0.6 : null,
+        'hasData': diary != null,
+        'avgScore': diary != null ? (diary.q1 + diary.q2 + diary.q3) / 3.0 : null,
       };
     });
   }
@@ -78,7 +88,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final history = _getMockHistory();
+    final history = _getHistory();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +170,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       onTap: () {
         setState(() {
           _selectedDayIndex = index;
-          // TODO: Load data for selected day
+          _loadDiaryForSelectedDay();
         });
       },
       borderRadius: BorderRadius.circular(8),
@@ -196,7 +206,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     final isReadOnly = !_canEdit(_selectedDayIndex ?? 14);
     
     // Lấy history để hiển thị date subtitle
-    final history = _getMockHistory();
+    final history = _getHistory();
     final dayData = history[_selectedDayIndex ?? 14];
     final date = dayData['date'] as DateTime;
     return Column(
@@ -342,6 +352,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           readOnly: isReadOnly,
           maxLines: 4,
           maxLength: _maxDiaryLength,
+          maxLengthEnforcement: MaxLengthEnforcement.enforced,
           decoration: InputDecoration(
             hintText: isReadOnly ? '' : l10n.writeYourThoughts,
             hintStyle: TextStyle(
@@ -385,24 +396,97 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
                     _stressLevel != null && 
                     _productivity != null;
     
-    return Center(
-      child: AppButton(
-        label: l10n.save,
-        onPressed: canSave ? _saveCheckIn : null,
-        isDisabled: !canSave,
-      ),
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final diaries = DataManager().emotionDiaries;
+    final isFirstTimeToday = !diaries.any((d) => _isSameDay(d.date, todayDate));
+
+    return Column(
+      children: [
+        Center(
+          child: AppButton(
+            label: l10n.save,
+            onPressed: canSave ? _saveCheckIn : null,
+            isDisabled: !canSave,
+          ),
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // Helper text
+        Text(
+          isFirstTimeToday 
+            ? '✨ Save to earn 10 points!' 
+            : '✅ Already saved today',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isFirstTimeToday ? AppColors.primary : AppColors.border,
+            fontSize: 12,
+            fontWeight: isFirstTimeToday ? FontWeight.w500 : FontWeight.normal,
+          ),
+        ),
+      ],
     );
   }
 
-  void _saveCheckIn() {
-    // TODO: Save to Hive
+  void _saveCheckIn() async {
+  // Validate notes length
+  if (_diaryController.text.length > _maxDiaryLength) {
+    _diaryController.text = _diaryController.text.substring(0, _maxDiaryLength);
+  }
+
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.journalSaved),
-        duration: const Duration(seconds: 2),
-      ),
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    
+    final diaries = DataManager().emotionDiaries;
+    final existingIndex = diaries.indexWhere((d) => _isSameDay(d.date, todayDate));
+    final isFirstTimeToday = existingIndex == -1;
+    
+    final newDiary = EmotionDiary(
+      date: todayDate,
+      q1: _overallFeeling!,
+      q2: _stressLevel!,
+      q3: _productivity!,
+      notes: _diaryController.text,
     );
+    
+    // Update or add diary
+    if (existingIndex != -1) {
+      diaries[existingIndex] = newDiary;
+    } else {
+      diaries.add(newDiary);
+    }
+    
+    // Sort by date (newest first) and keep only last 15 days
+    diaries.sort((a, b) => b.date.compareTo(a.date));
+    if (diaries.length > 15) {
+      diaries.removeRange(15, diaries.length);
+    }
+    
+    // Save to data manager
+    await DataManager().saveEmotionDiaries(diaries);
+    
+    // Award points if first time today
+    if (isFirstTimeToday) {
+      final profile = DataManager().userProfile;
+      final updatedProfile = profile.copyWith(
+        currentPoints: profile.currentPoints + 10,
+        totalPoints: profile.totalPoints + 10,
+      );
+      await DataManager().saveUserProfile(updatedProfile);
+    }
+    
+    if (mounted) {
+      setState(() {}); // Force rebuild to update save button state
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.journalSaved),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   // Helper để format date theo locale
@@ -425,5 +509,40 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       ];
       return '${date.day} ${months[date.month - 1]}, ${date.year}';
     }
+  }
+
+  // Load diary data for selected day
+  void _loadDiaryForSelectedDay() {
+    if (_selectedDayIndex == null) return;
+    
+    final targetDate = _getDateForIndex(_selectedDayIndex!);
+    final diaries = DataManager().emotionDiaries;
+    
+    final diary = diaries.where((d) => _isSameDay(d.date, targetDate)).firstOrNull;
+    
+    setState(() {
+      if (diary != null) {
+        _overallFeeling = diary.q1;
+        _stressLevel = diary.q2;
+        _productivity = diary.q3;
+        _diaryController.text = diary.notes;
+      } else {
+        _overallFeeling = null;
+        _stressLevel = null;
+        _productivity = null;
+        _diaryController.text = '';
+      }
+    });
+  }
+
+  // Get date for history index (0 = 14 days ago, 14 = today)
+  DateTime _getDateForIndex(int index) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day).subtract(Duration(days: 14 - index));
+  }
+
+  // Check if two dates are the same day
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
