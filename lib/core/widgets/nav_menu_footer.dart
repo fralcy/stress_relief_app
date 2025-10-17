@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
 import '../../models/scene_models.dart';
 
@@ -27,6 +28,8 @@ class NavMenuFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Container(
       height: 88,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -38,6 +41,7 @@ class NavMenuFooter extends StatelessWidget {
             icon: _getSceneIcon(scene),
             isActive: isActive,
             onPressed: () => onSceneChanged(scene),
+            theme: theme,
           );
         }).toList(),
       ),
@@ -48,8 +52,9 @@ class NavMenuFooter extends StatelessWidget {
     required IconData icon,
     required bool isActive,
     required VoidCallback onPressed,
+    required AppTheme theme,
   }) {
-    final bgColor = isActive ? AppColors.secondary : AppColors.primary;
+    final bgColor = isActive ? theme.secondary : theme.primary;
     
     return Material(
       color: bgColor,
@@ -64,7 +69,7 @@ class NavMenuFooter extends StatelessWidget {
           child: Icon(
             icon,
             size: 32,
-            color: AppColors.background,
+            color: theme.background,
           ),
         ),
       ),

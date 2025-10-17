@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../../core/constants/app_theme.dart';
+import '../../core/providers/theme_provider.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_slider.dart';
@@ -42,21 +44,6 @@ class _SettingsModalState extends State<SettingsModal> {
     'Chill Acoustic',
   ];
 
-  // Available themes with 5-color preview
-  final List<Map<String, dynamic>> _themeList = [
-    {
-      'id': 'pastel_blue_breeze',
-      'name': 'Pastel Blue Breeze',
-      'colors': [
-        AppColors.primary,
-        AppColors.secondary,
-        AppColors.text,
-        AppColors.background,
-        AppColors.border,
-      ],
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -96,6 +83,8 @@ class _SettingsModalState extends State<SettingsModal> {
                 _settings = UserSettings.initial();
                 _saveSettings();
               });
+              // Reset theme provider
+              context.read<ThemeProvider>().setTheme(_settings.currentTheme);
               Navigator.pop(context);
             },
             child: Text(l10n.reset),
@@ -108,13 +97,14 @@ class _SettingsModalState extends State<SettingsModal> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = context.watch<ThemeProvider>().currentTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ========== AUDIO ==========
-        _buildSection(l10n.audio, [
-          _buildLabel(l10n.bgm),
+        _buildSection(l10n.audio, theme, [
+          _buildLabel(l10n.bgm, theme),
           const SizedBox(height: 8),
           AppDropdown<String>(
             value: _settings.bgm,
@@ -140,14 +130,14 @@ class _SettingsModalState extends State<SettingsModal> {
             showValue: true,
           ),
           const SizedBox(height: 24),
-          _buildLabel(l10n.sfx),
+          _buildLabel(l10n.sfx, theme),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 l10n.enabled,
-                style: const TextStyle(color: AppColors.text, fontSize: 16),
+                style: TextStyle(color: theme.text, fontSize: 16),
               ),
               _buildToggleButtons(
                 value: _settings.sfxEnabled,
@@ -177,16 +167,16 @@ class _SettingsModalState extends State<SettingsModal> {
         const SizedBox(height: 32),
 
         // ========== DISPLAY ==========
-        _buildSection(l10n.display, [
-          _buildLabel(l10n.theme),
+        _buildSection(l10n.display, theme, [
+          _buildLabel(l10n.theme, theme),
           const SizedBox(height: 12),
-          _buildThemeSelector(),
+          _buildThemeSelector(theme),
           const SizedBox(height: 24),
-          _buildLabel(l10n.preview),
+          _buildLabel(l10n.preview, theme),
           const SizedBox(height: 8),
-          _buildThemePreview(),
+          _buildThemePreview(theme),
           const SizedBox(height: 24),
-          _buildLabel(l10n.language),
+          _buildLabel(l10n.language, theme),
           const SizedBox(height: 12),
           _buildLanguageSelector(),
         ]),
@@ -194,14 +184,14 @@ class _SettingsModalState extends State<SettingsModal> {
         const SizedBox(height: 32),
 
         // ========== MASCOT ==========
-        _buildSection(l10n.mascot, [
+        _buildSection(l10n.mascot, theme, [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 '${l10n.name}:',
-                style: const TextStyle(
-                  color: AppColors.text,
+                style: TextStyle(
+                  color: theme.text,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -209,12 +199,12 @@ class _SettingsModalState extends State<SettingsModal> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border, width: 1.5),
+                  border: Border.all(color: theme.border, width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   l10n.mascotName,
-                  style: const TextStyle(color: AppColors.text, fontSize: 16),
+                  style: TextStyle(color: theme.text, fontSize: 16),
                 ),
               ),
             ],
@@ -224,13 +214,13 @@ class _SettingsModalState extends State<SettingsModal> {
         const SizedBox(height: 32),
 
         // ========== NOTIFICATION ==========
-        _buildSection(l10n.notification, [
+        _buildSection(l10n.notification, theme, [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 '${l10n.sleepReminder}:',
-                style: const TextStyle(color: AppColors.text, fontSize: 16),
+                style: TextStyle(color: theme.text, fontSize: 16),
               ),
               _buildToggleButtons(
                 value: _settings.sleepReminderEnabled,
@@ -255,6 +245,7 @@ class _SettingsModalState extends State<SettingsModal> {
                   _saveSettings();
                 });
               },
+              theme,
             ),
           const SizedBox(height: 20),
           Row(
@@ -262,7 +253,7 @@ class _SettingsModalState extends State<SettingsModal> {
             children: [
               Text(
                 '${l10n.taskReminder}:',
-                style: const TextStyle(color: AppColors.text, fontSize: 16),
+                style: TextStyle(color: theme.text, fontSize: 16),
               ),
               _buildToggleButtons(
                 value: _settings.taskReminderEnabled,
@@ -286,13 +277,14 @@ class _SettingsModalState extends State<SettingsModal> {
                   _saveSettings();
                 });
               },
+              theme,
             ),
         ]),
 
         const SizedBox(height: 32),
 
         // ========== CLOUD SYNC ==========
-        _buildSection(l10n.cloudSync, [
+        _buildSection(l10n.cloudSync, theme, [
           Center(
             child: AppButton(
               label: l10n.sync,
@@ -305,8 +297,8 @@ class _SettingsModalState extends State<SettingsModal> {
               onPressed: _resetToDefault,
               child: Text(
                 l10n.resetToDefault,
-                style: const TextStyle(
-                  color: AppColors.primary,
+                style: TextStyle(
+                  color: theme.primary,
                   decoration: TextDecoration.underline,
                 ),
               ),
@@ -319,16 +311,16 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _buildSection(String title, AppTheme theme, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.text,
+            color: theme.text,
           ),
         ),
         const SizedBox(height: 16),
@@ -337,18 +329,17 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildLabel(String text, AppTheme theme) {
     return Text(
       text,
-      style: const TextStyle(
-        color: AppColors.text,
+      style: TextStyle(
+        color: theme.text,
         fontSize: 16,
         fontWeight: FontWeight.w600,
       ),
     );
   }
 
-  // ON/OFF toggle buttons sử dụng AppButton với isActive
   Widget _buildToggleButtons({required bool value, required Function(bool) onChanged}) {
     final l10n = AppLocalizations.of(context);
     
@@ -363,31 +354,33 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  Widget _buildThemeSelector() {
+  Widget _buildThemeSelector(AppTheme currentTheme) {
     return AppDropdown<String>(
       value: _settings.currentTheme,
-      items: _themeList.map((t) => t['id'] as String).toList(),
+      items: AppThemes.all.map((t) => t.id).toList(),
       itemBuilder: (themeId) {
-        final theme = _themeList.firstWhere((t) => t['id'] == themeId);
-        return Text(theme['name'] as String);
+        final theme = AppThemes.getById(themeId);
+        return Text(theme.name);
       },
       onChanged: (themeId) {
         setState(() {
           _settings = _settings.copyWith(currentTheme: themeId);
           _saveSettings();
         });
+        // Update theme provider để UI thay đổi real-time
+        context.read<ThemeProvider>().setTheme(themeId);
       },
     );
   }
 
-  Widget _buildThemePreview() {
-    final theme = _themeList.firstWhere((t) => t['id'] == _settings.currentTheme);
-    final colors = theme['colors'] as List<Color>;
+  Widget _buildThemePreview(AppTheme theme) {
+    final selectedTheme = AppThemes.getById(_settings.currentTheme);
+    final colors = selectedTheme.previewColors;
 
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(color: theme.border, width: 1.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -398,7 +391,7 @@ class _SettingsModalState extends State<SettingsModal> {
                 color: color,
                 border: Border(
                   right: color != colors.last
-                      ? const BorderSide(color: AppColors.border, width: 1)
+                      ? BorderSide(color: theme.border, width: 1)
                       : BorderSide.none,
                 ),
               ),
@@ -409,13 +402,18 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  Widget _buildTimeSelector(String label, TimeOfDay time, Function(TimeOfDay) onChanged) {
+  Widget _buildTimeSelector(
+    String label,
+    TimeOfDay time,
+    Function(TimeOfDay) onChanged,
+    AppTheme theme,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.text, fontSize: 16),
+          style: TextStyle(color: theme.text, fontSize: 16),
         ),
         InkWell(
           onTap: () async {
@@ -430,9 +428,9 @@ class _SettingsModalState extends State<SettingsModal> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: theme.primary,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border, width: 1.5),
+              border: Border.all(color: theme.border, width: 1.5),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -451,7 +449,12 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  Widget _buildBeforeSelector(String label, int minutes, Function(int) onChanged) {
+  Widget _buildBeforeSelector(
+    String label,
+    int minutes,
+    Function(int) onChanged,
+    AppTheme theme,
+  ) {
     final l10n = AppLocalizations.of(context);
     
     return Row(
@@ -459,7 +462,7 @@ class _SettingsModalState extends State<SettingsModal> {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.text, fontSize: 16),
+          style: TextStyle(color: theme.text, fontSize: 16),
         ),
         InkWell(
           onTap: () async {
@@ -482,9 +485,9 @@ class _SettingsModalState extends State<SettingsModal> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: theme.primary,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border, width: 1.5),
+              border: Border.all(color: theme.border, width: 1.5),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -502,6 +505,7 @@ class _SettingsModalState extends State<SettingsModal> {
       ],
     );
   }
+
   Widget _buildLanguageSelector() {
     final languageOptions = {
       'vi': 'Tiếng Việt',

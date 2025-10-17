@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'core/constants/app_colors.dart';
 import 'core/utils/locale_storage.dart';
 import 'core/l10n/app_localizations_delegate.dart';
 import 'core/utils/data_manager.dart';
 import 'core/utils/notifier.dart';
+import 'core/providers/theme_provider.dart';
 
 // Import test screens
 import 'screens/notifier_test_screen.dart';
@@ -23,7 +25,12 @@ void main() async {
   if (!kIsWeb) {
     await Notifier.initialize();
   }
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -56,15 +63,15 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.light(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.background,
-          background: AppColors.background,
+          primary: context.theme.primary,
+          secondary: context.theme.secondary,
+          surface: context.theme.background,
+          background: context.theme.background,
         ),
-        scaffoldBackgroundColor: AppColors.background,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: AppColors.text),
-          bodyMedium: TextStyle(color: AppColors.text),
+        scaffoldBackgroundColor: context.theme.background,
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: context.theme.text),
+          bodyMedium: TextStyle(color: context.theme.text),
         ),
       ),
       // Localization
@@ -91,18 +98,18 @@ class TestMenuScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Test Menu'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.theme.primary,
         foregroundColor: Colors.white,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
+          Text(
             'Select a test screen:',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: context.theme.text,
             ),
           ),
           const SizedBox(height: 24),

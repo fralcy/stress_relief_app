@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_theme.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -87,6 +88,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final l10n = AppLocalizations.of(context);
     final history = _getHistory();
 
@@ -94,19 +96,19 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ========== HISTORY SECTION ==========
-        _buildHistorySection(history),
+        _buildHistorySection(history, theme),
         
         const SizedBox(height: 24),
-        const Divider(color: AppColors.border, height: 1, thickness: 1.5),
+        Divider(color: theme.border, height: 1, thickness: 1.5),
         const SizedBox(height: 16),
         
         // ========== CHECK-IN SECTION ==========
-        _buildCheckInSection(l10n),
+        _buildCheckInSection(l10n, theme),
       ],
     );
   }
 
-  Widget _buildHistorySection(List<Map<String, dynamic>> history) {
+  Widget _buildHistorySection(List<Map<String, dynamic>> history, AppTheme theme) {
     final l10n = AppLocalizations.of(context);
     
     return Column(
@@ -114,10 +116,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       children: [
         Text(
           l10n.historyLast2Weeks,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: AppColors.text,
+            color: theme.text,
           ),
         ),
         const SizedBox(height: 12),
@@ -134,7 +136,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           ),
           itemCount: 15,
           itemBuilder: (context, index) {
-            return _buildDayButton(history[index], index);
+            return _buildDayButton(history[index], index, theme);
           },
         ),
         
@@ -143,14 +145,14 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           l10n.tapDayToViewDetails,
           style: TextStyle(
             fontSize: 12,
-            color: AppColors.text.withOpacity(0.6),
+            color: theme.text.withOpacity(0.6),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDayButton(Map<String, dynamic> dayData, int index) {
+  Widget _buildDayButton(Map<String, dynamic> dayData, int index, AppTheme theme) {
     final date = dayData['date'] as DateTime;
     final hasData = dayData['hasData'] as bool;
     final avgScore = dayData['avgScore'] as double?;
@@ -159,11 +161,11 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     // Determine border color
     Color borderColor;
     if (isSelected) {
-      borderColor = AppColors.secondary;
+      borderColor = theme.secondary;
     } else if (hasData) {
-      borderColor = AppColors.primary;
+      borderColor = theme.primary;
     } else {
-      borderColor = AppColors.border;
+      borderColor = theme.border;
     }
 
     return InkWell(
@@ -176,7 +178,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       borderRadius: BorderRadius.circular(8),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: theme.background,
           border: Border.all(color: borderColor, width: 2),
           borderRadius: BorderRadius.circular(8),
         ),
@@ -185,10 +187,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           children: [
             Text(
               '${date.day}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: theme.text,
               ),
             ),
             const SizedBox(height: 2),
@@ -202,7 +204,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     );
   }
 
-  Widget _buildCheckInSection(AppLocalizations l10n) {
+  Widget _buildCheckInSection(AppLocalizations l10n, AppTheme theme) {
     final isReadOnly = !_canEdit(_selectedDayIndex ?? 14);
     
     // Lấy history để hiển thị date subtitle
@@ -215,10 +217,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         // ========== TITLE ==========
         Text(
           isReadOnly ? l10n.dailyJournal : l10n.todaysJournal,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.text,
+            color: theme.text,
           ),
         ),
         const SizedBox(height: 16),
@@ -226,10 +228,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         // ========== DATE SUBTITLE ==========
         Text(
           _formatDate(date, l10n),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.text,
+            color: theme.text,
           ),
         ),
         const SizedBox(height: 12),
@@ -246,6 +248,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             l10n.great,
           ],
           onChanged: isReadOnly ? null : (val) => setState(() => _overallFeeling = val),
+          theme: theme,
         ),
         
         const SizedBox(height: 20),
@@ -262,6 +265,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             l10n.relaxed,
           ],
           onChanged: isReadOnly ? null : (val) => setState(() => _stressLevel = val),
+          theme: theme,
         ),
         
         const SizedBox(height: 20),
@@ -278,16 +282,17 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             l10n.very,
           ],
           onChanged: isReadOnly ? null : (val) => setState(() => _productivity = val),
+          theme: theme,
         ),
         
         const SizedBox(height: 20),
         
         // Diary text area
-        _buildDiaryTextArea(l10n, isReadOnly),
+        _buildDiaryTextArea(l10n, isReadOnly, theme),
         
         if (!isReadOnly) ...[
           const SizedBox(height: 20),
-          _buildSaveButton(l10n),
+          _buildSaveButton(l10n, theme),
         ],
       ],
     );
@@ -298,16 +303,17 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     required int? value,
     required List<String> labels,
     required Function(int)? onChanged,
+    required AppTheme theme,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           question,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.text,
+            color: theme.text,
           ),
         ),
         const SizedBox(height: 8),
@@ -324,14 +330,14 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
                     value: optionValue,
                     groupValue: value,
                     onChanged: onChanged != null ? (val) => onChanged(val!) : null,
-                    activeColor: AppColors.primary,
+                    activeColor: theme.primary,
                   ),
                   Text(
                     labels[index],
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.text.withOpacity(0.8),
+                      color: theme.text.withOpacity(0.8),
                     ),
                   ),
                 ],
@@ -343,7 +349,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     );
   }
 
-  Widget _buildDiaryTextArea(AppLocalizations l10n, bool isReadOnly) {
+  Widget _buildDiaryTextArea(AppLocalizations l10n, bool isReadOnly, AppTheme theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -356,20 +362,20 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           decoration: InputDecoration(
             hintText: isReadOnly ? '' : l10n.writeYourThoughts,
             hintStyle: TextStyle(
-              color: AppColors.border,
+              color: theme.border,
               fontWeight: FontWeight.normal,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+              borderSide: BorderSide(color: theme.border, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+              borderSide: BorderSide(color: theme.border, width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterText: '', // Hide default counter
           ),
@@ -383,7 +389,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             '${_diaryController.text.length}/$_maxDiaryLength',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.text.withOpacity(0.6),
+              color: theme.text.withOpacity(0.6),
             ),
           ),
         ),
@@ -391,7 +397,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     );
   }
 
-  Widget _buildSaveButton(AppLocalizations l10n) {
+  Widget _buildSaveButton(AppLocalizations l10n, AppTheme theme) {
     final canSave = _overallFeeling != null && 
                     _stressLevel != null && 
                     _productivity != null;
@@ -420,7 +426,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             : '✅ Already saved today',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isFirstTimeToday ? AppColors.primary : AppColors.border,
+            color: isFirstTimeToday ? theme.primary : theme.border,
             fontSize: 12,
             fontWeight: isFirstTimeToday ? FontWeight.w500 : FontWeight.normal,
           ),

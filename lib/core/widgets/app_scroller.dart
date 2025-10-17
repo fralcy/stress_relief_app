@@ -24,6 +24,8 @@ class AppScroller extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Scrollbar(
       controller: controller,
       thumbVisibility: alwaysShowScrollbar,
@@ -37,8 +39,8 @@ class AppScroller extends StatelessWidget {
         child: Theme(
           data: Theme.of(context).copyWith(
             scrollbarTheme: ScrollbarThemeData(
-              thumbColor: WidgetStateProperty.all(AppColors.primary),
-              trackColor: WidgetStateProperty.all(AppColors.border.withOpacity(0.3)),
+              thumbColor: WidgetStateProperty.all(theme.primary),
+              trackColor: WidgetStateProperty.all(theme.border.withOpacity(0.3)),
               trackBorderColor: WidgetStateProperty.all(Colors.transparent),
               radius: const Radius.circular(4),
               thickness: WidgetStateProperty.all(8),

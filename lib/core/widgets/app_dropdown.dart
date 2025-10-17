@@ -29,23 +29,23 @@ class AppDropdown<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: context.theme.background,
+        border: Border.all(color: context.theme.border, width: 1.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButton<T>(
         value: value,
         isExpanded: true,
         underline: const SizedBox(), // Remove default underline
-        icon: const Icon(
+        icon: Icon(
           Icons.arrow_drop_down,
-          color: AppColors.text,
+          color: context.theme.text,
           size: 24,
         ),
         hint: hint != null
             ? Text(
                 hint!,
-                style: const TextStyle(color: AppColors.text),
+                style: TextStyle(color: context.theme.text),
               )
             : null,
         items: items.map((item) {
@@ -59,9 +59,9 @@ class AppDropdown<T> extends StatelessWidget {
             onChanged(newValue);
           }
         },
-        dropdownColor: AppColors.background,
-        style: const TextStyle(
-          color: AppColors.text,
+        dropdownColor: context.theme.background,
+        style: TextStyle(
+          color: context.theme.text,
           fontSize: 16,
         ),
       ),

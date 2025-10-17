@@ -33,14 +33,16 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     // Determine background color based on state
     Color backgroundColor;
     if (isDisabled) {
-      backgroundColor = AppColors.secondary.withOpacity(0.5);
+      backgroundColor = theme.secondary.withOpacity(0.5);
     } else if (isActive) {
-      backgroundColor = AppColors.secondary;
+      backgroundColor = theme.secondary;
     } else {
-      backgroundColor = AppColors.primary;
+      backgroundColor = theme.primary;
     }
 
     return SizedBox(
@@ -50,11 +52,11 @@ class AppButton extends StatelessWidget {
         onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          foregroundColor: AppColors.background,
+          foregroundColor: theme.background,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // Bo tròn góc nhẹ
+            borderRadius: BorderRadius.circular(12),
           ),
           padding: EdgeInsets.symmetric(
             horizontal: label != null ? 20 : 16,

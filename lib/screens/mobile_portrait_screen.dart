@@ -36,10 +36,10 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.background,
-              AppColors.primary.withOpacity(0.3),
-              AppColors.primary.withOpacity(0.3),
-              AppColors.background,
+              context.theme.background,
+              context.theme.primary.withOpacity(0.3),
+              context.theme.primary.withOpacity(0.3),
+              context.theme.background,
             ],
             stops: const [0.0, 0.25, 0.75, 1.0],
           ),
@@ -112,7 +112,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: AppColors.border,
+                    color: context.theme.border,
                     alignment: Alignment.center,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -120,13 +120,13 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                         Icon(
                           Icons.image_not_supported,
                           size: 64,
-                          color: AppColors.text.withOpacity(0.3),
+                          color: context.theme.text.withOpacity(0.3),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           _currentScene.toString().split('.').last,
                           style: TextStyle(
-                            color: AppColors.text.withOpacity(0.5),
+                            color: context.theme.text.withOpacity(0.5),
                             fontSize: 16,
                           ),
                         ),
@@ -152,7 +152,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                   width: mascotSize,
                   height: mascotSize,
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.3),
+                    color: context.theme.secondary.withOpacity(0.3),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,

@@ -21,32 +21,34 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.background,
       appBar: AppBar(
         title: const Text('UI Components Showcase'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
       ),
       body: ScrollableColumn(
         padding: const EdgeInsets.all(24),
         children: [
           // Title
-          const Text(
+          Text(
             '🎨 UI Components',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: theme.text,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Test tất cả các component với theme pastel',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.text,
+              color: theme.text,
             ),
             textAlign: TextAlign.center,
           ),
@@ -59,7 +61,7 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Icon Only:', style: TextStyle(fontSize: 12, color: AppColors.text)),
+                Text('Icon Only:', style: TextStyle(fontSize: 12, color: theme.text)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -83,7 +85,7 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                 ),
                 
                 const SizedBox(height: 16),
-                const Text('Icon + Text:', style: TextStyle(fontSize: 12, color: AppColors.text)),
+                Text('Icon + Text:', style: TextStyle(fontSize: 12, color: theme.text)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -117,10 +119,10 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
               children: [
                 AppCard(
                   title: 'Static Card',
-                  content: const Text(
+                  content: Text(
                     'Đây là card thông thường không thể thu gọn. '
                     'Nội dung luôn hiển thị.',
-                    style: TextStyle(color: AppColors.text),
+                    style: TextStyle(color: theme.text),
                   ),
                 ),
                 
@@ -133,15 +135,15 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Card này có thể thu gọn/mở rộng!',
-                        style: TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: theme.text, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Nhấn vào header để toggle.\n\n'
                         'Rất hữu ích cho Settings hoặc FAQs.',
-                        style: TextStyle(color: AppColors.text),
+                        style: TextStyle(color: theme.text),
                       ),
                     ],
                   ),
@@ -226,7 +228,7 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
             child: Container(
               height: 200,
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border, width: 1.5),
+                border: Border.all(color: context.theme.border, width: 1.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: AppScroller(
@@ -239,7 +241,7 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         'Scrollable item ${index + 1}',
-                        style: const TextStyle(color: AppColors.text),
+                        style: TextStyle(color: theme.text),
                       ),
                     );
                   },
@@ -255,20 +257,25 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
   }
   
   Widget _buildSection({required String title, required Widget child}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.text,
-          ),
-        ),
-        const SizedBox(height: 16),
-        child,
-      ],
+    return Builder(
+      builder: (context) {
+        final theme = context.theme;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: theme.text,
+              ),
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        );
+      },
     );
   }
   
@@ -283,6 +290,8 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
   }
   
   void _showDemoModal(BuildContext context) {
+    final theme = context.theme;
+    
     AppModal.show(
       context: context,
       title: 'Demo Modal',
@@ -290,19 +299,19 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Modal Header',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: theme.text,
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Đây là nội dung của modal. Nếu nội dung dài, '
             'người dùng có thể scroll xuống để xem thêm.',
-            style: TextStyle(color: AppColors.text),
+            style: TextStyle(color: theme.text),
           ),
           const SizedBox(height: 24),
           
@@ -313,12 +322,12 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: context.theme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   'Scrollable content item ${index + 1}',
-                  style: const TextStyle(color: AppColors.text),
+                  style: TextStyle(color: theme.text),
                 ),
               ),
             );

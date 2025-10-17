@@ -42,19 +42,21 @@ class AppModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Container(
       constraints: BoxConstraints(
         maxHeight: maxHeight,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(24), // Bo tròn góc trên
         ),
         border: Border(
-          top: BorderSide(color: AppColors.border, width: 2),
-          left: BorderSide(color: AppColors.border, width: 2),
-          right: BorderSide(color: AppColors.border, width: 2),
+          top: BorderSide(color: theme.border, width: 2),
+          left: BorderSide(color: theme.border, width: 2),
+          right: BorderSide(color: theme.border, width: 2),
         ),
       ),
       child: Column(
@@ -64,8 +66,8 @@ class AppModal extends StatelessWidget {
           _buildHeader(context),
           
           // Divider
-          const Divider(
-            color: AppColors.border,
+          Divider(
+            color: theme.border,
             height: 1,
             thickness: 1.5,
           ),
@@ -85,6 +87,8 @@ class AppModal extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final theme = context.theme;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
       child: Stack(
@@ -94,10 +98,10 @@ class AppModal extends StatelessWidget {
           Center(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: theme.text,
               ),
             ),
           ),
@@ -108,7 +112,7 @@ class AppModal extends StatelessWidget {
             child: IconButton(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.close, size: 24),
-              color: AppColors.text,
+              color: theme.text,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(
                 minWidth: 40,

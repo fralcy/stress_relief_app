@@ -44,11 +44,13 @@ class _AppCardState extends State<AppCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Container(
       width: widget.width,
       decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border.all(color: AppColors.border, width: 1.5),
+        color: theme.background,
+        border: Border.all(color: theme.border, width: 1.5),
         borderRadius: BorderRadius.circular(16), // Bo tròn góc
         boxShadow: [
           BoxShadow(
@@ -66,8 +68,8 @@ class _AppCardState extends State<AppCard> {
           
           // Content (có thể collapse)
           if (_isExpanded) ...[
-            const Divider(
-              color: AppColors.border,
+            Divider(
+              color: theme.border,
               height: 1,
               thickness: 1,
             ),
@@ -82,52 +84,58 @@ class _AppCardState extends State<AppCard> {
   }
 
   Widget _buildHeader() {
-    return InkWell(
-      onTap: widget.isExpandable ? _toggleExpanded : null,
-      borderRadius: BorderRadius.vertical(
-        top: const Radius.circular(16),
-        bottom: _isExpanded ? Radius.zero : const Radius.circular(16),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: widget.isExpandable
-            ? Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Title (centered)
-                  Center(
+    return Builder(
+      builder: (context) {
+        final theme = context.theme;
+        
+        return InkWell(
+          onTap: widget.isExpandable ? _toggleExpanded : null,
+          borderRadius: BorderRadius.vertical(
+            top: const Radius.circular(16),
+            bottom: _isExpanded ? Radius.zero : const Radius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: widget.isExpandable
+                ? Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Title (centered)
+                      Center(
+                        child: Text(
+                          widget.title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: theme.text,
+                          ),
+                        ),
+                      ),
+                      
+                      // Arrow (positioned right)
+                      Positioned(
+                        right: 0,
+                        child: Icon(
+                          _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                          color: theme.text,
+                          size: 24,
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(
                     child: Text(
                       widget.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.text,
+                        color: theme.text,
                       ),
                     ),
                   ),
-                  
-                  // Arrow (positioned right)
-                  Positioned(
-                    right: 0,
-                    child: Icon(
-                      _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                      color: AppColors.text,
-                      size: 24,
-                    ),
-                  ),
-                ],
-              )
-            : Center(
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text,
-                  ),
-                ),
-              ),
-      ),
+          ),
+        );
+      }
     );
   }
 }

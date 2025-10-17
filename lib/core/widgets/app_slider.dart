@@ -27,6 +27,8 @@ class AppSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -41,19 +43,19 @@ class AppSlider extends StatelessWidget {
                 if (label != null)
                   Text(
                     label!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.text,
+                      color: theme.text,
                     ),
                   ),
                 if (showValue)
                   Text(
                     '${value.round()}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: theme.primary,
                     ),
                   ),
               ],
@@ -68,19 +70,19 @@ class AppSlider extends StatelessWidget {
               child: SliderTheme(
                 data: SliderThemeData(
                   // Track
-                  activeTrackColor: AppColors.primary,
-                  inactiveTrackColor: AppColors.border,
+                  activeTrackColor: theme.primary,
+                  inactiveTrackColor: theme.border,
                   trackHeight: 6,
                   trackShape: const RoundedRectSliderTrackShape(),
                   
                   // Thumb
-                  thumbColor: AppColors.primary,
+                  thumbColor: theme.primary,
                   thumbShape: const RoundSliderThumbShape(
                     enabledThumbRadius: 10,
                   ),
                   
                   // Overlay (khi press)
-                  overlayColor: AppColors.primary.withOpacity(0.2),
+                  overlayColor: theme.primary.withOpacity(0.2),
                   overlayShape: const RoundSliderOverlayShape(
                     overlayRadius: 20,
                   ),

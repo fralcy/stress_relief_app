@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_theme.dart';
 import '../models/scene_models.dart';
 import '../core/utils/asset_loader.dart';
 import '../core/l10n/app_localizations.dart';
@@ -37,12 +38,13 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final l10n = AppLocalizations.of(context);
     
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appName),
-        backgroundColor: AppColors.primary,
+        backgroundColor: theme.primary,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -51,12 +53,12 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header
-            const Text(
+            Text(
               '🎨 Asset Loader Test',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: theme.text,
               ),
               textAlign: TextAlign.center,
             ),
@@ -76,6 +78,7 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
             // Scene Test
             _buildSectionCard(
               title: '🏠 Scene Backgrounds',
+              theme: theme,
               child: Column(
                 children: [
                   // Scene type selector
@@ -90,9 +93,9 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                         onSelected: (_) {
                           setState(() => _currentScene = type);
                         },
-                        selectedColor: AppColors.primary,
+                        selectedColor: theme.primary,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.text,
+                          color: isSelected ? Colors.white : theme.text,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       );
@@ -106,9 +109,9 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                     width: double.infinity,
                     height: 200,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: context.theme.border,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary, width: 2),
+                      border: Border.all(color: context.theme.primary, width: 2),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
@@ -140,15 +143,15 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: theme.background,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       'Path: ${AssetLoader.getSceneAsset(_currentSet, _currentScene)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'monospace',
-                        color: AppColors.text,
+                        color: theme.text,
                       ),
                     ),
                   ),
@@ -161,6 +164,7 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
             // Mascot Test
             _buildSectionCard(
               title: '🐱 Mascot Expressions',
+              theme: theme,
               child: Column(
                 children: [
                   // Expression selector
@@ -175,9 +179,9 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                         onSelected: (_) {
                           setState(() => _currentExpression = expr);
                         },
-                        selectedColor: AppColors.secondary,
+                        selectedColor: context.theme.secondary,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.text,
+                          color: isSelected ? Colors.white : context.theme.text,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       );
@@ -191,9 +195,9 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                     width: 200,
                     height: 200,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: context.theme.border,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.secondary, width: 2),
+                      border: Border.all(color: context.theme.secondary, width: 2),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
@@ -228,15 +232,15 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: theme.background,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       'Path: ${AssetLoader.getMascotAsset(_currentExpression)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'monospace',
-                        color: AppColors.text,
+                        color: theme.text,
                       ),
                     ),
                   ),
@@ -249,7 +253,7 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
     );
   }
   
-  Widget _buildSectionCard({required String title, required Widget child}) {
+  Widget _buildSectionCard({required String title, required Widget child, required AppTheme theme}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -268,10 +272,10 @@ class _AssetTestScreenState extends State<AssetTestScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.text,
+              color: theme.text,
             ),
           ),
           const SizedBox(height: 16),

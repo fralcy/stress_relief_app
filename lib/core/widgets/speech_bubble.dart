@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
 
 /// Speech bubble cho linh vật giao tiếp với người dùng
@@ -26,29 +27,31 @@ class SpeechBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    
     return Container(
       width: width,
       constraints: BoxConstraints(maxWidth: maxWidth ?? double.infinity),
       child: CustomPaint(
         painter: tailPosition != BubbleTailPosition.none
-            ? _BubbleTailPainter(tailPosition: tailPosition)
+            ? _BubbleTailPainter(tailPosition: tailPosition, theme: theme)
             : null,
         child: Container(
           margin: _getMarginForTail(),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.background.withOpacity(0.75), // 75% opacity
+            color: theme.background.withOpacity(0.75), // 75% opacity
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.75), // 75% opacity
+              color: theme.primary.withOpacity(0.75), // 75% opacity
               width: 2,
             ),
             borderRadius: BorderRadius.circular(20), // Bo tròn góc oval
           ),
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
-              color: AppColors.text,
+              color: theme.text,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -78,17 +81,21 @@ class SpeechBubble extends StatelessWidget {
 /// Custom painter để vẽ tail của speech bubble
 class _BubbleTailPainter extends CustomPainter {
   final BubbleTailPosition tailPosition;
+  final AppTheme theme;
 
-  _BubbleTailPainter({required this.tailPosition});
+  _BubbleTailPainter({
+    required this.tailPosition, 
+    required this.theme,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.background.withOpacity(0.75)
+      ..color = theme.background.withOpacity(0.75)
       ..style = PaintingStyle.fill;
 
     final borderPaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.75)
+      ..color = theme.primary.withOpacity(0.75)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

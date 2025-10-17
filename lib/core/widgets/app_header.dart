@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
 import '../utils/data_manager.dart';
 import '../../screens/modals/settings_modal.dart';
@@ -18,6 +19,7 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final currentPoints = DataManager().userProfile.currentPoints;
     
     return Container(
@@ -29,11 +31,13 @@ class AppHeader extends StatelessWidget {
           _buildHeaderButton(
             icon: Icons.landscape,
             onPressed: onSceneShopPressed,
+            theme: theme,
           ),
-          _buildCoinDisplay(currentPoints),
+          _buildCoinDisplay(currentPoints, theme),
           _buildHeaderButton(
             icon: Icons.settings,
             onPressed: () => SettingsModal.show(context),
+            theme: theme,
           ),
         ],
       ),
@@ -43,9 +47,10 @@ class AppHeader extends StatelessWidget {
   Widget _buildHeaderButton({
     required IconData icon,
     required VoidCallback onPressed,
+    required AppTheme theme,
   }) {
     return Material(
-      color: AppColors.primary,
+      color: theme.primary,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onPressed,
@@ -54,30 +59,30 @@ class AppHeader extends StatelessWidget {
           width: 48,
           height: 48,
           alignment: Alignment.center,
-          child: Icon(icon, size: 24, color: AppColors.background),
+          child: Icon(icon, size: 24, color: theme.background),
         ),
       ),
     );
   }
 
-  Widget _buildCoinDisplay(int points) {
+  Widget _buildCoinDisplay(int points, AppTheme theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: theme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.monetization_on, size: 24, color: AppColors.background),
+          Icon(Icons.monetization_on, size: 24, color: theme.background),
           const SizedBox(width: 8),
           Text(
             points.toString(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.background,
+              color: theme.background,
             ),
           ),
         ],

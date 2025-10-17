@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_theme.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
@@ -200,32 +201,33 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ========== ADD TASK SECTION ==========
-        _buildAddSection(l10n),
+        _buildAddSection(l10n, theme),
         
         const SizedBox(height: 24),
-        const Divider(color: AppColors.border, height: 1, thickness: 1.5),
+        Divider(color: theme.border, height: 1, thickness: 1.5),
         const SizedBox(height: 16),
         
         // ========== TASK LIST SECTION ==========
-        _buildTaskList(),
+        _buildTaskList(theme),
         
         const SizedBox(height: 16),
-        const Divider(color: AppColors.border, height: 1, thickness: 1.5),
+        Divider(color: theme.border, height: 1, thickness: 1.5),
         const SizedBox(height: 16),
         
         // ========== FOOTER ==========
-        _buildFooter(l10n),
+        _buildFooter(l10n, theme),
       ],
     );
   }
 
-  Widget _buildAddSection(AppLocalizations l10n) {
+  Widget _buildAddSection(AppLocalizations l10n, AppTheme theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -235,20 +237,20 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           decoration: InputDecoration(
             hintText: l10n.taskName,
             hintStyle: TextStyle(
-              color: AppColors.border,
+              color: theme.border,
               fontWeight: FontWeight.normal,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+              borderSide: BorderSide(color: theme.border, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+              borderSide: BorderSide(color: theme.border, width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: theme.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
@@ -266,11 +268,12 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   initialTime: _startTime,
                   onPicked: (time) => _startTime = time,
                 ),
+                theme: theme,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text('-', style: TextStyle(color: AppColors.text, fontSize: 18)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text('-', style: TextStyle(color: theme.text, fontSize: 18)),
             ),
             Expanded(
               child: _buildTimePicker(
@@ -279,6 +282,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   initialTime: _endTime,
                   onPicked: (time) => _endTime = time,
                 ),
+                theme: theme,
               ),
             ),
           ],
@@ -297,6 +301,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   Widget _buildTimePicker({
     required TimeOfDay time,
     required VoidCallback onTap,
+    required AppTheme theme,
   }) {
     return InkWell(
       onTap: onTap,
@@ -304,9 +309,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.primary,
+          color: theme.primary,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: theme.border, width: 1.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -314,16 +319,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           children: [
             Text(
               _formatTime(time),
-              style: const TextStyle(
-                color: AppColors.background,
+              style: TextStyle(
+                color: theme.background,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(width: 2),
-            const Icon(
+            Icon(
               Icons.arrow_drop_down,
-              color: AppColors.background,
+              color: theme.background,
               size: 18,
             ),
           ],
@@ -332,7 +337,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     );
   }
 
-  Widget _buildTaskList() {
+  Widget _buildTaskList(AppTheme theme) {
     if (_tasks.isEmpty) {
       final l10n = AppLocalizations.of(context);
       return Center(
@@ -340,7 +345,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           padding: const EdgeInsets.all(32),
           child: Text(
             l10n.noTasksYet,
-            style: const TextStyle(color: AppColors.text, fontSize: 14),
+            style: TextStyle(color: theme.text, fontSize: 14),
           ),
         ),
       );
@@ -351,13 +356,13 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       child: ListView.builder(
         itemCount: _tasks.length,
         itemBuilder: (context, index) {
-          return _buildTaskItem(index);
+          return _buildTaskItem(index, theme);
         },
       ),
     );
   }
 
-  Widget _buildTaskItem(int index) {
+  Widget _buildTaskItem(int index, AppTheme theme) {
     final l10n = AppLocalizations.of(context);
     final task = _tasks[index];
     final isEditing = _editingMode[index] ?? false;
@@ -376,9 +381,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.theme.background,
         border: Border.all(
-          color: hasOverlap ? Colors.orange : AppColors.border,
+          color: hasOverlap ? Colors.orange : context.theme.border,
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -393,8 +398,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                 child: Checkbox(
                   value: task.isCompleted,
                   onChanged: (_) => _toggleTask(index),
-                  activeColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.border, width: 1.5),
+                  activeColor: theme.primary,
+                  side: BorderSide(color: theme.border, width: 1.5),
                 ),
               ),
               const SizedBox(width: 8),
@@ -412,7 +417,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+                            borderSide: BorderSide(color: theme.border, width: 1.5),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
@@ -420,7 +425,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                     : Text(
                         task.title,
                         style: TextStyle(
-                          color: AppColors.text,
+                          color: context.theme.text,
                           fontSize: 16,
                           decoration: task.isCompleted
                               ? TextDecoration.lineThrough
@@ -430,7 +435,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.close, color: AppColors.primary),
+                icon: Icon(Icons.close, color: theme.primary),
                 onPressed: () => _deleteTask(index),
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
@@ -455,10 +460,11 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                             });
                           },
                         ),
+                        theme: theme,
                       ),
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text('-', style: TextStyle(color: AppColors.text, fontSize: 14)),
+                        child: Text('-', style: TextStyle(color: theme.text, fontSize: 14)),
                       ),
                       _buildTimePicker(
                         time: _editEndTimes[index] ?? task.endTime,
@@ -470,6 +476,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                             });
                           },
                         ),
+                        theme: theme,
                       ),
                     ],
                   ),
@@ -477,7 +484,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
               else
                 Text(
                   '${_formatTime(task.startTime)} - ${_formatTime(task.endTime)}',
-                  style: const TextStyle(color: AppColors.text, fontSize: 14),
+                  style: TextStyle(color: theme.text, fontSize: 14),
                 ),
               if (isEditing)
                 AppButton(
@@ -504,7 +511,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     );
   }
 
-  Widget _buildFooter(AppLocalizations l10n) {
+  Widget _buildFooter(AppLocalizations l10n, AppTheme theme) {
     final profile = DataManager().userProfile;
     final pendingPoints = SchedulePointsService.getPendingPoints(_tasks);
     final canClaim = SchedulePointsService.canClaimToday(profile.lastPointsClaimDate) && pendingPoints > 0;
@@ -517,16 +524,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           children: [
             Text(
               l10n.expectedPoints,
-              style: const TextStyle(
-                color: AppColors.text,
+              style: TextStyle(
+                color: theme.text,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               '$pendingPoints',
-              style: const TextStyle(
-                color: AppColors.primary,
+              style: TextStyle(
+                color: theme.primary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -550,8 +557,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
             : profile.lastPointsClaimDate != null 
               ? l10n.alreadyClaimedToday
               : l10n.noCompletedTasks,
-          style: const TextStyle(
-            color: AppColors.border,
+          style: TextStyle(
+            color: theme.border,
             fontSize: 12,
           ),
         ),
