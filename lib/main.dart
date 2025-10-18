@@ -6,6 +6,7 @@ import 'core/constants/app_colors.dart';
 import 'core/utils/locale_storage.dart';
 import 'core/l10n/app_localizations_delegate.dart';
 import 'core/utils/data_manager.dart';
+import 'core/utils/bgm_service.dart';
 import 'core/utils/notifier.dart';
 import 'core/providers/theme_provider.dart';
 
@@ -20,6 +21,9 @@ void main() async {
   
   // Init DataManager (Hive)
   await DataManager().initialize();
+
+  // Init BGM Service
+  await BgmService().initialize();
   
   // Init Notifier
   if (!kIsWeb) {
@@ -40,13 +44,36 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
 
   @override
   void initState() {
     super.initState();
     _loadLocale();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    BgmService().dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        BgmService().pause();
+        break;
+      case AppLifecycleState.resumed:
+        BgmService().resume();
+        break;
+      default:
+        break;
+    }
   }
 
   void _loadLocale() {

@@ -7,6 +7,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_slider.dart';
 import '../../core/widgets/app_dropdown.dart';
 import '../../core/utils/data_manager.dart';
+import '../../core/utils/bgm_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/user_settings.dart';
 
@@ -115,17 +116,23 @@ class _SettingsModalState extends State<SettingsModal> {
                 _settings = _settings.copyWith(bgm: bgm);
                 _saveSettings();
               });
+              // ← THÊM DÒNG NÀY để apply ngay
+              BgmService().changeBgm(bgm);
             },
           ),
           const SizedBox(height: 16),
           AppSlider(
             label: l10n.volume,
-            value: _settings.bgmVolume / 100,
+            value: _settings.bgmVolume.toDouble(),
+            min: 0,
+            max: 100,
             onChanged: (val) {
+              final newVolume = val.round();
               setState(() {
-                _settings = _settings.copyWith(bgmVolume: (val * 100).round());
+                _settings = _settings.copyWith(bgmVolume: newVolume);
                 _saveSettings();
               });
+              BgmService().changeVolume(newVolume);
             },
             showValue: true,
           ),

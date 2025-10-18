@@ -21,7 +21,16 @@ class AppAssets {
   static const String mascotSleepy = 'assets/images/mascot/sleepy.png';
   static const String mascotSurprised = 'assets/images/mascot/surprised.png';
   
-  
+  // ==================== BGM (BACKGROUND MUSIC) ====================
+  static const String bgmLofiBeats = 'assets/audio/bgm/lofi_beats.mp3';
+  static const String bgmRainSounds = 'assets/audio/bgm/rain_sounds.mp3';
+  static const String bgmPianoMusic = 'assets/audio/bgm/piano_music.mp3';
+  static const String bgmAcousticBallad = 'assets/audio/bgm/acoustic_ballad.mp3';
+  static const String bgmTraditionalMelodies = 'assets/audio/bgm/traditional_melodies.mp3';
+  static const String bgmIndieVibes = 'assets/audio/bgm/indie_vibes.mp3';
+  static const String bgmSoftPop = 'assets/audio/bgm/soft_pop.mp3';
+  static const String bgmChillAcoustic = 'assets/audio/bgm/chill_acoustic.mp3';
+
   // ==================== HELPER MAPS ====================
   
   /// Map (SceneSet, SceneType) → asset path
@@ -45,5 +54,17 @@ class AppAssets {
     MascotExpression.sad: mascotSad,
     MascotExpression.sleepy: mascotSleepy,
     MascotExpression.surprised: mascotSurprised,
+  };
+
+  /// Map BGM name → asset path
+  static const Map<String, String> bgmAssets = {
+    'Lofi Beats': bgmLofiBeats,
+    'Rain Sounds': bgmRainSounds,
+    'Piano Music': bgmPianoMusic,
+    'Acoustic Ballad': bgmAcousticBallad,
+    'Traditional Melodies': bgmTraditionalMelodies,
+    'Indie Vibes': bgmIndieVibes,
+    'Soft Pop': bgmSoftPop,
+    'Chill Acoustic': bgmChillAcoustic,
   };
 }
