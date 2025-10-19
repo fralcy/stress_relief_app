@@ -8,6 +8,7 @@ import '../../core/widgets/app_slider.dart';
 import '../../core/widgets/app_dropdown.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/bgm_service.dart';
+import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/user_settings.dart';
 
@@ -56,6 +57,7 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   void _showSyncToast() {
+    SfxService().buttonClick();
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -75,11 +77,15 @@ class _SettingsModalState extends State<SettingsModal> {
         content: Text(l10n.resetConfirmation),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              SfxService().buttonClick();
+              Navigator.pop(context);
+            },
             child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
+              SfxService().buttonClick();
               setState(() {
                 _settings = UserSettings.initial();
                 _saveSettings();
@@ -112,6 +118,7 @@ class _SettingsModalState extends State<SettingsModal> {
             items: _bgmList,
             itemBuilder: (bgm) => Text(bgm),
             onChanged: (bgm) {
+              SfxService().buttonClick();
               setState(() {
                 _settings = _settings.copyWith(bgm: bgm);
                 _saveSettings();
@@ -139,36 +146,56 @@ class _SettingsModalState extends State<SettingsModal> {
           const SizedBox(height: 24),
           _buildLabel(l10n.sfx, theme),
           const SizedBox(height: 8),
+
+          // Toggle ON/OFF
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 l10n.enabled,
-                style: TextStyle(color: theme.text, fontSize: 16),
+                style: TextStyle(color: theme.text, fontSize: 14),
               ),
-              _buildToggleButtons(
+              Switch(
                 value: _settings.sfxEnabled,
+                activeColor: theme.primary,
                 onChanged: (val) {
                   setState(() {
                     _settings = _settings.copyWith(sfxEnabled: val);
                     _saveSettings();
                   });
+                  SfxService().setEnabled(val); // Apply ngay
+                  
+                  // Play test sound khi bật
+                  if (val) {
+                    SfxService().buttonClick();
+                  }
                 },
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          AppSlider(
-            label: l10n.volume,
-            value: _settings.sfxVolume / 100,
-            onChanged: (val) {
-              setState(() {
-                _settings = _settings.copyWith(sfxVolume: (val * 100).round());
-                _saveSettings();
-              });
-            },
-            showValue: true,
-          ),
+
+          // Volume slider (chỉ hiện khi SFX enabled)
+          if (_settings.sfxEnabled) ...[
+            const SizedBox(height: 16),
+            AppSlider(
+              label: l10n.volume,
+              value: _settings.sfxVolume.toDouble(),
+              min: 0,
+              max: 100,
+              onChanged: (val) {
+                final newVolume = val.round();
+                setState(() {
+                  _settings = _settings.copyWith(sfxVolume: newVolume);
+                  _saveSettings();
+                });
+                SfxService().changeVolume(newVolume);
+                
+                // Play test sound để nghe volume
+                SfxService().buttonClick();
+              },
+              showValue: true,
+            ),
+          ],
         ]),
 
         const SizedBox(height: 32),
@@ -356,7 +383,10 @@ class _SettingsModalState extends State<SettingsModal> {
       child: AppButton(
         label: value ? l10n.on : l10n.off,
         isActive: value,
-        onPressed: () => onChanged(!value),
+        onPressed: () {
+          SfxService().buttonClick();
+          onChanged(!value);
+        },
       ),
     );
   }
@@ -370,6 +400,7 @@ class _SettingsModalState extends State<SettingsModal> {
         return Text(theme.name);
       },
       onChanged: (themeId) {
+        SfxService().buttonClick();
         setState(() {
           _settings = _settings.copyWith(currentTheme: themeId);
           _saveSettings();
@@ -429,6 +460,7 @@ class _SettingsModalState extends State<SettingsModal> {
               initialTime: time,
             );
             if (picked != null) {
+              SfxService().buttonClick();
               onChanged(picked);
             }
           },
@@ -486,6 +518,7 @@ class _SettingsModalState extends State<SettingsModal> {
               ),
             );
             if (picked != null) {
+              SfxService().buttonClick();
               onChanged(picked);
             }
           },
@@ -524,6 +557,7 @@ class _SettingsModalState extends State<SettingsModal> {
       items: languageOptions.keys.toList(),
       itemBuilder: (langCode) => Text(languageOptions[langCode]!),
       onChanged: (langCode) {
+        SfxService().buttonClick();
         setState(() {
           _settings = _settings.copyWith(currentLanguage: langCode);
           _saveSettings();

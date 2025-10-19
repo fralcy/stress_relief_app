@@ -88,7 +88,12 @@ flutter:
     - assets/audio/bgm/indie_vibes.mp3
     - assets/audio/bgm/soft_pop.mp3
     - assets/audio/bgm/chill_acoustic.mp3
-
+    # Audio - Effects
+    - assets/audio/sfx/button_click.mp3
+    - assets/audio/sfx/error.mp3
+    - assets/audio/sfx/task_complete.mp3
+    - assets/audio/sfx/page_transition.mp3
+    - assets/audio/sfx/reward.mp3
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

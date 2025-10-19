@@ -7,6 +7,7 @@ import '../../core/utils/data_manager.dart';
 import '../../core/utils/notifier.dart';
 import '../../core/utils/schedule_points_service.dart';
 import '../../core/utils/overlap_detector.dart';
+import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/schedule_task.dart';
 
@@ -83,6 +84,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final l10n = AppLocalizations.of(context);
     
     if (_titleController.text.trim().isEmpty) {
+      SfxService().error();
       _showToast(l10n.enterTaskName);
       return;
     }
@@ -97,6 +99,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     _titleController.clear();
     _loadTasks();
     await _updateNotifications();
+    SfxService().buttonClick();
     _showToast(l10n.taskAdded);
   }
 
@@ -106,6 +109,13 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     await DataManager().updateScheduleTask(index, updatedTask);
     _loadTasks();
     await _updateNotifications();
+    
+    // Play appropriate sound
+    if (updatedTask.isCompleted) {
+      SfxService().taskComplete();
+    } else {
+      SfxService().buttonClick();
+    }
   }
 
   Future<void> _deleteTask(int index) async {
@@ -114,6 +124,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     await DataManager().removeScheduleTask(index);
     _loadTasks();
     await _updateNotifications();
+    SfxService().buttonClick();
     _showToast(l10n.taskDeleted);
   }
 
@@ -122,6 +133,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final controller = _editControllers[index];
     
     if (controller == null || controller.text.trim().isEmpty) {
+      SfxService().error();
       _showToast(l10n.taskNameRequired);
       return;
     }
@@ -143,6 +155,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       _editEndTimes.remove(index);
     });
     _loadTasks();
+    SfxService().buttonClick();
     _showToast(l10n.taskUpdated);
   }
 
@@ -151,10 +164,12 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final points = await SchedulePointsService.claimDailyPoints();
     
     if (points == null) {
+      SfxService().error();
       _showToast(l10n.alreadyClaimedOrNoTasks);
       return;
     }
 
+    SfxService().reward();
     _showToast('${l10n.pointsClaimed.replaceAll('{points}', '$points')} 🎉');
     _loadTasks(); // Refresh để xóa completed tasks
     
@@ -183,6 +198,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       initialTime: initialTime,
     );
     if (picked != null) {
+      SfxService().buttonClick();
       setState(() {
         onPicked(picked);
       });

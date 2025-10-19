@@ -6,6 +6,7 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/data_manager.dart';
+import '../../core/utils/sfx_service.dart';
 import '../../models/index.dart';
 
 /// Modal quản lý nhật ký cảm xúc
@@ -170,6 +171,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
 
     return InkWell(
       onTap: () {
+        SfxService().buttonClick();
         setState(() {
           _selectedDayIndex = index;
           _loadDiaryForSelectedDay();
@@ -247,7 +249,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             l10n.good,
             l10n.great,
           ],
-          onChanged: isReadOnly ? null : (val) => setState(() => _overallFeeling = val),
+          onChanged: isReadOnly ? null : (val) {
+            SfxService().buttonClick();
+            setState(() => _overallFeeling = val);
+          },
           theme: theme,
         ),
         
@@ -264,7 +269,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             l10n.low,
             l10n.relaxed,
           ],
-          onChanged: isReadOnly ? null : (val) => setState(() => _stressLevel = val),
+          onChanged: isReadOnly ? null : (val) {
+            SfxService().buttonClick();
+            setState(() => _stressLevel = val);
+          },
           theme: theme,
         ),
         
@@ -281,7 +289,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             l10n.good,
             l10n.very,
           ],
-          onChanged: isReadOnly ? null : (val) => setState(() => _productivity = val),
+          onChanged: isReadOnly ? null : (val) {
+            SfxService().buttonClick();
+            setState(() => _productivity = val);
+          },
           theme: theme,
         ),
         
@@ -475,12 +486,15 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     
     // Award points if first time today
     if (isFirstTimeToday) {
+      SfxService().reward(); // Play reward sound for first time
       final profile = DataManager().userProfile;
       final updatedProfile = profile.copyWith(
         currentPoints: profile.currentPoints + 10,
         totalPoints: profile.totalPoints + 10,
       );
       await DataManager().saveUserProfile(updatedProfile);
+    } else {
+      SfxService().buttonClick(); // Regular save sound
     }
     
     if (mounted) {

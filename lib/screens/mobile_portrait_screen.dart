@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../models/scene_models.dart';
 import '../core/utils/asset_loader.dart';
+import '../core/utils/sfx_service.dart';
 import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
@@ -70,7 +71,10 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 left: 0,
                 right: 0,
                 child: AppHeader(
-                  onSceneShopPressed: () => _showToast('Scene Shop'),
+                  onSceneShopPressed: () {
+                    SfxService().buttonClick();
+                    _showToast('Scene Shop');
+                  },
                 ),
               ),
               
@@ -82,6 +86,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 child: NavMenuFooter(
                   currentScene: _currentScene,
                   onSceneChanged: (scene) {
+                    SfxService().pageTransition();
                     setState(() => _currentScene = scene);
                   },
                 ),
@@ -183,12 +188,18 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.calendar_today,
             label: 'Tasks',
-            onPressed: () => ScheduleTaskModal.show(context),
+            onPressed: () {
+              SfxService().buttonClick();
+              ScheduleTaskModal.show(context);
+            },
           ),
           FeatureButton(
             icon: Icons.mood,
             label: 'Mood',
-            onPressed: () => EmotionDiaryModal.show(context),
+            onPressed: () {
+              SfxService().buttonClick();
+              EmotionDiaryModal.show(context);
+            },
           ),
         ];
       
@@ -197,7 +208,10 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.agriculture,
             label: 'Plant',
-            onPressed: () => _showToast('Plant'),
+            onPressed: () {
+              SfxService().buttonClick();
+              _showToast('Plant');
+            },
           ),
         ];
       
@@ -206,7 +220,10 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.food_bank,
             label: 'Feed',
-            onPressed: () => _showToast('Feed Fish'),
+            onPressed: () {
+              SfxService().buttonClick();
+              _showToast('Feed Fish');
+            },
           ),
         ];
       
@@ -215,12 +232,18 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.create,
             label: 'Draw',
-            onPressed: () => _showToast('Draw'),
+            onPressed: () {
+              SfxService().buttonClick();
+              _showToast('Draw');
+            },
           ),
           FeatureButton(
             icon: Icons.photo_library,
             label: 'Gallery',
-            onPressed: () => _showToast('Gallery'),
+            onPressed: () {
+              SfxService().buttonClick();
+              _showToast('Gallery');
+            },
           ),
         ];
       
@@ -229,12 +252,18 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           FeatureButton(
             icon: Icons.play_circle,
             label: 'Compose',
-            onPressed: () => _showToast('Compose Music'),
+            onPressed: () {
+              SfxService().buttonClick();
+              _showToast('Compose Music');
+            },
           ),
           FeatureButton(
             icon: Icons.library_music,
             label: 'Library',
-            onPressed: () => _showToast('Music Library'),
+            onPressed: () {
+              SfxService().buttonClick();
+              _showToast('Music Library');
+            },
           ),
         ];
     }

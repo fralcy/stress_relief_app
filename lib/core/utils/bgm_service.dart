@@ -8,7 +8,7 @@ class BgmService {
   factory BgmService() => _instance;
   BgmService._internal();
 
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _bgmPlayer = AudioPlayer();
   bool _isInitialized = false;
   String? _currentBgm;
 
@@ -29,7 +29,24 @@ class BgmService {
     if (_isInitialized) return;
 
     // Set release mode để nhạc chạy liên tục
-    await _player.setReleaseMode(ReleaseMode.loop);
+    await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+    
+    // Set audio context cho background music
+    await _bgmPlayer.setAudioContext(AudioContext(
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.playback,
+        options: {
+          AVAudioSessionOptions.mixWithOthers,
+        },
+      ),
+      android: AudioContextAndroid(
+        isSpeakerphoneOn: false,
+        stayAwake: true,
+        contentType: AndroidContentType.music,
+        usageType: AndroidUsageType.media,
+        audioFocus: AndroidAudioFocus.gain, // Giữ audio focus cho BGM
+      ),
+    ));
     
     // Load settings và play nhạc
     final settings = DataManager().userSettings;
@@ -41,11 +58,11 @@ class BgmService {
   /// Apply settings từ UserSettings
   Future<void> _applySettings(String bgm, int volume) async {
     _currentBgm = bgm;
-    await _player.setVolume(volume / 100.0);
+    await _bgmPlayer.setVolume(volume / 100.0);
     
     final assetPath = _bgmAssets[bgm];
     if (assetPath != null) {
-      await _player.play(AssetSource(assetPath));
+      await _bgmPlayer.play(AssetSource(assetPath));
     }
   }
 
@@ -58,38 +75,38 @@ class BgmService {
     final assetPath = _bgmAssets[bgmName];
     
     if (assetPath != null) {
-      await _player.stop();
-      await _player.play(AssetSource(assetPath));
+      await _bgmPlayer.stop();
+      await _bgmPlayer.play(AssetSource(assetPath));
     }
   }
 
   /// Đổi volume (0-100)
   Future<void> changeVolume(int volume) async {
     if (!_isInitialized) await initialize();
-    await _player.setVolume(volume / 100.0);
+    await _bgmPlayer.setVolume(volume / 100.0);
   }
 
   /// Pause nhạc
   Future<void> pause() async {
     if (!_isInitialized) return;
-    await _player.pause();
+    await _bgmPlayer.pause();
   }
 
   /// Resume nhạc
   Future<void> resume() async {
     if (!_isInitialized) await initialize();
-    await _player.resume();
+    await _bgmPlayer.resume();
   }
 
   /// Stop nhạc
   Future<void> stop() async {
     if (!_isInitialized) return;
-    await _player.stop();
+    await _bgmPlayer.stop();
   }
 
   /// Dispose khi app đóng
   void dispose() {
-    _player.dispose();
+    _bgmPlayer.dispose();
     _isInitialized = false;
   }
 }
