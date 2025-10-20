@@ -257,4 +257,38 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get alreadySavedToday => '✅ Đã lưu hôm nay';
+
+  // Garden
+  @override
+  String get gardenTitle => 'KHU VƯỜN';
+
+  @override
+  String get inventory => 'KHO ĐỒ';
+
+  @override
+  String get action => 'Hành động';
+
+  @override
+  String get plant => 'Trồng';
+
+  @override
+  String get water => 'Tưới nước';
+
+  @override
+  String get pestControl => 'Bắt sâu';
+
+  @override
+  String get harvest => 'Thu hoạch';
+
+  @override
+  String get plantedSuccessfully => 'Đã trồng thành công!';
+
+  @override
+  String get wateredSuccessfully => 'Đã tưới nước!';
+
+  @override
+  String get pestControlSuccessfully => 'Đã bắt sâu!';
+
+  @override
+  String harvestedSuccessfully(int count, int points) => 'Thu hoạch $count cây! +$points điểm';
 }

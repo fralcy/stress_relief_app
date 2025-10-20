@@ -8,6 +8,7 @@ import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
 import 'modals/schedule_task_modal.dart';
 import 'modals/emotion_diary_modal.dart';
+import 'modals/garden_modal.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -207,10 +208,10 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
         return [
           FeatureButton(
             icon: Icons.agriculture,
-            label: 'Plant',
+            label: 'Garden',
             onPressed: () {
               SfxService().buttonClick();
-              _showToast('Plant');
+              GardenModal.show(context);
             },
           ),
         ];

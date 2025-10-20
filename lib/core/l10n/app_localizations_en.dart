@@ -257,4 +257,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alreadySavedToday => '✅ Already saved today';
+
+  // Garden
+  @override
+  String get gardenTitle => 'GARDEN';
+
+  @override
+  String get inventory => 'INVENTORY';
+
+  @override
+  String get action => 'Action';
+
+  @override
+  String get plant => 'Plant';
+
+  @override
+  String get water => 'Water';
+
+  @override
+  String get pestControl => 'Pest Control';
+
+  @override
+  String get harvest => 'Harvest';
+
+  @override
+  String get plantedSuccessfully => 'Planted successfully!';
+
+  @override
+  String get wateredSuccessfully => 'Watered successfully!';
+
+  @override
+  String get pestControlSuccessfully => 'Pest control completed!';
+
+  @override
+  String harvestedSuccessfully(int count, int points) => 'Harvested $count plants! +$points points';
 }
