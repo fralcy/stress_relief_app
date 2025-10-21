@@ -79,6 +79,7 @@ flutter:
     # Images
     - assets/images/scenes/default/
     - assets/images/mascot/
+    - assets/images/plants/
     # Audio - BGM
     - assets/audio/bgm/lofi_beats.mp3
     - assets/audio/bgm/rain_sounds.mp3

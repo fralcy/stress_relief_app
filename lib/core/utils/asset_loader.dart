@@ -86,4 +86,27 @@ class AssetLoader {
       preloadMascots(context),
     ]);
   }
+  // ==================== PLANT LOADING ====================
+
+  /// Lấy asset path của cây theo loại và growthStage
+  /// 
+  /// [plantType]: Tên loại cây (carrot, tomato, corn, ...)
+  /// [growthStage]: 0-100, sẽ convert thành 1-4
+  /// 
+  /// Returns: Path của plant asset
+  static String getPlantAsset(String plantType, int growthStage) {
+    // Convert 0-100 → 1-4
+    int stage;
+    if (growthStage < 33) {
+      stage = 1;
+    } else if (growthStage < 66) {
+      stage = 2;
+    } else if (growthStage < 100) {
+      stage = 3;
+    } else {
+      stage = 4; // 100 = có thể thu hoạch
+    }
+    
+    return 'assets/images/plants/${plantType.toLowerCase()}_$stage.png';
+  }
 }
