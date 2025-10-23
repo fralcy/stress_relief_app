@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/plant_config.dart';
 import '../../core/utils/asset_loader.dart';
+import '../../core/utils/garden_service.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
@@ -42,76 +44,43 @@ class _GardenModalState extends State<GardenModal> {
     var progress = DataManager().gardenProgress;
     
     if (progress == null || progress.plots == null) {
-      // Tạo test data với các stage khác nhau
-      final testPlots = List.generate(5, (row) {
-        return List.generate(5, (col) {
-          // Tạo vài ô có cây để test
-          if (row == 0 && col == 0) {
-            // Stage 1
-            return PlantCell(
-              plantType: 'carrot',
-              growthStage: 20,
-              lastWatered: DateTime.now(),
-              needsWater: false,
-              hasPest: false,
-            );
-          } else if (row == 0 && col == 1) {
-            // Stage 2
-            return PlantCell(
-              plantType: 'tomato',
-              growthStage: 50,
-              lastWatered: DateTime.now(),
-              needsWater: false,
-              hasPest: false,
-            );
-          } else if (row == 0 && col == 2) {
-            // Stage 3
-            return PlantCell(
-              plantType: 'corn',
-              growthStage: 80,
-              lastWatered: DateTime.now(),
-              needsWater: false,
-              hasPest: false,
-            );
-          } else if (row == 0 && col == 3) {
-            // Stage 4 - ready to harvest
-            return PlantCell(
-              plantType: 'sunflower',
-              growthStage: 100,
-              lastWatered: DateTime.now(),
-              needsWater: false,
-              hasPest: false,
-            );
-          } else {
-            // Ô trống
-            return PlantCell(
-              growthStage: 0,
-              lastWatered: DateTime.now(),
-              needsWater: false,
-              hasPest: false,
-            );
-          }
+      final emptyPlots = List.generate(4, (row) {
+        return List.generate(4, (col) {
+          return PlantCell(
+            plantType: null,
+            growthStage: 0,
+            lastWatered: DateTime.now(),
+            needsWater: false,
+            hasPest: false,
+            plantedAt: null,
+          );
         });
       });
       
       progress = GardenProgress(
-        plots: testPlots,
+        plots: emptyPlots,
         inventory: {
           'carrot': 5,
           'tomato': 5,
           'corn': 5,
-          'sunflower': 3,
-          'rose': 3,
-          'tulip': 3,
-          'wheat': 2,
-          'pumpkin': 2,
-          'strawberry': 2,
-          'lettuce': 2,
+          'sunflower': 5,
+          'rose': 5,
+          'tulip': 5,
+          'wheat': 5,
+          'pumpkin': 5,
+          'strawberry': 5,
+          'lettuce': 5,
         },
         earnings: 0,
       );
-      DataManager().saveGardenProgress(progress);
+    } else {
+      // UPDATE tất cả cells dựa trên timestamp
+      progress = progress.copyWith(
+        plots: GardenService.updateAllCells(progress.plots!),
+      );
     }
+    
+    DataManager().saveGardenProgress(progress);
     
     setState(() {
       _progress = progress!;
@@ -198,6 +167,7 @@ class _GardenModalState extends State<GardenModal> {
         if (cell.plantType != null) return;
         if (!_canPlant) return;
         
+        final now = DateTime.now();
         final plots = List<List<PlantCell>>.from(
           _progress.plots!.map((row) => List<PlantCell>.from(row))
         );
@@ -205,9 +175,10 @@ class _GardenModalState extends State<GardenModal> {
         plots[row][col] = PlantCell(
           plantType: _selectedPlantType,
           growthStage: 0,
-          lastWatered: DateTime.now(),
+          lastWatered: now,
           needsWater: false,
           hasPest: false,
+          plantedAt: now,
         );
         
         final newInventory = Map<String, int>.from(_progress.inventory);
@@ -261,27 +232,51 @@ class _GardenModalState extends State<GardenModal> {
       case 'harvest':
         if (cell.plantType == null || cell.growthStage < 100) return;
         
+        // Lấy config của cây
+        final config = PlantConfigs.getConfig(cell.plantType!);
+        if (config == null) return;
+        
         final plots = List<List<PlantCell>>.from(
           _progress.plots!.map((row) => List<PlantCell>.from(row))
         );
         
+        // Reset ô về trống
         plots[row][col] = PlantCell(
+          plantType: null,
           growthStage: 0,
           lastWatered: DateTime.now(),
           needsWater: false,
           hasPest: false,
+          plantedAt: null,
         );
         
-        final points = 10;
+        // Lấy seeds và points từ config
+        final seedsGained = config.seedsFromHarvest;
+        final pointsGained = config.harvestReward;
         
+        // Update inventory
+        final newInventory = Map<String, int>.from(_progress.inventory);
+        newInventory[cell.plantType!] = (newInventory[cell.plantType!] ?? 0) + seedsGained;
+        
+        // Update garden progress
         setState(() {
           _progress = _progress.copyWith(
             plots: plots,
-            earnings: _progress.earnings + points,
+            inventory: newInventory,
+            earnings: _progress.earnings + pointsGained,
           );
         });
         _saveProgress();
-        _showToast(l10n.harvestedSuccessfully(1, points));
+        
+        // Cộng điểm vào UserProfile
+        final profile = DataManager().userProfile;
+        final updatedProfile = profile.copyWith(
+          currentPoints: profile.currentPoints + pointsGained,
+          totalPoints: profile.totalPoints + pointsGained,
+        );
+        DataManager().saveUserProfile(updatedProfile);
+
+        _showToast(l10n.harvestedSuccessfully(1, pointsGained));
         break;
     }
   }
@@ -352,14 +347,14 @@ class _GardenModalState extends State<GardenModal> {
             child: GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
+                crossAxisCount: 4,
                 mainAxisSpacing: 0,
                 crossAxisSpacing: 0,
               ),
-              itemCount: 25,
+              itemCount: 16,
               itemBuilder: (context, index) {
-                final row = index ~/ 5;
-                final col = index % 5;
+                final row = index ~/ 4;
+                final col = index % 4;
                 return _buildPlotCell(row, col, _progress.plots![row][col], theme);
               },
             ),
@@ -375,24 +370,111 @@ class _GardenModalState extends State<GardenModal> {
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF8B7355),
-          // Bỏ border này
-          // border: Border.all(color: theme.border, width: 0.5),
         ),
-        child: Center(
-          child: cell.plantType != null
-              ? Image.asset(
-                  AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
-                  width: 40,
-                  height: 40,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback nếu không load được ảnh
-                    return Text(
-                      _getPlantIcon(cell.plantType!),
-                      style: const TextStyle(fontSize: 24),
-                    );
-                  },
-                )
-              : null, // Ô trống = không hiển thị gì
+        child: Stack(
+          children: [
+            // Cây ở giữa
+            Center(
+              child: cell.plantType != null
+                  ? Image.asset(
+                      AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
+                      width: 40,
+                      height: 40,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Text(
+                          _getPlantIcon(cell.plantType!),
+                          style: const TextStyle(fontSize: 24),
+                        );
+                      },
+                    )
+                  : null,
+            ),
+            
+            // Indicators ở góc
+            if (cell.plantType != null) ...[
+              // Icon tưới nước (góc trên trái)
+              if (cell.needsWater)
+                Positioned(
+                  top: 2,
+                  left: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.water_drop,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              
+              // Icon sâu bệnh (góc trên phải)
+              if (cell.hasPest)
+                Positioned(
+                  top: 2,
+                  right: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.bug_report,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              
+              // Icon thu hoạch (góc dưới phải)
+              if (cell.growthStage >= 100)
+                Positioned(
+                  bottom: 2,
+                  right: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              
+              // Thanh % ở dưới (TÙY CHỌN)
+              if (cell.growthStage < 100)
+                Positioned(
+                  bottom: 2,
+                  left: 4,
+                  right: 4,
+                  child: Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: cell.growthStage / 100,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.lightGreen,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ],
         ),
       ),
     );

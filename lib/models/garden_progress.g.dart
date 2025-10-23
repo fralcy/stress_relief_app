@@ -22,13 +22,14 @@ class PlantCellAdapter extends TypeAdapter<PlantCell> {
       lastWatered: fields[2] as DateTime,
       needsWater: fields[3] as bool,
       hasPest: fields[4] as bool,
+      plantedAt: fields[5] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, PlantCell obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.plantType)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class PlantCellAdapter extends TypeAdapter<PlantCell> {
       ..writeByte(3)
       ..write(obj.needsWater)
       ..writeByte(4)
-      ..write(obj.hasPest);
+      ..write(obj.hasPest)
+      ..writeByte(5)
+      ..write(obj.plantedAt);
   }
 
   @override

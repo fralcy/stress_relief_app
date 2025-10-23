@@ -20,12 +20,16 @@ class PlantCell {
   @HiveField(4)
   final bool hasPest; // Bị sâu bệnh không
 
+  @HiveField(5)
+  final DateTime? plantedAt;  // Thời điểm trồng cây
+
   PlantCell({
     this.plantType,
     required this.growthStage,
     required this.lastWatered,
     required this.needsWater,
     required this.hasPest,
+    this.plantedAt,
   });
 
   // Tạo bản sao với các thay đổi
@@ -35,6 +39,7 @@ class PlantCell {
     DateTime? lastWatered,
     bool? needsWater,
     bool? hasPest,
+    DateTime? plantedAt,
   }) {
     return PlantCell(
       plantType: plantType ?? this.plantType,
@@ -42,6 +47,7 @@ class PlantCell {
       lastWatered: lastWatered ?? this.lastWatered,
       needsWater: needsWater ?? this.needsWater,
       hasPest: hasPest ?? this.hasPest,
+      plantedAt: plantedAt ?? this.plantedAt,
     );
   }
 }
