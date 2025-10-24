@@ -20,70 +20,70 @@ class PlantConfigs {
     'carrot': PlantConfig(
       id: 'carrot',
       name: 'Carrot',
-      growthTimeHours: 48,   // 2 ngày
+      growthTimeHours: 40,   // 2 ngày
       harvestReward: 10,
       seedsFromHarvest: 2,
     ),
     'tomato': PlantConfig(
       id: 'tomato',
       name: 'Tomato',
-      growthTimeHours: 72,   // 3 ngày
+      growthTimeHours: 60,   // 3 ngày
       harvestReward: 15,
       seedsFromHarvest: 3,
     ),
     'corn': PlantConfig(
       id: 'corn',
       name: 'Corn',
-      growthTimeHours: 96,   // 4 ngày
+      growthTimeHours: 80,   // 4 ngày
       harvestReward: 20,
       seedsFromHarvest: 2,
     ),
     'sunflower': PlantConfig(
       id: 'sunflower',
       name: 'Sunflower',
-      growthTimeHours: 120,  // 5 ngày
+      growthTimeHours: 100,  // 5 ngày
       harvestReward: 25,
       seedsFromHarvest: 4,
     ),
     'rose': PlantConfig(
       id: 'rose',
       name: 'Rose',
-      growthTimeHours: 144,  // 6 ngày
+      growthTimeHours: 120,  // 6 ngày
       harvestReward: 30,
       seedsFromHarvest: 3,
     ),
     'tulip': PlantConfig(
       id: 'tulip',
       name: 'Tulip',
-      growthTimeHours: 96,   // 4 ngày
+      growthTimeHours: 80,   // 4 ngày
       harvestReward: 22,
       seedsFromHarvest: 2,
     ),
     'wheat': PlantConfig(
       id: 'wheat',
       name: 'Wheat',
-      growthTimeHours: 72,   // 3 ngày
+      growthTimeHours: 60,   // 3 ngày
       harvestReward: 12,
       seedsFromHarvest: 3,
     ),
     'pumpkin': PlantConfig(
       id: 'pumpkin',
       name: 'Pumpkin',
-      growthTimeHours: 168,  // 7 ngày
+      growthTimeHours: 140,  // 7 ngày
       harvestReward: 35,
       seedsFromHarvest: 2,
     ),
     'strawberry': PlantConfig(
       id: 'strawberry',
       name: 'Strawberry',
-      growthTimeHours: 120,  // 5 ngày
+      growthTimeHours: 100,  // 5 ngày
       harvestReward: 28,
       seedsFromHarvest: 3,
     ),
     'lettuce': PlantConfig(
       id: 'lettuce',
       name: 'Lettuce',
-      growthTimeHours: 60,   // 2.5 ngày
+      growthTimeHours: 50,   // 2.5 ngày
       harvestReward: 14,
       seedsFromHarvest: 2,
     ),

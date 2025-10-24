@@ -291,4 +291,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String harvestedSuccessfully(int count, int points) => 'Thu hoạch $count cây! +$points điểm';
+
+  // Aquarium
+  @override
+  String get fish => 'con cá';
+
+  @override
+  String get hour => 'giờ';
+
+  @override
+  String get lastFed => 'Cho ăn lần cuối:';
+
+  @override
+  String get hoursAgo => 'giờ trước';
+
+  @override
+  String get feedNow => 'Cho ăn ngay';
+
+  @override
+  String get fishShop => 'CỬA HÀNG CÁ';
+
+  @override
+  String get owned => 'sở hữu';
+
+  @override
+  String get price => 'Giá';
+
+  @override
+  String get goldfish => 'Cá vàng';
+
+  @override
+  String get clownfish => 'Cá hề';
 }

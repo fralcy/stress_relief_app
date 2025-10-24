@@ -291,4 +291,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String harvestedSuccessfully(int count, int points) => 'Harvested $count plants! +$points points';
+
+  // Aquarium
+  @override
+  String get fish => 'fish';
+
+  @override
+  String get hour => 'hour';
+
+  @override
+  String get lastFed => 'Last fed:';
+
+  @override
+  String get hoursAgo => 'hours ago';
+
+  @override
+  String get feedNow => 'Feed Now';
+
+  @override
+  String get fishShop => 'FISH SHOP';
+
+  @override
+  String get owned => 'owned';
+
+  @override
+  String get price => 'Price';
+
+  @override
+  String get goldfish => 'Goldfish';
+
+  @override
+  String get clownfish => 'Clownfish';
 }

@@ -18,8 +18,8 @@ class GardenService {
     final timeSincePlanted = now.difference(cell.plantedAt!);
     final timeSinceWatered = now.difference(cell.lastWatered);
     
-    // Nếu quá 24h không tưới → thiếu nước
-    if (timeSinceWatered.inHours >= 24) {
+    // Nếu quá 20h không tưới → thiếu nước
+    if (timeSinceWatered.inHours >= 20) {
       return cell.growthStage; // Ngừng grow
     }
     
@@ -37,7 +37,7 @@ class GardenService {
     final now = DateTime.now();
     final timeSinceWatered = now.difference(cell.lastWatered);
     
-    return timeSinceWatered.inHours >= 24;
+    return timeSinceWatered.inHours >= 20;
   }
   
   // Random spawn pest khi mở modal (tỉ lệ thấp)

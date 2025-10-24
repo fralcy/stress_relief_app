@@ -124,6 +124,18 @@ abstract class AppLocalizations {
   String get pestControlSuccessfully;
   String harvestedSuccessfully(int count, int points);
 
+  // Aquarium
+  String get fish;
+  String get hour;
+  String get lastFed;
+  String get hoursAgo;
+  String get feedNow;
+  String get fishShop;
+  String get owned;
+  String get price;
+  String get goldfish;
+  String get clownfish;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
