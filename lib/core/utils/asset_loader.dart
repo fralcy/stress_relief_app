@@ -109,4 +109,21 @@ class AssetLoader {
     
     return 'assets/images/plants/${plantType.toLowerCase()}_$stage.png';
   }
+
+  // ==================== AQUARIUM LOADING ====================
+  static String getTankAsset(SceneSet sceneSet) {
+    final assetPath = AppAssets.tankAssets[sceneSet];
+    if (assetPath == null) {
+      throw Exception('No tank asset found for scene set: $sceneSet');
+    }
+    return assetPath;
+  }
+
+  static String getFishAsset(String fishType) {
+    final assetPath = AppAssets.fishAssets[fishType.toLowerCase()];
+    if (assetPath == null) {
+      throw Exception('No asset found for fish type: $fishType');
+    }
+    return assetPath;
+  }
 }

@@ -318,8 +318,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get price => 'Price';
 
   @override
-  String get goldfish => 'Goldfish';
+  String get noFishYet => 'No fish yet!';
 
   @override
-  String get clownfish => 'Clownfish';
+  String get buyFishBelow => 'Buy some below.';
+
+  @override
+  String get betta => 'Betta';
+
+  @override
+  String get guppy => 'Guppy';
+
+  @override
+  String get neonTetra => 'Neon Tetra';
+
+  @override
+  String get molly => 'Molly';
+
+  @override
+  String get cory => 'Cory';
+
+  @override
+  String get platy => 'Platy';
 }

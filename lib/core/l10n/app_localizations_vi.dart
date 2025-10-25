@@ -318,8 +318,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get price => 'Giá';
 
   @override
-  String get goldfish => 'Cá vàng';
+  String get noFishYet => 'Chưa có cá nào!';
 
   @override
-  String get clownfish => 'Cá hề';
+  String get buyFishBelow => 'Mua cá ở dưới.';
+
+  @override
+  String get betta => 'Cá Betta';
+
+  @override
+  String get guppy => 'Cá Guppy';
+
+  @override
+  String get neonTetra => 'Cá Neon Tetra';
+
+  @override
+  String get molly => 'Cá Molly';
+
+  @override
+  String get cory => 'Cá Cory';
+
+  @override
+  String get platy => 'Cá Platy';
 }

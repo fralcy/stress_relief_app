@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/utils/asset_loader.dart';
+import '../../models/scene_models.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
 
-/// Modal mini-game nuôi cá (static mockup)
+/// Modal mini-game nuôi cá (với image assets)
 class AquariumModal extends StatefulWidget {
   const AquariumModal({super.key});
 
@@ -33,24 +35,66 @@ class _AquariumModalState extends State<AquariumModal> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
 
-    // Initialize fish shop with localized names
+    // Initialize fish shop with localized names (update names each time in case language changes)
     if (_fishShop.isEmpty) {
       _fishShop = {
-        'goldfish': FishData(
-          icon: '🐠',
-          name: l10n.goldfish,
-          pointsPerHour: 3,
+        'betta': FishData(
+          fishType: 'betta',
+          name: l10n.betta,
+          pointsPerHour: 5,
           price: 100,
+          owned: 1,
+        ),
+        'guppy': FishData(
+          fishType: 'guppy',
+          name: l10n.guppy,
+          pointsPerHour: 3,
+          price: 80,
           owned: 2,
         ),
-        'clownfish': FishData(
-          icon: '🐡',
-          name: l10n.clownfish,
+        'neon': FishData(
+          fishType: 'neon',
+          name: l10n.neonTetra,
+          pointsPerHour: 4,
+          price: 90,
+          owned: 0,
+        ),
+        'molly': FishData(
+          fishType: 'molly',
+          name: l10n.molly,
           pointsPerHour: 3,
-          price: 150,
-          owned: 3,
+          price: 75,
+          owned: 0,
+        ),
+        'cory': FishData(
+          fishType: 'cory',
+          name: l10n.cory,
+          pointsPerHour: 4,
+          price: 85,
+          owned: 0,
+        ),
+        'platy': FishData(
+          fishType: 'platy',
+          name: l10n.platy,
+          pointsPerHour: 3,
+          price: 70,
+          owned: 0,
         ),
       };
+    } else {
+      // Update names when language changes
+      _fishShop = _fishShop.map((key, fish) {
+        String newName = fish.name;
+        switch (key) {
+          case 'betta': newName = l10n.betta; break;
+          case 'guppy': newName = l10n.guppy; break;
+          case 'neon': newName = l10n.neonTetra; break;
+          case 'molly': newName = l10n.molly; break;
+          case 'cory': newName = l10n.cory; break;
+          case 'platy': newName = l10n.platy; break;
+        }
+        return MapEntry(key, fish.copyWith(name: newName));
+      });
     }
 
     // Tính tổng
@@ -118,54 +162,30 @@ class _AquariumModalState extends State<AquariumModal> {
         
         const SizedBox(height: 12),
         
-        // Bể cá (vuông/chữ nhật static)
+        // Bể cá với background image
         AspectRatio(
-          aspectRatio: 1.2,
+          aspectRatio: 1.0,
           child: Container(
             decoration: BoxDecoration(
-              // Màu xanh nước biển nhạt
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF87CEEB).withOpacity(0.3),
-                  const Color(0xFF4682B4).withOpacity(0.5),
-                ],
-              ),
               border: Border.all(color: theme.border, width: 2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Stack(
-              children: [
-                // Nền cát/đá dưới đáy
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 40,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B7355).withOpacity(0.6),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text('🪨', style: TextStyle(fontSize: 20)),
-                        Text('🌿', style: TextStyle(fontSize: 20)),
-                        Text('🪨', style: TextStyle(fontSize: 20)),
-                        Text('🌱', style: TextStyle(fontSize: 20)),
-                      ],
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Stack(
+                children: [
+                  // Background bể cá
+                  Positioned.fill(
+                    child: Image.asset(
+                      AssetLoader.getTankAsset(SceneSet.defaultSet),
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ),
-                
-                // Mock cá bơi (static positions)
-                ..._buildMockFishPositions(),
-              ],
+                  
+                  // Các con cá (lấy từ owned fish)
+                  ..._buildOwnedFishPositions(),
+                ],
+              ),
             ),
           ),
         ),
@@ -185,26 +205,59 @@ class _AquariumModalState extends State<AquariumModal> {
     );
   }
 
-  List<Widget> _buildMockFishPositions() {
-    // Mock vị trí các con cá (static)
-    final positions = [
-      {'left': 20.0, 'top': 30.0, 'icon': '🐠'},
-      {'left': 100.0, 'top': 60.0, 'icon': '🐡'},
-      {'left': 180.0, 'top': 40.0, 'icon': '🐠'},
-      {'left': 50.0, 'top': 90.0, 'icon': '🐡'},
-      {'left': 150.0, 'top': 100.0, 'icon': '🐠'},
+  List<Widget> _buildOwnedFishPositions() {
+    // Lấy các cá đã sở hữu
+    final ownedFish = _fishShop.entries
+        .where((entry) => entry.value.owned > 0)
+        .toList();
+    
+    if (ownedFish.isEmpty) {
+      final l10n = AppLocalizations.of(context);
+      return [
+        Center(
+          child: Text(
+            '${l10n.noFishYet} ${l10n.buyFishBelow}',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    // Mock positions cho demo
+    final List<Map<String, dynamic>> positions = [
+      {'left': 0.15, 'top': 0.2},
+      {'left': 0.6, 'top': 0.15},
+      {'left': 0.3, 'top': 0.45},
+      {'left': 0.7, 'top': 0.5},
+      {'left': 0.1, 'top': 0.7},
+      {'left': 0.55, 'top': 0.75},
     ];
 
-    return positions.map((pos) {
-      return Positioned(
-        left: pos['left'] as double,
-        top: pos['top'] as double,
-        child: Text(
-          pos['icon'] as String,
-          style: const TextStyle(fontSize: 24),
-        ),
-      );
-    }).toList();
+    List<Widget> fishWidgets = [];
+    int posIndex = 0;
+
+    for (var entry in ownedFish) {
+      for (int i = 0; i < entry.value.owned && posIndex < positions.length; i++) {
+        final pos = positions[posIndex];
+        fishWidgets.add(
+          Positioned(
+            left: MediaQuery.of(context).size.width * (pos['left'] as double),
+            top: MediaQuery.of(context).size.width * (pos['top'] as double),
+            child: Image.asset(
+              AssetLoader.getFishAsset(entry.value.fishType),
+              width: 48,
+              height: 48,
+            ),
+          ),
+        );
+        posIndex++;
+      }
+    }
+
+    return fishWidgets;
   }
 
   Widget _buildFishShop(AppTheme theme, AppLocalizations l10n) {
@@ -240,10 +293,11 @@ class _AquariumModalState extends State<AquariumModal> {
       ),
       child: Row(
         children: [
-          // Icon cá
-          Text(
-            fish.icon,
-            style: const TextStyle(fontSize: 32),
+          // Ảnh cá (thay vì emoji)
+          Image.asset(
+            AssetLoader.getFishAsset(fish.fishType),
+            width: 48,
+            height: 48,
           ),
           
           const SizedBox(width: 12),
@@ -279,7 +333,7 @@ class _AquariumModalState extends State<AquariumModal> {
             ),
           ),
           
-          // Nút [ - ]  2 owned  [ + ]
+          // Nút [ - ]  owned  [ + ]
           Row(
             children: [
               IconButton(
@@ -293,9 +347,9 @@ class _AquariumModalState extends State<AquariumModal> {
               ),
               
               Text(
-                '${fish.owned} ${l10n.owned}',
+                '${fish.owned}',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: theme.text,
                 ),
@@ -318,16 +372,16 @@ class _AquariumModalState extends State<AquariumModal> {
   }
 }
 
-/// Mock data model cho cá
+/// Data class cho từng loại cá
 class FishData {
-  final String icon;
+  final String fishType; // Thêm fishType để load asset
   final String name;
   final int pointsPerHour;
   final int price;
   final int owned;
 
   FishData({
-    required this.icon,
+    required this.fishType,
     required this.name,
     required this.pointsPerHour,
     required this.price,
@@ -335,14 +389,14 @@ class FishData {
   });
 
   FishData copyWith({
-    String? icon,
+    String? fishType,
     String? name,
     int? pointsPerHour,
     int? price,
     int? owned,
   }) {
     return FishData(
-      icon: icon ?? this.icon,
+      fishType: fishType ?? this.fishType,
       name: name ?? this.name,
       pointsPerHour: pointsPerHour ?? this.pointsPerHour,
       price: price ?? this.price,

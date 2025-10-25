@@ -67,4 +67,30 @@ class AppAssets {
     'Soft Pop': bgmSoftPop,
     'Chill Acoustic': bgmChillAcoustic,
   };
+
+  // ==================== AQUARIUM ====================
+  // Tank backgrounds
+  static const String tankDefault = 'assets/images/aquarium/tank_default.png';
+
+  // Fish types
+  static const String fishBetta = 'assets/images/aquarium/fish_betta.png';
+  static const String fishGuppy = 'assets/images/aquarium/fish_guppy.png';
+  static const String fishNeon = 'assets/images/aquarium/fish_neon.png';
+  static const String fishMolly = 'assets/images/aquarium/fish_molly.png';
+  static const String fishCory = 'assets/images/aquarium/fish_cory.png';
+  static const String fishPlaty = 'assets/images/aquarium/fish_platy.png';
+
+  // Maps
+  static const Map<SceneSet, String> tankAssets = {
+    SceneSet.defaultSet: tankDefault,
+  };
+
+  static const Map<String, String> fishAssets = {
+    'betta': fishBetta,
+    'guppy': fishGuppy,
+    'neon': fishNeon,
+    'molly': fishMolly,
+    'cory': fishCory,
+    'platy': fishPlaty,
+  };
 }

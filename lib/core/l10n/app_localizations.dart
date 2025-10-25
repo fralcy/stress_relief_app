@@ -133,8 +133,14 @@ abstract class AppLocalizations {
   String get fishShop;
   String get owned;
   String get price;
-  String get goldfish;
-  String get clownfish;
+  String get noFishYet;
+  String get buyFishBelow;
+  String get betta;
+  String get guppy;
+  String get neonTetra;
+  String get molly;
+  String get cory;
+  String get platy;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {
