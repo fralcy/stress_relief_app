@@ -18,21 +18,15 @@ class FishAdapter extends TypeAdapter<Fish> {
     };
     return Fish(
       type: fields[0] as String,
-      hunger: fields[1] as int,
-      pointsPerHours: fields[2] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, Fish obj) {
     writer
-      ..writeByte(3)
-      ..writeByte(0)
-      ..write(obj.type)
       ..writeByte(1)
-      ..write(obj.hunger)
-      ..writeByte(2)
-      ..write(obj.pointsPerHours);
+      ..writeByte(0)
+      ..write(obj.type);
   }
 
   @override
@@ -60,19 +54,22 @@ class AquariumProgressAdapter extends TypeAdapter<AquariumProgress> {
       fishes: (fields[0] as List).cast<Fish>(),
       lastFed: fields[1] as DateTime,
       earnings: fields[2] as int,
+      lastClaimed: fields[3] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AquariumProgress obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.fishes)
       ..writeByte(1)
       ..write(obj.lastFed)
       ..writeByte(2)
-      ..write(obj.earnings);
+      ..write(obj.earnings)
+      ..writeByte(3)
+      ..write(obj.lastClaimed);
   }
 
   @override

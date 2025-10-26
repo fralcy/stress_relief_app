@@ -315,9 +315,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get owned => 'sở hữu';
 
   @override
-  String get price => 'Giá';
-
-  @override
   String get noFishYet => 'Chưa có cá nào!';
 
   @override
@@ -340,4 +337,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get platy => 'Cá Platy';
+
+  @override
+  String get readyToFeed => 'Sẵn sàng cho ăn!';
+
+  @override
+  String get hoursLeft => 'giờ còn lại';
+
+  @override
+  String get claimCoins => 'Nhận xu';
+
+  @override
+  String get tankFull => 'BỂ ĐẦY';
+
+  @override
+  String get maxFish => 'Tối đa 10 con';
 }

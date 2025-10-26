@@ -7,28 +7,17 @@ part 'aquarium_progress.g.dart';
 class Fish {
   @HiveField(0)
   final String type;      // Loại cá
-  
-  @HiveField(1)
-  final int hunger;       // Độ đói (0-100)
-  
-  @HiveField(2)
-  final int pointsPerHours; // Điểm sinh ra mỗi giờ
 
   Fish({
     required this.type,
-    required this.hunger,
-    required this.pointsPerHours,
   });
+
 
   Fish copyWith({
     String? type,
-    int? hunger,
-    int? pointsPerHours,
   }) {
     return Fish(
       type: type ?? this.type,
-      hunger: hunger ?? this.hunger,
-      pointsPerHours: pointsPerHours ?? this.pointsPerHours,
     );
   }
 }
@@ -45,21 +34,27 @@ class AquariumProgress {
   @HiveField(2)
   final int earnings; // Tổng điểm kiếm được
 
+  @HiveField(3)
+  final DateTime? lastClaimed; // Thời điểm nhận điểm lần cuối
+
   AquariumProgress({
     required this.fishes,
     required this.lastFed,
     required this.earnings,
+    this.lastClaimed,
   });
 
   AquariumProgress copyWith({
     List<Fish>? fishes,
     DateTime? lastFed,
     int? earnings,
+    DateTime? lastClaimed,
   }) {
     return AquariumProgress(
       fishes: fishes ?? this.fishes,
       lastFed: lastFed ?? this.lastFed,
       earnings: earnings ?? this.earnings,
+      lastClaimed: lastClaimed ?? this.lastClaimed,
     );
   }
 }

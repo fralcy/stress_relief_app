@@ -132,7 +132,6 @@ abstract class AppLocalizations {
   String get feedNow;
   String get fishShop;
   String get owned;
-  String get price;
   String get noFishYet;
   String get buyFishBelow;
   String get betta;
@@ -141,6 +140,11 @@ abstract class AppLocalizations {
   String get molly;
   String get cory;
   String get platy;
+  String get readyToFeed;
+  String get hoursLeft;
+  String get claimCoins;
+  String get tankFull;
+  String get maxFish;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

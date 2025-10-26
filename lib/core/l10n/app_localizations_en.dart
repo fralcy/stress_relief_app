@@ -315,9 +315,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get owned => 'owned';
 
   @override
-  String get price => 'Price';
-
-  @override
   String get noFishYet => 'No fish yet!';
 
   @override
@@ -340,4 +337,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platy => 'Platy';
+
+  @override
+  String get readyToFeed => 'Ready to feed!';
+
+  @override
+  String get hoursLeft => 'h left';
+
+  @override
+  String get claimCoins => 'Claim';
+
+  @override
+  String get tankFull => 'TANK FULL';
+
+  @override
+  String get maxFish => 'Max 10 fish';
 }
