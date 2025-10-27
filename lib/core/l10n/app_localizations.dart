@@ -10,6 +10,7 @@ abstract class AppLocalizations {
   String get ok;
   String get cancel;
   String get save;
+  String get open;
   String get reset;
   String get edit;
   
@@ -145,6 +146,14 @@ abstract class AppLocalizations {
   String get claimCoins;
   String get tankFull;
   String get maxFish;
+
+  // Painting Room
+  String get art;
+  String get canvasName;
+  String get clear;
+  String get undo;
+  String get colorPalette;
+  String get selected;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

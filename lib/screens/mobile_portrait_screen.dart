@@ -10,6 +10,7 @@ import 'modals/schedule_task_modal.dart';
 import 'modals/emotion_diary_modal.dart';
 import 'modals/garden_modal.dart';
 import 'modals/aquarium_modal.dart';
+import 'modals/drawing_modal.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -236,7 +237,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             label: 'Draw',
             onPressed: () {
               SfxService().buttonClick();
-              _showToast('Draw');
+              DrawingModal.show(context);
             },
           ),
           FeatureButton(

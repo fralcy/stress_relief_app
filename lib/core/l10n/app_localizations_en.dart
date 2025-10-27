@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
   
   @override
+  String get open => 'Open';
+  
+  @override
   String get reset => 'Reset';
   
   @override
@@ -352,4 +355,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maxFish => 'Max 10 fish';
+
+  // Painting Room
+  @override
+  String get art => 'Art';
+
+  @override
+  String get canvasName => 'Canvas Name';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get colorPalette => 'COLOR PALETTE';
+
+  @override
+  String get selected => 'Selected';
 }

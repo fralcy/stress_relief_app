@@ -15,6 +15,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get save => 'Lưu';
   
   @override
+  String get open => 'Mở';
+  
+  @override
   String get reset => 'Đặt lại';
   
   @override
@@ -352,4 +355,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get maxFish => 'Tối đa 10 con';
+
+  // Painting Room
+  @override
+  String get art => 'Vẽ tranh';
+
+  @override
+  String get canvasName => 'Tên tranh';
+
+  @override
+  String get clear => 'Xóa';
+
+  @override
+  String get undo => 'Hoàn tác';
+
+  @override
+  String get colorPalette => 'BẢNG MÀU';
+
+  @override
+  String get selected => 'Đang chọn';
 }
