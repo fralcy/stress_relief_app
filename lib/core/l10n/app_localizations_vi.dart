@@ -374,4 +374,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get selected => 'Đang chọn';
+
+  @override
+  String get clearCanvas => 'Xóa Canvas?';
+
+  @override
+  String get clearCanvasWarning => 'Xóa';
+
+  @override
+  String get thisWillEraseEverything => 'Điều này sẽ xóa tất cả!';
 }

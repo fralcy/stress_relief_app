@@ -374,4 +374,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selected => 'Selected';
+
+  @override
+  String get clearCanvas => 'Clear Canvas?';
+
+  @override
+  String get clearCanvasWarning => 'Clear';
+
+  @override
+  String get thisWillEraseEverything => 'This will erase everything!';
 }

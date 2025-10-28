@@ -4,6 +4,9 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/constants/drawing_palette.dart';
+import '../../core/widgets/pixel_canvas.dart';
+import '../../core/utils/painting_service.dart';
 
 /// Modal vẽ tranh
 class DrawingModal extends StatefulWidget {
@@ -25,51 +28,84 @@ class DrawingModal extends StatefulWidget {
 }
 
 class _DrawingModalState extends State<DrawingModal> {
-  String _drawingName = 'My Drawing___';
-  int _selectedColorIndex = 2; // Red được chọn mặc định
+  final PaintingService _paintingService = PaintingService();
+  
+  late List<List<int>> _pixels;
+  int _selectedColorIndex = 0;
+  String _drawingName = 'My Drawing';
+  bool _isLoading = true;
+  
+  // Undo history
+  final List<List<List<int>>> _history = [];
+  static const int _maxHistorySize = 20;
+  
+  // Scroll control
+  bool _isDrawing = false;
 
-  // 32 màu: 8 hàng x 4 cột
-  final List<Color> _colorPalette = [
-    const Color(0xFF0066CC),
-    const Color(0xFFFFFFFF),
-    const Color(0xFFFF6B35),
-    const Color(0xFFFFCC00),
+  @override
+  void initState() {
+    super.initState();
+    _loadPainting();
+  }
+
+  void _loadPainting() {
+    final painting = _paintingService.getCurrentPainting();
     
-    const Color(0xFF00AA00),
-    const Color(0xFF00CC66),
-    const Color(0xFF3366FF),
-    const Color(0xFFCC66FF),
+    if (painting != null) {
+      setState(() {
+        _pixels = painting.pixels.map((row) => List<int>.from(row)).toList();
+        _drawingName = painting.name;
+        _isLoading = false;
+      });
+    } else {
+      // Tạo mới nếu chưa có
+      setState(() {
+        _pixels = _paintingService.createEmptyGrid();
+        _isLoading = false;
+      });
+    }
     
-    const Color(0xFF996633),
-    const Color(0xFF808080),
-    const Color(0xFF000000),
-    const Color(0xFFCC0066),
+    // Save initial state to history
+    _saveToHistory();
+  }
+  
+  void _saveToHistory() {
+    final snapshot = _pixels.map((row) => List<int>.from(row)).toList();
+    _history.add(snapshot);
     
-    const Color(0xFFFF99CC),
-    const Color(0xFF66CCFF),
-    const Color(0xFFFFFF99),
-    const Color(0xFF99FF99),
+    if (_history.length > _maxHistorySize) {
+      _history.removeAt(0);
+    }
+  }
+
+  void _onPixelPaint(int row, int col) {
+    if (_pixels[row][col] == _selectedColorIndex) return;
     
-    const Color(0xFFFF9999),
-    const Color(0xFF9999FF),
-    const Color(0xFFCCCCCC),
-    const Color(0xFF663300),
+    _saveToHistory();
     
-    const Color(0xFF006666),
-    const Color(0xFF660066),
-    const Color(0xFFFF3300),
-    const Color(0xFFFFFF00),
+    setState(() {
+      _pixels[row][col] = _selectedColorIndex;
+    });
     
-    const Color(0xFF00FF00),
-    const Color(0xFF0000FF),
-    const Color(0xFFFF00FF),
-    const Color(0xFF00FFFF),
+    // Auto-save
+    _paintingService.savePainting(_pixels, name: _drawingName);
+  }
+  
+  void _onUndo() {
+    SfxService().buttonClick();
     
-    const Color(0xFF333333),
-    const Color(0xFF666666),
-    const Color(0xFF999999),
-    const Color(0xFFCCCCCC),
-  ];
+    if (_history.length <= 1) return;
+    
+    _history.removeLast();
+    
+    final previousState = _history.last;
+    setState(() {
+      _pixels = previousState.map((row) => List<int>.from(row)).toList();
+    });
+    
+    // Auto-save
+    _paintingService.savePainting(_pixels, name: _drawingName);
+  }
 
   void _onColorSelected(int index) {
     SfxService().buttonClick();
@@ -80,26 +116,37 @@ class _DrawingModalState extends State<DrawingModal> {
 
   void _onClear() {
     SfxService().buttonClick();
-    // TODO: Xóa canvas
-    print('Clear canvas');
-  }
-
-  void _onUndo() {
-    SfxService().buttonClick();
-    // TODO: Hoàn tác
-    print('Undo last stroke');
-  }
-
-  void _onSave() {
-    SfxService().buttonClick();
-    // TODO: Lưu bức tranh
-    print('Save drawing');
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.clearCanvas),
+        content: Text(l10n.thisWillEraseEverything),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _saveToHistory();
+              setState(() {
+                _pixels = _paintingService.createEmptyGrid();
+              });
+              _paintingService.clearCurrentCanvas();
+            },
+            child: Text(l10n.clearCanvasWarning),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onOpen() {
     SfxService().buttonClick();
-    // TODO: Mở bức tranh đã lưu
-    print('Open drawing');
+    // TODO: Show list của paintings để chọn
+    print('Open painting list');
   }
 
   @override
@@ -107,64 +154,83 @@ class _DrawingModalState extends State<DrawingModal> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // ========== TOOLBAR: Tên + Actions ==========
-        _buildToolbar(l10n, theme),
-        
-        const SizedBox(height: 16),
-        
-        // ========== CANVAS MOCKUP (64x64 grid) ==========
-        _buildCanvas(theme),
-        
-        const SizedBox(height: 16),
-        
-        // ========== COLOR PALETTE LABEL ==========
-        Text(
-          l10n.colorPalette,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: theme.text,
-          ),
-        ),
-        
-        const SizedBox(height: 8),
-        
-        // Selected color indicator
-        Row(
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        // Block scroll khi đang vẽ
+        return _isDrawing;
+      },
+      child: SingleChildScrollView(
+        physics: _isDrawing ? const NeverScrollableScrollPhysics() : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              '${l10n.selected}: ',
-              style: TextStyle(color: theme.text, fontSize: 14),
-            ),
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: _colorPalette[_selectedColorIndex],
-                border: Border.all(color: theme.border, width: 2),
-                borderRadius: BorderRadius.circular(4),
+            // ========== TOOLBAR ==========
+            _buildToolbar(l10n, theme),
+            
+            const SizedBox(height: 16),
+            
+            // ========== CANVAS ==========
+            Listener(
+              onPointerDown: (_) => setState(() => _isDrawing = true),
+              onPointerUp: (_) => setState(() => _isDrawing = false),
+              onPointerCancel: (_) => setState(() => _isDrawing = false),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: PixelCanvas(
+                  gridSize: 32,
+                  pixels: _pixels,
+                  selectedColorIndex: _selectedColorIndex,
+                  onPixelPaint: _onPixelPaint,
+                ),
               ),
             ),
-            const SizedBox(width: 4),
+            
+            const SizedBox(height: 16),
+            
+            // ========== COLOR PALETTE LABEL ==========
             Text(
-              _getColorName(_selectedColorIndex),
+              l10n.colorPalette,
               style: TextStyle(
-                color: theme.text,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: theme.text,
               ),
             ),
+            
+            const SizedBox(height: 8),
+            
+            // Selected color indicator
+            Row(
+              children: [
+                Text(
+                  '${l10n.selected}: ',
+                  style: TextStyle(color: theme.text, fontSize: 14),
+                ),
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Color(DrawingPalette.hexToInt(
+                      DrawingPalette.getColorByIndex(_selectedColorIndex)
+                    )),
+                    border: Border.all(color: theme.border, width: 2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // ========== COLOR PALETTE GRID ==========
+            _buildColorPalette(theme),
           ],
         ),
-        
-        const SizedBox(height: 12),
-        
-        // ========== COLOR PALETTE GRID (8 rows x 4 cols) ==========
-        _buildColorPalette(theme),
-      ],
+      ),
     );
   }
 
@@ -172,7 +238,7 @@ class _DrawingModalState extends State<DrawingModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Drawing name với icon
+        // Drawing name
         Row(
           children: [
             Text(
@@ -201,9 +267,12 @@ class _DrawingModalState extends State<DrawingModal> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            AppButton(
+              icon: Icons.undo, 
+              onPressed: _history.length > 1 ? _onUndo : null,
+              width: 56,
+            ),
             AppButton(icon: Icons.clear, onPressed: _onClear, width: 56),
-            AppButton(icon: Icons.undo, onPressed: _onUndo, width: 56),
-            AppButton(icon: Icons.save, onPressed: _onSave, width: 56),
             AppButton(icon: Icons.folder_open, onPressed: _onOpen, width: 56),
           ],
         ),
@@ -211,70 +280,40 @@ class _DrawingModalState extends State<DrawingModal> {
     );
   }
 
-  Widget _buildCanvas(dynamic theme) {
-    return Container(
-      width: double.infinity,
-      height: 300, // Square-ish cho mobile
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: theme.border, width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(
-          '64×64 Grid\n(mockup)',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 16,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildColorPalette(dynamic theme) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, // 4 cột
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 1, // Square cells
-      ),
-      itemCount: 32,
-      itemBuilder: (context, index) {
-        final isSelected = index == _selectedColorIndex;
-        return GestureDetector(
-          onTap: () => _onColorSelected(index),
-          child: Container(
-            decoration: BoxDecoration(
-              color: _colorPalette[index],
-              border: Border.all(
-                color: isSelected ? Colors.red : theme.border,
-                width: isSelected ? 3 : 1.5,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
+    int index = 0;
+    return Column(
+      children: DrawingPalette.colors.map((row) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: row.map((colorHex) {
+              final currentIndex = index++;
+              final isSelected = currentIndex == _selectedColorIndex;
+              return GestureDetector(
+                onTap: () => _onColorSelected(currentIndex),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: Color(DrawingPalette.hexToInt(colorHex)),
+                    border: Border.all(
+                      color: isSelected ? Colors.white : theme.border,
+                      width: isSelected ? 3 : 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: Colors.white.withOpacity(0.5), blurRadius: 8)]
+                        : null,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         );
-      },
+      }).toList(),
     );
-  }
-
-  String _getColorName(int index) {
-    // Tên màu đơn giản cho demo
-    const colorNames = [
-      'Blue', 'White', 'Orange', 'Yellow',
-      'Green', 'Cyan', 'Navy', 'Purple',
-      'Brown', 'Gray', 'Black', 'Pink',
-      'Rose', 'Sky', 'Cream', 'Mint',
-      'Coral', 'Lavender', 'Silver', 'Dark Brown',
-      'Teal', 'Violet', 'Red', 'Bright Yellow',
-      'Lime', 'Indigo', 'Magenta', 'Aqua',
-      'Dark', 'Mid Gray', 'Light Gray', 'Pale',
-    ];
-    return colorNames[index % colorNames.length];
   }
 }

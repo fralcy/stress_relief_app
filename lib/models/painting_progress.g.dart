@@ -20,7 +20,7 @@ class PaintingAdapter extends TypeAdapter<Painting> {
       name: fields[0] as String,
       createdAt: fields[1] as DateTime,
       pixels: (fields[2] as List)
-          .map((dynamic e) => (e as List).cast<String>())
+          .map((dynamic e) => (e as List).cast<int>())
           .toList(),
     );
   }
@@ -60,15 +60,18 @@ class PaintingProgressAdapter extends TypeAdapter<PaintingProgress> {
     };
     return PaintingProgress(
       savedPaintings: (fields[0] as List?)?.cast<Painting>(),
+      selected: fields[1] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, PaintingProgress obj) {
     writer
-      ..writeByte(1)
+      ..writeByte(2)
       ..writeByte(0)
-      ..write(obj.savedPaintings);
+      ..write(obj.savedPaintings)
+      ..writeByte(1)
+      ..write(obj.selected);
   }
 
   @override

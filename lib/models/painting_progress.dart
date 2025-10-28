@@ -12,7 +12,7 @@ class Painting {
   final DateTime createdAt;
   
   @HiveField(2)
-  final List<List<String>> pixels; // Grid 64x64, mỗi cell là mã màu 8-bit
+  final List<List<int>> pixels; // Grid 64x64, mỗi cell là số thứ tự của màu trong palette
 
   Painting({
     required this.name,
@@ -23,7 +23,7 @@ class Painting {
   Painting copyWith({
     String? name,
     DateTime? createdAt,
-    List<List<String>>? pixels,
+    List<List<int>>? pixels,
   }) {
     return Painting(
       name: name ?? this.name,
@@ -39,15 +39,21 @@ class PaintingProgress {
   @HiveField(0)
   final List<Painting>? savedPaintings;
 
+  @HiveField(1)
+  final int selected; // Index của tranh đang chọn, mặc định là 0
+
   PaintingProgress({
     this.savedPaintings,
+    this.selected = 0,
   });
 
   PaintingProgress copyWith({
     List<Painting>? savedPaintings,
+    int? selected,
   }) {
     return PaintingProgress(
       savedPaintings: savedPaintings ?? this.savedPaintings,
+      selected: selected ?? this.selected,
     );
   }
 }

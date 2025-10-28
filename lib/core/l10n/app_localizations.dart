@@ -154,6 +154,9 @@ abstract class AppLocalizations {
   String get undo;
   String get colorPalette;
   String get selected;
+  String get clearCanvas;
+  String get clearCanvasWarning;
+  String get thisWillEraseEverything;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {
