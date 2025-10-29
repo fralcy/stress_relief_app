@@ -157,6 +157,9 @@ abstract class AppLocalizations {
   String get clearCanvas;
   String get clearCanvasWarning;
   String get thisWillEraseEverything;
+  String get gallery;
+  String get myPaintings;
+  String paintingNumber(int number);
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

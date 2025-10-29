@@ -21,6 +21,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reset => 'Reset';
   
   @override
+  String get edit => 'Edit';
+  
+  @override
   String get livingRoom => 'Living Room';
   
   @override
@@ -30,7 +33,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aquarium => 'Aquarium';
   
   @override
-  String get paintingRoom => 'Art Room';
+  String get paintingRoom => 'Painting Room';
   
   @override
   String get musicRoom => 'Music Room';
@@ -58,13 +61,13 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String get enabled => 'Enabled';
-  
+
   @override
   String get on => 'ON';
-  
+
   @override
   String get off => 'OFF';
-  
+
   @override
   String get display => 'Display';
   
@@ -84,10 +87,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification => 'Notification';
   
   @override
-  String get sleepReminder => 'Sleep reminder';
+  String get sleepReminder => 'Sleep Reminder';
   
   @override
-  String get taskReminder => 'Task reminder';
+  String get taskReminder => 'Task Reminder';
   
   @override
   String get time => 'Time';
@@ -108,7 +111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sync => 'Sync';
   
   @override
-  String get resetToDefault => 'Reset to default';
+  String get resetToDefault => 'Reset to Default';
 
   @override
   String get cloudSyncComingSoon => 'Cloud sync coming soon!';
@@ -118,63 +121,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scheduleTask => 'Schedule Task';
+
+  @override
+  String get taskName => 'Task Name';
+
+  @override
+  String get addTask => 'Add Task';
   
   @override
-  String get taskName => 'Task name';
-  
-  @override
-  String get addTask => 'Add task';
-  
-  @override
-  String get editTask => 'Edit';
-  
+  String get editTask => 'Edit Task';
+
   @override
   String get completed => 'Completed';
   
   @override
-  String get earnPoints => 'Earn';
+  String get earnPoints => 'Earn Points';
+                     
+  @override
+  String get noTasksYet => 'No tasks yet!';
 
   @override
-  String get edit => 'Edit';
+  String get enterTaskName => 'Enter task name';
 
   @override
-  String get noTasksYet => 'No tasks yet';
+  String get taskAdded => 'Task added!';
 
   @override
-  String get enterTaskName => 'Please enter task name';
+  String get taskDeleted => 'Task deleted!';
 
   @override
-  String get taskAdded => 'Task added';
+  String get taskUpdated => 'Task updated!';
 
   @override
-  String get taskDeleted => 'Task deleted';
+  String get taskNameRequired => 'Please enter task name';
 
   @override
-  String get taskUpdated => 'Updated';
+  String get expectedPoints => 'Expected points';
 
   @override
-  String get taskNameRequired => 'Task name is required';
+  String get endDayAndClaimPoints => 'End Day & Claim Points';
 
   @override
-  String get expectedPoints => 'Expected points:';
+  String get completedTasks => 'completed tasks';
 
   @override
-  String get endDayAndClaimPoints => 'End day & claim points';
+  String get alreadyClaimedToday => 'Already claimed today!';
 
   @override
-  String get completedTasks => 'Completed {count} tasks';
+  String get noCompletedTasks => 'No completed tasks!';
 
   @override
-  String get alreadyClaimedToday => 'Already claimed today';
+  String get pointsClaimed => 'Points claimed!';
 
   @override
-  String get noCompletedTasks => 'No completed tasks';
-
-  @override
-  String get pointsClaimed => 'Claimed {points} points! 🎉';
-
-  @override
-  String get alreadyClaimedOrNoTasks => 'Already claimed today or no completed tasks';
+  String get alreadyClaimedOrNoTasks => 'Already claimed or no completed tasks!';
 
   @override
   String get sceneShop => 'Scene Shop';
@@ -182,30 +182,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get feature => 'Feature';
 
-  // Emotion Diary
   @override
-  String get emotionDiary => 'Mood';
+  String get emotionDiary => 'Emotion Diary';
 
   @override
-  String get historyLast2Weeks => 'History (last 2 weeks)';
+  String get historyLast2Weeks => 'History (Last 2 weeks)';
 
   @override
-  String get tapDayToViewDetails => 'Tap a day to view details ↑';
+  String get tapDayToViewDetails => 'Tap a day to view details';
 
   @override
-  String get todaysJournal => "TODAY'S JOURNAL";
+  String get todaysJournal => "Today's Journal";
 
   @override
-  String get dailyJournal => "DAILY JOURNAL";
+  String get dailyJournal => 'Daily Journal';
 
   @override
-  String get howDoYouFeelOverall => '1. How do you feel overall today?';
+  String get howDoYouFeelOverall => 'How do you feel overall?';
 
   @override
-  String get howWasYourStressLevel => '2. How was your stress level?';
+  String get howWasYourStressLevel => 'How was your stress level?';
 
   @override
-  String get howProductiveWereYou => '3. How productive were you?';
+  String get howProductiveWereYou => 'How productive were you?';
 
   @override
   String get veryBad => 'Very Bad';
@@ -250,10 +249,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get very => 'Very';
 
   @override
-  String get writeYourThoughts => 'Write your thoughts here...';
+  String get writeYourThoughts => 'Write your thoughts...';
 
   @override
-  String get journalSaved => 'Journal saved! ✅';
+  String get journalSaved => '✅ Journal saved!';
 
   @override
   String get saveToEarnPoints => '✨ Save to earn 10 points!';
@@ -383,4 +382,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisWillEraseEverything => 'This will erase everything!';
+  
+  @override
+  String get gallery => 'Gallery';
+  
+  @override
+  String get myPaintings => 'My Paintings';
+  
+  @override
+  String paintingNumber(int number) => 'Painting $number';
 }

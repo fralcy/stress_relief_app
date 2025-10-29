@@ -21,6 +21,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reset => 'Đặt lại';
   
   @override
+  String get edit => 'Sửa';
+  
+  @override
   String get livingRoom => 'Phòng khách';
   
   @override
@@ -117,64 +120,61 @@ class AppLocalizationsVi extends AppLocalizations {
   String get resetConfirmation => 'Bạn có chắc muốn đặt lại tất cả cài đặt?';
 
   @override
-  String get scheduleTask => 'Lập lịch';
-  
+  String get scheduleTask => 'Lịch công việc';
+
   @override
   String get taskName => 'Tên công việc';
-  
+
   @override
   String get addTask => 'Thêm công việc';
   
   @override
-  String get editTask => 'Sửa';
-  
+  String get editTask => 'Sửa công việc';
+
   @override
   String get completed => 'Hoàn thành';
   
   @override
-  String get earnPoints => 'Kiếm được';
+  String get earnPoints => 'Nhận điểm';
+                     
+  @override
+  String get noTasksYet => 'Chưa có công việc nào!';
 
   @override
-  String get edit => 'Sửa';
+  String get enterTaskName => 'Nhập tên công việc';
 
   @override
-  String get noTasksYet => 'Chưa có công việc nào';
+  String get taskAdded => 'Đã thêm công việc!';
 
   @override
-  String get enterTaskName => 'Vui lòng nhập tên công việc';
+  String get taskDeleted => 'Đã xóa công việc!';
 
   @override
-  String get taskAdded => 'Đã thêm công việc';
+  String get taskUpdated => 'Đã cập nhật công việc!';
 
   @override
-  String get taskDeleted => 'Đã xóa công việc';
+  String get taskNameRequired => 'Vui lòng nhập tên công việc';
 
   @override
-  String get taskUpdated => 'Đã cập nhật';
+  String get expectedPoints => 'Điểm dự kiến';
 
   @override
-  String get taskNameRequired => 'Tên công việc không được để trống';
+  String get endDayAndClaimPoints => 'Kết thúc ngày & Nhận điểm';
 
   @override
-  String get expectedPoints => 'Điểm dự kiến:';
+  String get completedTasks => 'công việc hoàn thành';
 
   @override
-  String get endDayAndClaimPoints => 'Kết thúc ngày & nhận điểm';
+  String get alreadyClaimedToday => 'Đã nhận điểm hôm nay rồi!';
 
   @override
-  String get completedTasks => 'Hoàn thành {count} công việc';
+  String get noCompletedTasks => 'Chưa có công việc nào hoàn thành!';
 
   @override
-  String get alreadyClaimedToday => 'Hôm nay đã nhận điểm rồi';
+  String get pointsClaimed => 'Đã nhận điểm!';
 
   @override
-  String get noCompletedTasks => 'Chưa có công việc hoàn thành';
-
-  @override
-  String get pointsClaimed => 'Đã nhận {points} điểm! 🎉';
-
-  @override
-  String get alreadyClaimedOrNoTasks => 'Hôm nay đã nhận điểm rồi hoặc chưa có công việc hoàn thành';
+  String get alreadyClaimedOrNoTasks => 'Đã nhận hoặc chưa có công việc hoàn thành!';
 
   @override
   String get sceneShop => 'Cửa hàng cảnh';
@@ -182,30 +182,29 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get feature => 'Tính năng';
 
-  // Emotion Diary
   @override
   String get emotionDiary => 'Nhật ký cảm xúc';
 
   @override
-  String get historyLast2Weeks => 'Lịch sử (2 tuần gần nhất)';
+  String get historyLast2Weeks => 'Lịch sử 2 tuần';
 
   @override
-  String get tapDayToViewDetails => 'Nhấn vào ngày để xem chi tiết ↑';
+  String get tapDayToViewDetails => 'Chạm vào ngày để xem chi tiết';
 
   @override
-  String get todaysJournal => "NHẬT KÝ HÔM NAY";
+  String get todaysJournal => 'Nhật ký hôm nay';
 
   @override
-  String get dailyJournal => "NHẬT KÝ TRONG NGÀY";
+  String get dailyJournal => 'Nhật ký hằng ngày';
 
   @override
-  String get howDoYouFeelOverall => '1. Hôm nay bạn cảm thấy thế nào?';
+  String get howDoYouFeelOverall => 'Bạn cảm thấy thế nào?';
 
   @override
-  String get howWasYourStressLevel => '2. Mức độ căng thẳng của bạn?';
+  String get howWasYourStressLevel => 'Mức độ căng thẳng?';
 
   @override
-  String get howProductiveWereYou => '3. Bạn làm việc hiệu quả như thế nào?';
+  String get howProductiveWereYou => 'Mức độ làm việc?';
 
   @override
   String get veryBad => 'Rất tệ';
@@ -220,7 +219,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get good => 'Tốt';
 
   @override
-  String get great => 'Tuyệt vời';
+  String get great => 'Rất tốt';
 
   @override
   String get veryHigh => 'Rất cao';
@@ -247,13 +246,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get average => 'Trung bình';
 
   @override
-  String get very => 'Rất tốt';
+  String get very => 'Nhiều';
 
   @override
   String get writeYourThoughts => 'Viết suy nghĩ của bạn...';
 
   @override
-  String get journalSaved => 'Đã lưu nhật ký! ✅';
+  String get journalSaved => '✅ Đã lưu nhật ký!';
 
   @override
   String get saveToEarnPoints => '✨ Lưu để nhận 10 điểm!';
@@ -383,4 +382,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get thisWillEraseEverything => 'Điều này sẽ xóa tất cả!';
+  
+  @override
+  String get gallery => 'Thư viện';
+  
+  @override
+  String get myPaintings => 'Tranh của tôi';
+  
+  @override
+  String paintingNumber(int number) => 'Tranh $number';
 }

@@ -7,6 +7,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/constants/drawing_palette.dart';
 import '../../core/widgets/pixel_canvas.dart';
 import '../../core/utils/painting_service.dart';
+import 'gallery_modal.dart';
 
 /// Modal vẽ tranh
 class DrawingModal extends StatefulWidget {
@@ -16,8 +17,14 @@ class DrawingModal extends StatefulWidget {
   State<DrawingModal> createState() => _DrawingModalState();
 
   /// Helper để show modal
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    
+    // Init default paintings nếu chưa có
+    await PaintingService().initializeDefaultPaintings();
+    
+    if (!context.mounted) return;
+    
     return AppModal.show(
       context: context,
       title: l10n.art,
@@ -29,11 +36,13 @@ class DrawingModal extends StatefulWidget {
 
 class _DrawingModalState extends State<DrawingModal> {
   final PaintingService _paintingService = PaintingService();
+  final TextEditingController _nameController = TextEditingController();
   
   late List<List<int>> _pixels;
   int _selectedColorIndex = 0;
   String _drawingName = 'My Drawing';
   bool _isLoading = true;
+  bool _isEditingName = false;
   
   // Undo history
   final List<List<List<int>>> _history = [];
@@ -48,6 +57,12 @@ class _DrawingModalState extends State<DrawingModal> {
     _loadPainting();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
   void _loadPainting() {
     final painting = _paintingService.getCurrentPainting();
     
@@ -55,12 +70,14 @@ class _DrawingModalState extends State<DrawingModal> {
       setState(() {
         _pixels = painting.pixels.map((row) => List<int>.from(row)).toList();
         _drawingName = painting.name;
+        _nameController.text = painting.name;
         _isLoading = false;
       });
     } else {
       // Tạo mới nếu chưa có
       setState(() {
         _pixels = _paintingService.createEmptyGrid();
+        _nameController.text = _drawingName;
         _isLoading = false;
       });
     }
@@ -143,10 +160,59 @@ class _DrawingModalState extends State<DrawingModal> {
     );
   }
 
-  void _onOpen() {
+  Future<void> _onOpen() async {
     SfxService().buttonClick();
-    // TODO: Show list của paintings để chọn
-    print('Open painting list');
+    
+    // Show gallery modal
+    await GalleryModal.show(
+      context,
+      onPaintingSelected: () {
+        // Reload painting khi chọn tranh mới
+        setState(() {
+          _isLoading = true;
+        });
+        _loadPainting();
+      },
+    );
+  }
+
+  void _onEditName() {
+    SfxService().buttonClick();
+    setState(() {
+      _isEditingName = true;
+    });
+  }
+
+  Future<void> _onSaveName() async {
+    SfxService().buttonClick();
+    
+    final newName = _nameController.text.trim();
+    if (newName.isEmpty) {
+      _nameController.text = _drawingName;
+      setState(() {
+        _isEditingName = false;
+      });
+      return;
+    }
+    
+    setState(() {
+      _drawingName = newName;
+      _isEditingName = false;
+    });
+    
+    // Save name
+    await _paintingService.updateCurrentPaintingName(newName);
+    
+    // Re-save painting with new name
+    await _paintingService.savePainting(_pixels, name: newName);
+  }
+
+  void _onCancelEdit() {
+    SfxService().buttonClick();
+    _nameController.text = _drawingName;
+    setState(() {
+      _isEditingName = false;
+    });
   }
 
   @override
@@ -238,7 +304,7 @@ class _DrawingModalState extends State<DrawingModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Drawing name
+        // Drawing name với edit functionality
         Row(
           children: [
             Text(
@@ -249,15 +315,61 @@ class _DrawingModalState extends State<DrawingModal> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Text(
-              _drawingName,
-              style: TextStyle(
-                color: theme.text,
-                fontSize: 16,
+            
+            if (_isEditingName) ...[
+              // Text field để edit
+              Expanded(
+                child: TextField(
+                  controller: _nameController,
+                  autofocus: true,
+                  style: TextStyle(
+                    color: theme.text,
+                    fontSize: 16,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: theme.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: theme.primary),
+                    ),
+                  ),
+                  onSubmitted: (_) => _onSaveName(),
+                ),
               ),
-            ),
-            const SizedBox(width: 4),
-            const Text('✏️', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              // Save button
+              GestureDetector(
+                onTap: _onSaveName,
+                child: const Text('✓', style: TextStyle(fontSize: 20, color: Colors.green)),
+              ),
+              const SizedBox(width: 8),
+              // Cancel button
+              GestureDetector(
+                onTap: _onCancelEdit,
+                child: const Text('✗', style: TextStyle(fontSize: 20, color: Colors.red)),
+              ),
+            ] else ...[
+              // Display name
+              Text(
+                _drawingName,
+                style: TextStyle(
+                  color: theme.text,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Edit button
+              GestureDetector(
+                onTap: _onEditName,
+                child: const Text('✏️', style: TextStyle(fontSize: 16)),
+              ),
+            ],
           ],
         ),
         
