@@ -37,6 +37,21 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String get musicRoom => 'Music Room';
+
+  @override
+  String get tasks => 'Tasks';
+
+  @override
+  String get mood => 'Mood';
+
+  @override
+  String get draw => 'Draw';
+
+  @override
+  String get compose => 'Compose';
+
+  @override
+  String get library => 'Library';
   
   @override
   String get settings => 'Settings';
@@ -255,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journalSaved => '✅ Journal saved!';
 
   @override
-  String get saveToEarnPoints => '✨ Save to earn 10 points!';
+  String get saveToEarnPoints => '✨ Save to earn points!';
 
   @override
   String get alreadySavedToday => '✅ Already saved today';

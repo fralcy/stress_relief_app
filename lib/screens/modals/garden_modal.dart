@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/constants/plant_config.dart';
@@ -8,6 +9,7 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/providers/score_provider.dart';
 import '../../models/garden_progress.dart';
 
 /// Modal mini-game làm vườn/trồng trọt
@@ -156,7 +158,7 @@ class _GardenModalState extends State<GardenModal> {
     });
   }
 
-  void _onCellTap(int row, int col) {
+  void _onCellTap(int row, int col) async {
     if (_selectedAction == null) return;
     
     final cell = _progress.plots![row][col];
@@ -269,12 +271,7 @@ class _GardenModalState extends State<GardenModal> {
         _saveProgress();
         
         // Cộng điểm vào UserProfile
-        final profile = DataManager().userProfile;
-        final updatedProfile = profile.copyWith(
-          currentPoints: profile.currentPoints + pointsGained,
-          totalPoints: profile.totalPoints + pointsGained,
-        );
-        DataManager().saveUserProfile(updatedProfile);
+        await context.read<ScoreProvider>().addPoints(pointsGained);
 
         _showToast(l10n.harvestedSuccessfully(1, pointsGained));
         break;

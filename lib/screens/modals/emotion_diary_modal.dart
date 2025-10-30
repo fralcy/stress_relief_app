@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/widgets/app_modal.dart';
@@ -7,6 +8,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/providers/score_provider.dart';
 import '../../models/index.dart';
 
 /// Modal quản lý nhật ký cảm xúc
@@ -433,8 +435,8 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         // Helper text
         Text(
           isFirstTimeToday 
-            ? '✨ Save to earn 10 points!' 
-            : '✅ Already saved today',
+            ? l10n.saveToEarnPoints
+            : l10n.alreadySavedToday,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: isFirstTimeToday ? theme.primary : theme.border,
@@ -487,12 +489,8 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     // Award points if first time today
     if (isFirstTimeToday) {
       SfxService().reward(); // Play reward sound for first time
-      final profile = DataManager().userProfile;
-      final updatedProfile = profile.copyWith(
-        currentPoints: profile.currentPoints + 10,
-        totalPoints: profile.totalPoints + 10,
-      );
-      await DataManager().saveUserProfile(updatedProfile);
+      const diaryPoints = 20;
+      await context.read<ScoreProvider>().addPoints(diaryPoints);
     } else {
       SfxService().buttonClick(); // Regular save sound
     }

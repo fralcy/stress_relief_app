@@ -37,6 +37,21 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String get musicRoom => 'Phòng nhạc';
+
+  @override
+  String get tasks => 'Công việc';
+
+  @override
+  String get mood => 'Tâm trạng';
+
+  @override
+  String get draw => 'Vẽ';
+
+  @override
+  String get compose => 'Sáng tác';
+
+  @override
+  String get library => 'Thư viện';
   
   @override
   String get settings => 'Cài đặt';
@@ -255,7 +270,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get journalSaved => '✅ Đã lưu nhật ký!';
 
   @override
-  String get saveToEarnPoints => '✨ Lưu để nhận 10 điểm!';
+  String get saveToEarnPoints => '✨ Lưu để nhận điểm!';
 
   @override
   String get alreadySavedToday => '✅ Đã lưu hôm nay';

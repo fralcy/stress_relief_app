@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/constants/fish_config.dart';
@@ -7,6 +8,7 @@ import '../../core/utils/asset_loader.dart';
 import '../../core/utils/aquarium_service.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/providers/score_provider.dart';
 import '../../models/aquarium_progress.dart';
 import '../../models/scene_models.dart';
 import '../../core/widgets/app_modal.dart';
@@ -145,7 +147,7 @@ class _AquariumModalState extends State<AquariumModal> {
     SfxService().taskComplete();
   }
 
-  void _onClaim() {
+  void _onClaim() async {
     final claimablePoints = AquariumService.calculateClaimablePoints(
       _progress.fishes,
       _progress.lastFed,
@@ -155,14 +157,8 @@ class _AquariumModalState extends State<AquariumModal> {
     if (claimablePoints == 0) return;
     
     // Update user profile points
-    final currentProfile = DataManager().userProfile;
-    final updatedProfile = currentProfile.copyWith(
-      currentPoints: currentProfile.currentPoints + claimablePoints,
-      totalPoints: currentProfile.totalPoints + claimablePoints,
-      lastPointsClaimDate: DateTime.now(),
-    );
-    DataManager().saveUserProfile(updatedProfile);
-    
+    await context.read<ScoreProvider>().addPoints(claimablePoints);
+
     setState(() {
       _progress = _progress.copyWith(
         earnings: _progress.earnings + claimablePoints,
@@ -172,9 +168,7 @@ class _AquariumModalState extends State<AquariumModal> {
     
     _saveProgress();
     SfxService().reward();
-  }
-
-  void _onBuyFish(String fishType) {
+  }  void _onBuyFish(String fishType) async {
     final config = FishConfigs.getConfig(fishType);
     if (config == null) return;
     
@@ -187,10 +181,7 @@ class _AquariumModalState extends State<AquariumModal> {
     if (_progress.fishes.length >= 10) return;
     
     // Trừ điểm từ user profile
-    final updatedProfile = currentProfile.copyWith(
-      currentPoints: currentProfile.currentPoints - config.price,
-    );
-    DataManager().saveUserProfile(updatedProfile);
+    await context.read<ScoreProvider>().subtractPoints(config.price);
     
     setState(() {
       final newFishes = List<Fish>.from(_progress.fishes)
@@ -217,7 +208,7 @@ class _AquariumModalState extends State<AquariumModal> {
     SfxService().reward();
   }
 
-  void _onSellFish(String fishType) {
+  void _onSellFish(String fishType) async {
     final fishIndex = _progress.fishes.indexWhere((f) => f.type == fishType);
     if (fishIndex == -1) return;
     
@@ -225,11 +216,7 @@ class _AquariumModalState extends State<AquariumModal> {
     if (config != null) {
       // Hoàn lại 50% giá khi bán
       final sellPrice = (config.price * 0.5).toInt();
-      final currentProfile = DataManager().userProfile;
-      final updatedProfile = currentProfile.copyWith(
-        currentPoints: currentProfile.currentPoints + sellPrice,
-      );
-      DataManager().saveUserProfile(updatedProfile);
+      await context.read<ScoreProvider>().addPoints(sellPrice);
     }
     
     setState(() {
@@ -254,7 +241,7 @@ class _AquariumModalState extends State<AquariumModal> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
-    final currentPoints = DataManager().userProfile.currentPoints;
+    final currentPoints = context.watch<ScoreProvider>().currentPoints;
 
     // Tính toán thông tin hiển thị
     final totalFish = _progress.fishes.length;
@@ -332,20 +319,6 @@ class _AquariumModalState extends State<AquariumModal> {
                 fontWeight: FontWeight.bold,
                 color: theme.text,
               ),
-            ),
-            Row(
-              children: [
-                const Icon(Icons.monetization_on, size: 16, color: Colors.amber),
-                const SizedBox(width: 4),
-                Text(
-                  '$currentPoints',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: theme.text,
-                  ),
-                ),
-              ],
             ),
           ],
         ),

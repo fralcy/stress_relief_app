@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
+import '../providers/score_provider.dart';
 import '../utils/data_manager.dart';
 import '../../screens/modals/settings_modal.dart';
 
@@ -9,7 +11,7 @@ import '../../screens/modals/settings_modal.dart';
 /// Layout: [Scene Shop] [Coin: 1234] [Settings]
 /// - Background: transparent
 /// - Items: primary bg, background text
-class AppHeader extends StatelessWidget {
+class AppHeader extends StatefulWidget {
   final VoidCallback onSceneShopPressed;
 
   const AppHeader({
@@ -18,9 +20,37 @@ class AppHeader extends StatelessWidget {
   });
 
   @override
+  State<AppHeader> createState() => _AppHeaderState();
+}
+
+class _AppHeaderState extends State<AppHeader> {
+  late int currentPoints;
+
+  @override
+  void initState() {
+    super.initState();
+    currentPoints = DataManager().userProfile.currentPoints;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  /// Phương thức để cập nhật điểm số từ bên ngoài
+  void updatePoints() {
+    if (mounted) {
+      setState(() {
+        currentPoints = DataManager().userProfile.currentPoints;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final currentPoints = DataManager().userProfile.currentPoints;
+    // Cập nhật điểm số mỗi lần rebuild
+    final currentPoints = context.watch<ScoreProvider>().currentPoints;
     
     return Container(
       height: 68,
@@ -30,7 +60,7 @@ class AppHeader extends StatelessWidget {
         children: [
           _buildHeaderButton(
             icon: Icons.landscape,
-            onPressed: onSceneShopPressed,
+            onPressed: widget.onSceneShopPressed,
             theme: theme,
           ),
           _buildCoinDisplay(currentPoints, theme),

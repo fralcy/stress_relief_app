@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
+import '../core/l10n/app_localizations.dart';
 import '../models/scene_models.dart';
 import '../core/utils/asset_loader.dart';
 import '../core/utils/sfx_service.dart';
@@ -186,12 +187,14 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   }
 
   List<FeatureButton> _getFeatureButtonsForScene(SceneType scene) {
+    final l10n = AppLocalizations.of(context);
+    
     switch (scene) {
       case SceneType.livingRoom:
         return [
           FeatureButton(
             icon: Icons.calendar_today,
-            label: 'Tasks',
+            label: l10n.tasks,
             onPressed: () {
               SfxService().buttonClick();
               ScheduleTaskModal.show(context);
@@ -199,7 +202,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           ),
           FeatureButton(
             icon: Icons.mood,
-            label: 'Mood',
+            label: l10n.mood,
             onPressed: () {
               SfxService().buttonClick();
               EmotionDiaryModal.show(context);
@@ -211,7 +214,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
         return [
           FeatureButton(
             icon: Icons.agriculture,
-            label: 'Garden',
+            label: l10n.garden,
             onPressed: () {
               SfxService().buttonClick();
               GardenModal.show(context);
@@ -223,7 +226,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
         return [
           FeatureButton(
             icon: Icons.food_bank,
-            label: 'Aquarium',
+            label: l10n.aquarium,
             onPressed: () {
               SfxService().buttonClick();
               AquariumModal.show(context);
@@ -235,7 +238,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
         return [
           FeatureButton(
             icon: Icons.create,
-            label: 'Draw',
+            label: l10n.draw,
             onPressed: () {
               SfxService().buttonClick();
               DrawingModal.show(context);
@@ -243,7 +246,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           ),
           FeatureButton(
             icon: Icons.photo_library,
-            label: 'Gallery',
+            label: l10n.gallery,
             onPressed: () {
               SfxService().buttonClick();
               GalleryModal.show(
@@ -258,7 +261,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
         return [
           FeatureButton(
             icon: Icons.play_circle,
-            label: 'Compose',
+            label: l10n.compose,
             onPressed: () {
               SfxService().buttonClick();
               _showToast('Compose Music');
@@ -266,7 +269,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
           ),
           FeatureButton(
             icon: Icons.library_music,
-            label: 'Library',
+            label: l10n.library,
             onPressed: () {
               SfxService().buttonClick();
               _showToast('Music Library');

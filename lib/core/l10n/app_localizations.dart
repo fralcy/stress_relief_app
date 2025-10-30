@@ -20,6 +20,13 @@ abstract class AppLocalizations {
   String get aquarium;
   String get paintingRoom;
   String get musicRoom;
+
+  // Feature buttons
+  String get tasks;
+  String get mood;
+  String get draw;
+  String get compose;
+  String get library;
   
   // Settings
   String get settings;

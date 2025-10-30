@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/widgets/app_modal.dart';
@@ -9,6 +10,7 @@ import '../../core/utils/schedule_points_service.dart';
 import '../../core/utils/overlap_detector.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/providers/score_provider.dart';
 import '../../models/schedule_task.dart';
 
 // Export
@@ -161,22 +163,39 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
 
   Future<void> _claimPoints() async {
     final l10n = AppLocalizations.of(context);
-    final points = await SchedulePointsService.claimDailyPoints();
     
-    if (points == null) {
+    // Lấy profile từ provider
+    final profile = context.read<ScoreProvider>().profile;
+    final tasks = DataManager().scheduleTasks;
+    
+    // Check đã claim hôm nay chưa
+    if (!SchedulePointsService.canClaimToday(profile.lastPointsClaimDate)) {
       SfxService().error();
       _showToast(l10n.alreadyClaimedOrNoTasks);
       return;
     }
-
+    
+    // Tính điểm từ completed tasks
+    final points = SchedulePointsService.calculatePoints(tasks);
+    if (points == 0) {
+      SfxService().error();
+      _showToast(l10n.alreadyClaimedOrNoTasks);
+      return;
+    }
+    
+    // Cộng điểm qua provider ← KEY!
+    await context.read<ScoreProvider>().addPoints(points);
+    
+    // Update last claim date
+    await context.read<ScoreProvider>().updateLastClaimDate(DateTime.now());
+    
+    // Xóa completed tasks
+    final remainingTasks = tasks.where((task) => !task.isCompleted).toList();
+    await DataManager().saveScheduleTasks(remainingTasks);
+    
     SfxService().reward();
     _showToast('${l10n.pointsClaimed.replaceAll('{points}', '$points')} 🎉');
-    _loadTasks(); // Refresh để xóa completed tasks
-    
-    // Refresh header để update coins
-    if (mounted) {
-      setState(() {});
-    }
+    _loadTasks();
   }
 
   void _showToast(String message) {
@@ -528,7 +547,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Widget _buildFooter(AppLocalizations l10n, AppTheme theme) {
-    final profile = DataManager().userProfile;
+    final profile = context.watch<ScoreProvider>().profile;
     final pendingPoints = SchedulePointsService.getPendingPoints(_tasks);
     final canClaim = SchedulePointsService.canClaimToday(profile.lastPointsClaimDate) && pendingPoints > 0;
 

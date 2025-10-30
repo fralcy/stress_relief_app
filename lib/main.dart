@@ -10,6 +10,8 @@ import 'core/utils/bgm_service.dart';
 import 'core/utils/sfx_service.dart';
 import 'core/utils/notifier.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/providers/locale_provider.dart';
+import 'core/providers/score_provider.dart';
 
 // Import test screens
 import 'screens/notifier_test_screen.dart';
@@ -33,8 +35,12 @@ void main() async {
     await Notifier.initialize();
   }
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => ScoreProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -48,12 +54,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  Locale? _locale;
-
   @override
   void initState() {
     super.initState();
-    _loadLocale();
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -79,15 +82,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
-  void _loadLocale() {
-    final locale = LocaleStorage.getLocale();
-    setState(() {
-      _locale = locale;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<LocaleProvider>().currentLocale;
     return MaterialApp(
       title: 'Stress Relief App',
       theme: ThemeData(
@@ -105,7 +102,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
       ),
       // Localization
-      locale: _locale,
+      locale: locale, // ← ĐỔI TỪ _locale THÀNH locale
       supportedLocales: LocaleStorage.supportedLocales,
       localizationsDelegates: const [
         AppLocalizationsDelegate(),

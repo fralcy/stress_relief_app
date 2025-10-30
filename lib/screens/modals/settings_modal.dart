@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/providers/locale_provider.dart'; // ← THÊM IMPORT
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_slider.dart';
@@ -556,14 +557,15 @@ class _SettingsModalState extends State<SettingsModal> {
       value: _settings.currentLanguage,
       items: languageOptions.keys.toList(),
       itemBuilder: (langCode) => Text(languageOptions[langCode]!),
-      onChanged: (langCode) {
+      onChanged: (langCode) { 
         SfxService().buttonClick();
+        
         setState(() {
           _settings = _settings.copyWith(currentLanguage: langCode);
           _saveSettings();
         });
-        // Đóng modal và reload app để cập nhật ngôn ngữ
-        Navigator.pop(context);
+        
+        context.read<LocaleProvider>().setLocale(langCode);
       },
     );
   }

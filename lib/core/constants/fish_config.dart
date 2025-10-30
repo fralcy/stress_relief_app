@@ -19,37 +19,37 @@ class FishConfigs {
     'betta': FishConfig(
       id: 'betta',
       name: 'Betta',
-      pointsPerHour: 5,
+      pointsPerHour: 2,
       price: 100,
     ),
     'guppy': FishConfig(
       id: 'guppy',
       name: 'Guppy',
-      pointsPerHour: 3,
+      pointsPerHour: 1,
       price: 80,
     ),
     'neon': FishConfig(
       id: 'neon',
       name: 'Neon Tetra',
-      pointsPerHour: 4,
+      pointsPerHour: 2,
       price: 90,
     ),
     'molly': FishConfig(
       id: 'molly',
       name: 'Molly',
-      pointsPerHour: 3,
+      pointsPerHour: 1,
       price: 75,
     ),
     'cory': FishConfig(
       id: 'cory',
       name: 'Cory',
-      pointsPerHour: 4,
+      pointsPerHour: 2,
       price: 85,
     ),
     'platy': FishConfig(
       id: 'platy',
       name: 'Platy',
-      pointsPerHour: 3,
+      pointsPerHour: 1,
       price: 70,
     ),
   };
