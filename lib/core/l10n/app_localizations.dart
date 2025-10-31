@@ -168,6 +168,18 @@ abstract class AppLocalizations {
   String get myPaintings;
   String paintingNumber(int number);
 
+  // Music Room
+  String get music;
+  String get songName;
+  String get selectInstrument;
+  String get notes;
+  String get note;
+  String get piano;
+  String get guitar;
+  String get synth;
+  String get bass;
+  String get drum;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

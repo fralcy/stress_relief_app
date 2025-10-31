@@ -406,4 +406,35 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String paintingNumber(int number) => 'Tranh $number';
+
+  // Music Room
+  @override
+  String get music => 'Âm nhạc';
+  
+  @override
+  String get songName => 'Tên bài hát';
+  
+  @override
+  String get selectInstrument => 'CHỌN NHẠC CỤ';
+  
+  @override
+  String get notes => 'NỐT NHẠC (chạm để đặt lên timeline)';
+  
+  @override
+  String get note => 'Nốt';
+  
+  @override
+  String get piano => 'Piano';
+  
+  @override
+  String get guitar => 'Guitar';
+  
+  @override
+  String get synth => 'Synth';
+  
+  @override
+  String get bass => 'Bass';
+  
+  @override
+  String get drum => 'Trống';
 }

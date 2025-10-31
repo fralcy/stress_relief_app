@@ -406,4 +406,35 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String paintingNumber(int number) => 'Painting $number';
+
+  // Music Room
+  @override
+  String get music => 'Music';
+  
+  @override
+  String get songName => 'Song Name';
+  
+  @override
+  String get selectInstrument => 'SELECT INSTRUMENT';
+  
+  @override
+  String get notes => 'NOTES (tap to place on timeline)';
+  
+  @override
+  String get note => 'Note';
+  
+  @override
+  String get piano => 'Piano';
+  
+  @override
+  String get guitar => 'Guitar';
+  
+  @override
+  String get synth => 'Synth';
+  
+  @override
+  String get bass => 'Bass';
+  
+  @override
+  String get drum => 'Drum';
 }

@@ -13,6 +13,7 @@ import 'modals/garden_modal.dart';
 import 'modals/aquarium_modal.dart';
 import 'modals/drawing_modal.dart';
 import 'modals/gallery_modal.dart';
+import 'modals/composing_modal.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -264,7 +265,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             label: l10n.compose,
             onPressed: () {
               SfxService().buttonClick();
-              _showToast('Compose Music');
+              MusicModal.show(context);
             },
           ),
           FeatureButton(
