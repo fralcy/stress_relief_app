@@ -437,4 +437,10 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String get drum => 'Trống';
+  
+  @override
+  String get selectNote => 'CHỌN NỐT NHẠC';
+  
+  @override
+  String get eraser => 'Tẩy';
 }

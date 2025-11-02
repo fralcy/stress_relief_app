@@ -265,7 +265,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             label: l10n.compose,
             onPressed: () {
               SfxService().buttonClick();
-              MusicModal.show(context);
+              ComposingModal.show(context);
             },
           ),
           FeatureButton(

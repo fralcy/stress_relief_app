@@ -3,14 +3,16 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/utils/composing_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'dart:async';
 
 /// Modal sáng tác nhạc
-class MusicModal extends StatefulWidget {
-  const MusicModal({super.key});
+class ComposingModal extends StatefulWidget {
+  const ComposingModal({super.key});
 
   @override
-  State<MusicModal> createState() => _MusicModalState();
+  State<ComposingModal> createState() => _ComposingModalState();
 
   /// Helper để show modal
   static Future<void> show(BuildContext context) async {
@@ -22,109 +24,74 @@ class MusicModal extends StatefulWidget {
       context: context,
       title: l10n.music,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const MusicModal(),
+      content: const ComposingModal(),
     );
   }
 }
 
-class _MusicModalState extends State<MusicModal> {
+class _ComposingModalState extends State<ComposingModal> {
   final TextEditingController _nameController = TextEditingController();
+  final ComposingService _composingService = ComposingService();
   
   String _songName = 'My Song';
   bool _isEditingName = false;
+  Timer? _playbackTimer;
   
   // Music settings
   static const int _bpm = 120;
-  static const int _timeSignature = 4; // 4/4
   static const int _durationSeconds = 8;
   static const int _beatsPerBar = 4;
-  
-  // Calculate total beats: 8 seconds * 120 BPM / 60 = 16 beats
   static const int _totalBeats = (_durationSeconds * _bpm) ~/ 60;
   
   // Selected instrument and note
   InstrumentType _selectedInstrument = InstrumentType.piano;
-  String? _selectedNote;
+  int? _selectedNote;
   
-  // Timeline grid: [beat][track] -> note or null
-  // 5 tracks for 5 instruments, 16 beats
-  final List<List<String?>> _timeline = List.generate(
+  // Timeline: [beat][track] = note (1-8) or null
+  final List<List<int?>> _timeline = List.generate(
     _totalBeats,
-    (_) => List.filled(5, null),
+    (_) => List.filled(InstrumentType.values.length, null),
   );
   
-  // Current playback position (0-16)
-  int _playbackPosition = 0;
+  // Playback
   bool _isPlaying = false;
+  int _playbackPosition = 0;
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = _songName;
+    _composingService.initialize();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _playbackTimer?.cancel();
+    _composingService.stopAll();
     super.dispose();
-  }
-
-  void _onEditName() {
-    SfxService().buttonClick();
-    setState(() {
-      _isEditingName = true;
-    });
-  }
-
-  Future<void> _onSaveName() async {
-    SfxService().buttonClick();
-    
-    final newName = _nameController.text.trim();
-    if (newName.isEmpty) {
-      _nameController.text = _songName;
-      setState(() {
-        _isEditingName = false;
-      });
-      return;
-    }
-    
-    setState(() {
-      _songName = newName;
-      _isEditingName = false;
-    });
-  }
-
-  void _onCancelEdit() {
-    SfxService().buttonClick();
-    _nameController.text = _songName;
-    setState(() {
-      _isEditingName = false;
-    });
   }
 
   void _onInstrumentSelected(InstrumentType instrument) {
     SfxService().buttonClick();
     setState(() {
       _selectedInstrument = instrument;
+      _selectedNote = null;
     });
   }
 
-  void _onNoteSelected(String note) {
-    SfxService().buttonClick();
+  void _onNoteSelected(int note) {
+    _composingService.playNote(_getInstrumentPath(_selectedInstrument), note);
     setState(() {
       _selectedNote = note;
     });
   }
 
-  void _onTimelineGridTap(int beatIndex) {
+  void _onTimelineClick(int beatIndex) {
     if (_selectedNote == null) return;
     
-    SfxService().buttonClick();
-    
-    final trackIndex = _selectedInstrument.index;
+    final trackIndex = InstrumentType.values.indexOf(_selectedInstrument);
     
     setState(() {
-      // Toggle: if same note exists, remove it; otherwise place it
       if (_timeline[beatIndex][trackIndex] == _selectedNote) {
         _timeline[beatIndex][trackIndex] = null;
       } else {
@@ -133,32 +100,106 @@ class _MusicModalState extends State<MusicModal> {
     });
   }
 
+  String _getInstrumentPath(InstrumentType instrument) {
+    switch (instrument) {
+      case InstrumentType.piano:
+        return 'piano';
+      case InstrumentType.guitar:
+        return 'guitar';
+      case InstrumentType.synth:
+        return 'synth';
+      case InstrumentType.bass:
+        return 'bass';
+      case InstrumentType.drum:
+        return 'drum';
+    }
+  }
+
   void _onPlay() {
     SfxService().buttonClick();
-    // TODO: Implement playback
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
+    
+    if (_isPlaying) {
+      // Đang play -> pause
+      _pausePlayback();
+    } else {
+      // Start hoặc resume
+      _startPlayback();
+    }
   }
 
   void _onPause() {
     SfxService().buttonClick();
+    _pausePlayback();
+  }
+
+  void _onStop() {
+    SfxService().buttonClick();
+    _stopPlayback();
+  }
+
+  void _startPlayback() {
+    setState(() {
+      _isPlaying = true;
+    });
+    
+    // Tính interval giữa các beat: 60000ms / BPM
+    final intervalMs = (60000 / _bpm).round();
+    
+    _playbackTimer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
+      // Phát notes ở beat hiện tại
+      _playCurrentBeat();
+      
+      // Di chuyển sang beat tiếp theo
+      setState(() {
+        _playbackPosition++;
+        
+        // Loop lại khi hết
+        if (_playbackPosition >= _totalBeats) {
+          _playbackPosition = 0;
+        }
+      });
+    });
+  }
+
+  void _pausePlayback() {
+    _playbackTimer?.cancel();
+    _composingService.stopAll();
     setState(() {
       _isPlaying = false;
     });
   }
 
-  void _onStop() {
-    SfxService().buttonClick();
+  void _stopPlayback() {
+    _playbackTimer?.cancel();
+    _composingService.stopAll();
     setState(() {
       _isPlaying = false;
       _playbackPosition = 0;
     });
   }
 
-  void _onSave() {
-    SfxService().buttonClick();
-    // TODO: Implement save
+  void _playCurrentBeat() {
+    // Thu thập tất cả notes ở beat hiện tại
+    final notesToPlay = <String, int>{};
+    
+    for (int trackIndex = 0; trackIndex < InstrumentType.values.length; trackIndex++) {
+      final note = _timeline[_playbackPosition][trackIndex];
+      if (note != null) {
+        final instrument = InstrumentType.values[trackIndex];
+        final instrumentPath = _getInstrumentPath(instrument);
+        notesToPlay[instrumentPath] = note;
+      }
+    }
+    
+    // Phát tất cả notes cùng lúc
+    if (notesToPlay.isNotEmpty) {
+      _composingService.playChord(notesToPlay);
+    }
   }
 
   @override
@@ -170,194 +211,174 @@ class _MusicModalState extends State<MusicModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ========== SONG NAME ==========
           _buildSongNameSection(l10n, theme),
-          
           const SizedBox(height: 16),
-          
-          // ========== TIMELINE ==========
           _buildTimeline(theme),
-          
           const SizedBox(height: 16),
-          
-          // ========== PLAYBACK CONTROLS ==========
           _buildPlaybackControls(l10n),
-          
           const SizedBox(height: 24),
-          
-          // ========== INSTRUMENT SELECTION ==========
           _buildInstrumentSection(l10n, theme),
-          
           const SizedBox(height: 16),
-          
-          // ========== NOTE SELECTION ==========
           _buildNoteSection(l10n, theme),
         ],
       ),
     );
   }
 
-  Widget _buildSongNameSection(AppLocalizations l10n, dynamic theme) {
+  Widget _buildSongNameSection(AppLocalizations l10n, theme) {
     return Row(
       children: [
         Text(
           '${l10n.songName}: ',
           style: TextStyle(
             color: theme.text,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        
-        if (_isEditingName) ...[
-          Expanded(
-            child: TextField(
-              controller: _nameController,
-              autofocus: true,
-              style: TextStyle(
-                color: theme.text,
-                fontSize: 16,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
+        Expanded(
+          child: _isEditingName
+              ? TextField(
+                  controller: _nameController,
+                  autofocus: true,
+                  style: TextStyle(color: theme.text, fontSize: 14),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: theme.border),
+                    ),
+                  ),
+                  onSubmitted: (val) {
+                    setState(() {
+                      _songName = val.isEmpty ? 'My Song' : val;
+                      _isEditingName = false;
+                    });
+                  },
+                )
+              : GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isEditingName = true;
+                      _nameController.text = _songName;
+                    });
+                  },
+                  child: Text(
+                    _songName,
+                    style: TextStyle(
+                      color: theme.text,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: theme.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: theme.primary),
-                ),
-              ),
-              onSubmitted: (_) => _onSaveName(),
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _onSaveName,
-            child: const Text('✓', style: TextStyle(fontSize: 20, color: Colors.green)),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _onCancelEdit,
-            child: const Text('✗', style: TextStyle(fontSize: 20, color: Colors.red)),
-          ),
-        ] else ...[
-          Text(
-            _songName,
-            style: TextStyle(
-              color: theme.text,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _onEditName,
-            child: const Text('✏️', style: TextStyle(fontSize: 16)),
-          ),
-        ],
+        ),
       ],
     );
   }
 
-  Widget _buildTimeline(dynamic theme) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.border, width: 2),
-        borderRadius: BorderRadius.circular(8),
-        color: theme.background,
-      ),
-      child: Column(
-        children: [
-          // Timeline grid
-          SizedBox(
-            height: 200,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  // Instrument labels column
-                  Container(
-                    width: 60,
-                    color: theme.primary.withOpacity(0.1),
-                    child: Column(
-                      children: InstrumentType.values.map((instrument) {
-                        return Container(
-                          height: 40,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: theme.border, width: 1),
-                            ),
-                          ),
-                          child: Text(
-                            _getInstrumentEmoji(instrument),
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+  Widget _buildTimeline(theme) {
+    return Column(
+      children: [
+        Container(
+          height: 280,
+          decoration: BoxDecoration(
+            color: theme.background,
+            border: Border.all(color: theme.border, width: 2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                Container(
+                  width: 80,
+                  decoration: BoxDecoration(
+                    border: Border(right: BorderSide(color: theme.border, width: 2)),
                   ),
-                  
-                  // Timeline beats
-                  ...List.generate(_totalBeats, (beatIndex) {
-                    return Container(
-                      width: 40,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: beatIndex % _beatsPerBar == 0 
-                                ? theme.border 
-                                : theme.border.withOpacity(0.3),
-                            width: beatIndex % _beatsPerBar == 0 ? 2 : 1,
-                          ),
+                  child: Column(
+                    children: InstrumentType.values.map((instrument) {
+                      return Container(
+                        height: 56,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: theme.border, width: 1)),
                         ),
+                        child: Text(
+                          _getInstrumentEmoji(instrument),
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                ...List.generate(_totalBeats, (beatIndex) {
+                  final isBarStart = beatIndex % _beatsPerBar == 0;
+                  final isCurrentBeat = _isPlaying && _playbackPosition == beatIndex;
+                  
+                  return Container(
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: isCurrentBeat ? theme.secondary.withOpacity(0.2) : null,
+                      border: Border(
+                        left: isBarStart
+                            ? BorderSide(color: theme.border, width: 2)
+                            : BorderSide.none,
                       ),
-                      child: Column(
-                        children: List.generate(5, (trackIndex) {
-                          final hasNote = _timeline[beatIndex][trackIndex] != null;
-                          final isPlaybackPosition = beatIndex == _playbackPosition && _isPlaying;
-                          
-                          return GestureDetector(
-                            onTap: () => _onTimelineGridTap(beatIndex),
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isPlaybackPosition
-                                    ? theme.secondary.withOpacity(0.3)
-                                    : hasNote
-                                        ? Colors.black
-                                        : theme.background,
-                                border: Border(
-                                  bottom: BorderSide(color: theme.border, width: 1),
-                                ),
+                    ),
+                    child: Column(
+                      children: List.generate(InstrumentType.values.length, (trackIndex) {
+                        final note = _timeline[beatIndex][trackIndex];
+                        final hasNote = note != null;
+                        
+                        return GestureDetector(
+                          onTap: () => _onTimelineClick(beatIndex),
+                          child: Container(
+                            height: 56,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isCurrentBeat && hasNote
+                                  ? theme.primary
+                                  : hasNote
+                                      ? theme.secondary
+                                      : theme.background,
+                              border: Border(
+                                bottom: BorderSide(color: theme.border, width: 1),
                               ),
                             ),
-                          );
-                        }),
-                      ),
-                    );
-                  }),
-                ],
-              ),
+                            child: hasNote
+                                ? Text(
+                                    note.toString(),
+                                    style: TextStyle(
+                                      color: theme.background,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        );
+                      }),
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
-          
-          // Progress bar
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: LinearProgressIndicator(
-              value: _isPlaying ? _playbackPosition / _totalBeats : 0,
-              backgroundColor: theme.border,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
-            ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: LinearProgressIndicator(
+            value: _isPlaying ? _playbackPosition / _totalBeats : 0,
+            backgroundColor: theme.border,
+            valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
           ),
-          const SizedBox(height: 8),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
@@ -376,17 +397,11 @@ class _MusicModalState extends State<MusicModal> {
           onPressed: _onStop,
           width: 56,
         ),
-        const SizedBox(width: 12),
-        AppButton(
-          icon: Icons.save,
-          onPressed: _onSave,
-          width: 56,
-        ),
       ],
     );
   }
 
-  Widget _buildInstrumentSection(AppLocalizations l10n, dynamic theme) {
+  Widget _buildInstrumentSection(AppLocalizations l10n, theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -446,9 +461,7 @@ class _MusicModalState extends State<MusicModal> {
     );
   }
 
-  Widget _buildNoteSection(AppLocalizations l10n, dynamic theme) {
-    final notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C2'];
-    
+  Widget _buildNoteSection(AppLocalizations l10n, theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -464,33 +477,37 @@ class _MusicModalState extends State<MusicModal> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: notes.map((note) {
-            final isSelected = note == _selectedNote;
-            return GestureDetector(
-              onTap: () => _onNoteSelected(note),
-              child: Container(
-                width: 60,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected ? theme.secondary : theme.primary,
-                  border: Border.all(
-                    color: isSelected ? theme.text : theme.border,
-                    width: isSelected ? 2 : 1,
+          children: [
+            ...List.generate(8, (index) {
+              final note = index + 1;
+              final isSelected = _selectedNote == note;
+              
+              return GestureDetector(
+                onTap: () => _onNoteSelected(note),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? theme.secondary : theme.primary,
+                    border: Border.all(
+                      color: isSelected ? theme.text : theme.border,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  note,
-                  style: TextStyle(
-                    color: theme.background,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  child: Text(
+                    note.toString(),
+                    style: TextStyle(
+                      color: theme.background,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }),
+          ],
         ),
         const SizedBox(height: 12),
         if (_selectedNote != null)

@@ -437,4 +437,10 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String get drum => 'Drum';
+  
+  @override
+  String get selectNote => 'SELECT NOTE';
+  
+  @override
+  String get eraser => 'Eraser';
 }

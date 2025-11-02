@@ -179,6 +179,8 @@ abstract class AppLocalizations {
   String get synth;
   String get bass;
   String get drum;
+  String get selectNote;
+  String get eraser;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {
