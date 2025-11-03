@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
+import 'data_manager.dart';
 
 /// Service quản lý phát âm thanh nhạc cụ cho composing modal
 /// Singleton để đảm bảo chỉ có 1 instance
@@ -9,15 +10,41 @@ class ComposingService {
   ComposingService._internal();
 
   // Tạo nhiều AudioPlayer để phát đồng thời nhiều nhạc cụ
-  final List<AudioPlayer> _players = List.generate(5, (_) => AudioPlayer());
+  final List<AudioPlayer> _players = [];
   bool _isInitialized = false;
+  double _volume = 0.5; // Default, sẽ load từ settings
 
   /// Khởi tạo service
   Future<void> initialize() async {
     if (_isInitialized) return;
     
-    for (var player in _players) {
+    // Load volume từ SFX settings
+    final settings = DataManager().userSettings;
+    _volume = settings.sfxVolume / 100.0; // Dùng chung với SFX
+    
+    // Tạo 5 players
+    for (int i = 0; i < 5; i++) {
+      final player = AudioPlayer();
+      
+      // Set audio context giống SFX
+      await player.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: {
+            AVAudioSessionOptions.mixWithOthers,
+          },
+        ),
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.sonification,
+          usageType: AndroidUsageType.assistanceAccessibility,
+          audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+        ),
+      ));
+      
       await player.setReleaseMode(ReleaseMode.stop);
+      _players.add(player);
     }
     
     _isInitialized = true;
@@ -32,15 +59,24 @@ class ComposingService {
     if (note < 1 || note > 8) return;
     if (trackIndex < 0 || trackIndex >= _players.length) return;
 
+    // Check xem SFX có bật không
+    final settings = DataManager().userSettings;
+    if (!settings.sfxEnabled) return;
+
     final path = 'audio/instruments/$instrument/$note.mp3';
     
     try {
       final player = _players[trackIndex];
       await player.stop();
-      await player.play(AssetSource(path), volume: 0.7);
+      await player.play(AssetSource(path), volume: _volume);
     } catch (e) {
       // Ignore nếu file không tồn tại
     }
+  }
+
+  /// Cập nhật volume khi user thay đổi trong settings
+  void updateVolume(int volume) {
+    _volume = volume / 100.0;
   }
 
   /// Phát nhiều notes cùng lúc (cho playback)
@@ -70,6 +106,7 @@ class ComposingService {
     for (var player in _players) {
       player.dispose();
     }
+    _players.clear();
     _isInitialized = false;
   }
 }

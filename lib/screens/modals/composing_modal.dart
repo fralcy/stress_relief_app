@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/utils/sfx_service.dart';
 import '../../core/utils/composing_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import 'dart:async';
+import '../../core/utils/bgm_service.dart';
 
 /// Modal sáng tác nhạc
 class ComposingModal extends StatefulWidget {
@@ -19,13 +19,19 @@ class ComposingModal extends StatefulWidget {
     final l10n = AppLocalizations.of(context);
     
     if (!context.mounted) return;
+
+    // Pause BGM khi mở modal
+    await BgmService().pause();
     
-    return AppModal.show(
+    await AppModal.show(
       context: context,
       title: l10n.music,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
       content: const ComposingModal(),
     );
+    
+    // Resume BGM khi đóng modal
+    await BgmService().resume();
   }
 }
 
@@ -72,7 +78,6 @@ class _ComposingModalState extends State<ComposingModal> {
   }
 
   void _onInstrumentSelected(InstrumentType instrument) {
-    SfxService().buttonClick();
     setState(() {
       _selectedInstrument = instrument;
       _selectedNote = null;
@@ -116,8 +121,6 @@ class _ComposingModalState extends State<ComposingModal> {
   }
 
   void _onPlay() {
-    SfxService().buttonClick();
-    
     if (_isPlaying) {
       // Đang play -> pause
       _pausePlayback();
@@ -128,12 +131,10 @@ class _ComposingModalState extends State<ComposingModal> {
   }
 
   void _onPause() {
-    SfxService().buttonClick();
     _pausePlayback();
   }
 
   void _onStop() {
-    SfxService().buttonClick();
     _stopPlayback();
   }
 
