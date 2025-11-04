@@ -96,15 +96,18 @@ class MusicProgressAdapter extends TypeAdapter<MusicProgress> {
     };
     return MusicProgress(
       savedTracks: (fields[0] as List).cast<MusicTrack>(),
+      selected: fields[1] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, MusicProgress obj) {
     writer
-      ..writeByte(1)
+      ..writeByte(2)
       ..writeByte(0)
-      ..write(obj.savedTracks);
+      ..write(obj.savedTracks)
+      ..writeByte(1)
+      ..write(obj.selected);
   }
 
   @override

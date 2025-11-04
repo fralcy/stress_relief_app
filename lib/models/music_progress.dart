@@ -82,15 +82,21 @@ class MusicProgress {
   @HiveField(0)
   final List<MusicTrack> savedTracks;
 
+  @HiveField(1)
+  final int selected; // index của track đang chọn, mặc định là 0
+
   MusicProgress({
     required this.savedTracks,
+    this.selected = 0,
   });
   
   MusicProgress copyWith({
     List<MusicTrack>? savedTracks,
+    int? selected,
   }) {
     return MusicProgress(
       savedTracks: savedTracks ?? this.savedTracks,
+      selected: selected ?? this.selected,
     );
   }
 }

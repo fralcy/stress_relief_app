@@ -6,6 +6,7 @@ import '../../core/utils/composing_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import 'dart:async';
 import '../../core/utils/bgm_service.dart';
+import 'library_modal.dart';
 
 /// Modal sáng tác nhạc
 class ComposingModal extends StatefulWidget {
@@ -17,6 +18,9 @@ class ComposingModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    
+    // Init default tracks nếu chưa có
+    await ComposingService().initializeDefaultTracks();
     
     if (!context.mounted) return;
 
@@ -41,6 +45,7 @@ class _ComposingModalState extends State<ComposingModal> {
   
   String _songName = 'My Song';
   bool _isEditingName = false;
+  bool _isLoading = true;
   Timer? _playbackTimer;
   
   // Music settings
@@ -67,6 +72,39 @@ class _ComposingModalState extends State<ComposingModal> {
   void initState() {
     super.initState();
     _composingService.initialize();
+    _loadTrack();
+  }
+
+  void _loadTrack() {
+    final currentTrack = _composingService.getCurrentTrack();
+    
+    if (currentTrack != null) {
+      setState(() {
+        _songName = currentTrack.name;
+        _nameController.text = currentTrack.name;
+        
+        // Convert tracks thành timeline
+        final convertedTimeline = _composingService.convertTracksToTimeline(
+          currentTrack.tracks,
+          _totalBeats,
+          _bpm,
+        );
+        
+        // Update timeline
+        for (int beat = 0; beat < _totalBeats && beat < convertedTimeline.length; beat++) {
+          for (int track = 0; track < InstrumentType.values.length && track < convertedTimeline[beat].length; track++) {
+            _timeline[beat][track] = convertedTimeline[beat][track];
+          }
+        }
+        
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _nameController.text = _songName;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -103,6 +141,17 @@ class _ComposingModalState extends State<ComposingModal> {
         _timeline[beatIndex][trackIndex] = _selectedNote;
       }
     });
+    
+    // Auto-save
+    _saveTrack();
+  }
+
+  Future<void> _saveTrack() async {
+    // Convert timeline thành tracks format
+    final tracks = _composingService.convertTimelineToTracks(_timeline, _bpm);
+    
+    // Save
+    await _composingService.saveTrack(tracks, name: _songName);
   }
 
   String _getInstrumentPath(InstrumentType instrument) {
@@ -203,16 +252,69 @@ class _ComposingModalState extends State<ComposingModal> {
     }
   }
 
+  Future<void> _onOpen() async {
+    // Show library modal
+    await LibraryModal.show(
+      context,
+      onTrackSelected: () {
+        // Reload track khi chọn track mới
+        setState(() {
+          _isLoading = true;
+        });
+        _loadTrack();
+      },
+    );
+  }
+
+  Future<void> _onSaveName() async {
+    final newName = _nameController.text.trim();
+    if (newName.isEmpty) {
+      _nameController.text = _songName;
+      setState(() {
+        _isEditingName = false;
+      });
+      return;
+    }
+    
+    setState(() {
+      _songName = newName;
+      _isEditingName = false;
+    });
+    
+    // Save name
+    await _composingService.updateCurrentTrackName(newName);
+    
+    // Re-save track with new name
+    _saveTrack();
+  }
+
+  void _onCancelEdit() {
+    _nameController.text = _songName;
+    setState(() {
+      _isEditingName = false;
+    });
+  }
+
+  void _onEditName() {
+    setState(() {
+      _isEditingName = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
 
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSongNameSection(l10n, theme),
+          _buildToolbar(l10n, theme),
           const SizedBox(height: 16),
           _buildTimeline(theme),
           const SizedBox(height: 16),
@@ -226,56 +328,80 @@ class _ComposingModalState extends State<ComposingModal> {
     );
   }
 
-  Widget _buildSongNameSection(AppLocalizations l10n, theme) {
-    return Row(
+  Widget _buildToolbar(AppLocalizations l10n, dynamic theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${l10n.songName}: ',
-          style: TextStyle(
-            color: theme.text,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Expanded(
-          child: _isEditingName
-              ? TextField(
+        // Song name với edit functionality
+        Row(
+          children: [
+            Text(
+              '${l10n.songName}: ',
+              style: TextStyle(
+                color: theme.text,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            
+            if (_isEditingName) ...[
+              // Text field để edit
+              Expanded(
+                child: TextField(
                   controller: _nameController,
                   autofocus: true,
-                  style: TextStyle(color: theme.text, fontSize: 14),
+                  style: TextStyle(
+                    color: theme.text,
+                    fontSize: 16,
+                  ),
                   decoration: InputDecoration(
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
                       borderSide: BorderSide(color: theme.border),
                     ),
-                  ),
-                  onSubmitted: (val) {
-                    setState(() {
-                      _songName = val.isEmpty ? 'My Song' : val;
-                      _isEditingName = false;
-                    });
-                  },
-                )
-              : GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isEditingName = true;
-                      _nameController.text = _songName;
-                    });
-                  },
-                  child: Text(
-                    _songName,
-                    style: TextStyle(
-                      color: theme.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: theme.primary),
                     ),
                   ),
+                  onSubmitted: (_) => _onSaveName(),
                 ),
+              ),
+              const SizedBox(width: 8),
+              // Save button
+              GestureDetector(
+                onTap: _onSaveName,
+                child: const Text('✓', style: TextStyle(fontSize: 20, color: Colors.green)),
+              ),
+              const SizedBox(width: 8),
+              // Cancel button
+              GestureDetector(
+                onTap: _onCancelEdit,
+                child: const Text('✗', style: TextStyle(fontSize: 20, color: Colors.red)),
+              ),
+            ] else ...[
+              // Display name
+              Text(
+                _songName,
+                style: TextStyle(
+                  color: theme.text,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Edit button
+              GestureDetector(
+                onTap: _onEditName,
+                child: const Text('✏️', style: TextStyle(fontSize: 16)),
+              ),
+            ],
+          ],
         ),
+        
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -396,6 +522,12 @@ class _ComposingModalState extends State<ComposingModal> {
         AppButton(
           icon: Icons.stop,
           onPressed: _onStop,
+          width: 56,
+        ),
+        const SizedBox(width: 12),
+                AppButton(
+          icon: Icons.folder_open, 
+          onPressed: _onOpen,
           width: 56,
         ),
       ],
