@@ -78,6 +78,10 @@ flutter:
   assets:
     # Images
     - assets/images/scenes/default/
+    - assets/images/scenes/forest/
+    - assets/images/scenes/beach/
+    - assets/images/scenes/japanese/
+    - assets/images/scenes/winter/
     - assets/images/mascot/
     - assets/images/plants/
     - assets/images/aquarium/

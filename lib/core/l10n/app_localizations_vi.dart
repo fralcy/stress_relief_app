@@ -192,7 +192,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get alreadyClaimedOrNoTasks => 'Đã nhận hoặc chưa có công việc hoàn thành!';
 
   @override
-  String get sceneShop => 'Cửa hàng cảnh';
+  String get sceneShop => 'Cửa hàng bối cảnh';
 
   @override
   String get feature => 'Tính năng';
@@ -443,4 +443,59 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String get eraser => 'Tẩy';
+
+  // Scene Shop
+  @override
+  String get yourPoints => 'Điểm của bạn';
+  
+  @override
+  String get buyCollection => 'Mua bối cảnh';
+  
+  @override
+  String get useCollection => 'Sử dụng bối cảnh';
+  
+  @override
+  String get currentlyUsing => 'Đang sử dụng';
+  
+  @override
+  String get notEnoughPoints => 'Không đủ điểm';
+  
+  @override
+  String get points => 'điểm';
+  
+  @override
+  String get free => 'MIỄN PHÍ';
+
+  @override
+  String get ownedBadge => '✓ Sở hữu';
+  
+  @override
+  String get cozyHome => 'Ngôi nhà ấm cúng';
+  
+  @override
+  String get forest => 'Rừng xanh';
+  
+  @override
+  String get beach => 'Bãi biển';
+  
+  @override
+  String get japanese => 'Nhật Bản';
+  
+  @override
+  String get winter => 'Mùa đông';
+
+  @override
+  String get cozyHomeDesc => 'Những khung cảnh ấm cúng tại nhà';
+
+  @override
+  String get forestDesc => 'Khung cảnh rừng xanh yên bình';
+
+  @override
+  String get beachDesc => 'Khung cảnh biển thư giãn';
+
+  @override
+  String get japaneseDesc => 'Khung cảnh thiền Nhật Bản truyền thống';
+
+  @override
+  String get winterDesc => 'Xứ sở mùa đông ấm áp';
 }

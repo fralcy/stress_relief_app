@@ -52,6 +52,14 @@ class SceneSetAdapter extends TypeAdapter<SceneSet> {
     switch (reader.readByte()) {
       case 0:
         return SceneSet.defaultSet;
+      case 1:
+        return SceneSet.japanese;
+      case 2:
+        return SceneSet.beach;
+      case 3:
+        return SceneSet.winter;
+      case 4:
+        return SceneSet.forest;
       default:
         return SceneSet.defaultSet;
     }
@@ -62,6 +70,18 @@ class SceneSetAdapter extends TypeAdapter<SceneSet> {
     switch (obj) {
       case SceneSet.defaultSet:
         writer.writeByte(0);
+        break;
+      case SceneSet.japanese:
+        writer.writeByte(1);
+        break;
+      case SceneSet.beach:
+        writer.writeByte(2);
+        break;
+      case SceneSet.winter:
+        writer.writeByte(3);
+        break;
+      case SceneSet.forest:
+        writer.writeByte(4);
         break;
     }
   }

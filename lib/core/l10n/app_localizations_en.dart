@@ -443,4 +443,59 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String get eraser => 'Eraser';
+
+  // Scene Shop
+  @override
+  String get yourPoints => 'Your Points';
+  
+  @override
+  String get buyCollection => 'Buy Scenes';
+  
+  @override
+  String get useCollection => 'Use Scenes';
+  
+  @override
+  String get currentlyUsing => 'Currently Using';
+  
+  @override
+  String get notEnoughPoints => 'Not enough points';
+  
+  @override
+  String get points => 'points';
+  
+  @override
+  String get free => 'FREE';
+
+  @override
+  String get ownedBadge => '✓ Owned';
+  
+  @override
+  String get cozyHome => 'Cozy Home';
+  
+  @override
+  String get forest => 'Forest';
+  
+  @override
+  String get beach => 'Beach';
+  
+  @override
+  String get japanese => 'Japanese';
+  
+  @override
+  String get winter => 'Winter';
+
+  @override
+  String get cozyHomeDesc => 'Classic home comfort scenes';
+
+  @override
+  String get forestDesc => 'Peaceful woodland scenes';
+
+  @override
+  String get beachDesc => 'Relaxing coastal scenes';
+
+  @override
+  String get japaneseDesc => 'Traditional zen scenes';
+
+  @override
+  String get winterDesc => 'Cozy winter wonderland';
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/l10n/app_localizations.dart';
 import '../models/scene_models.dart';
@@ -7,6 +8,8 @@ import '../core/utils/sfx_service.dart';
 import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
+import '../core/providers/scene_provider.dart';
+import 'modals/scene_shop_modal.dart';
 import 'modals/schedule_task_modal.dart';
 import 'modals/emotion_diary_modal.dart';
 import 'modals/garden_modal.dart';
@@ -80,7 +83,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 child: AppHeader(
                   onSceneShopPressed: () {
                     SfxService().buttonClick();
-                    _showToast('Scene Shop');
+                    SceneShopModal.show(context);
                   },
                 ),
               ),
@@ -110,74 +113,81 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
     final sceneSize = screenWidth;
     final mascotSize = sceneSize / 2.4;
 
-    return SizedBox(
-      width: sceneSize,
-      height: sceneSize,
-      child: Stack(
-        children: [
-          // Scene background
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                AssetLoader.getSceneAsset(SceneSet.defaultSet, _currentScene),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: context.theme.border,
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.image_not_supported,
-                          size: 64,
-                          color: context.theme.text.withOpacity(0.3),
+    return Consumer<SceneProvider>(
+      builder: (context, sceneProvider, child) {
+        // Get current scene asset path dynamically from provider
+        final sceneAssetPath = sceneProvider.getCurrentSceneAsset(_currentScene);
+        
+        return SizedBox(
+          width: sceneSize,
+          height: sceneSize,
+          child: Stack(
+            children: [
+              // Scene background - sử dụng dynamic asset từ provider
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.asset(
+                    sceneAssetPath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: context.theme.border,
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported,
+                              size: 64,
+                              color: context.theme.text.withOpacity(0.3),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _currentScene.toString().split('.').last,
+                              style: TextStyle(
+                                color: context.theme.text.withOpacity(0.5),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _currentScene.toString().split('.').last,
-                          style: TextStyle(
-                            color: context.theme.text.withOpacity(0.5),
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
-          ),
-          
-          // Mascot (center-bottom)
-          Positioned(
-            bottom: 20,
-            left: (sceneSize - mascotSize) / 2,
-            child: Image.asset(
-              AssetLoader.getMascotAsset(_currentExpression),
-              width: mascotSize,
-              height: mascotSize,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
+              
+              // Mascot (center-bottom)
+              Positioned(
+                bottom: 20,
+                left: (sceneSize - mascotSize) / 2,
+                child: Image.asset(
+                  AssetLoader.getMascotAsset(_currentExpression),
                   width: mascotSize,
                   height: mascotSize,
-                  decoration: BoxDecoration(
-                    color: context.theme.secondary.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '🐱',
-                    style: TextStyle(fontSize: mascotSize / 2),
-                  ),
-                );
-              },
-            ),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: mascotSize,
+                      height: mascotSize,
+                      decoration: BoxDecoration(
+                        color: context.theme.secondary.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '🐱',
+                        style: TextStyle(fontSize: mascotSize / 2),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -284,13 +294,5 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
     }
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+
 }

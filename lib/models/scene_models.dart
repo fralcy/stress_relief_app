@@ -6,7 +6,14 @@ part 'scene_models.g.dart';
 enum SceneSet {
   @HiveField(0)
   defaultSet,  // Bộ mặc định ban đầu
-  // Có thể thêm: modernSet, vintageSet, etc.
+  @HiveField(1)
+  japanese,    // Phong cách Nhật Bản
+  @HiveField(2)
+  beach,       // Bãi biển nhiệt đới
+  @HiveField(3)
+  winter,      // Mùa đông tuyết trắng
+  @HiveField(4)
+  forest,      // Rừng cây xanh mát
 }
 
 /// 5 loại phòng trong app

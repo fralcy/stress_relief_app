@@ -12,6 +12,7 @@ import 'core/utils/notifier.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/score_provider.dart';
+import 'core/providers/scene_provider.dart';
 
 // Import test screens
 import 'screens/notifier_test_screen.dart';
@@ -40,6 +41,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => ScoreProvider()),
+        ChangeNotifierProvider(create: (_) => SceneProvider()),
       ],
       child: const MyApp(),
     ),

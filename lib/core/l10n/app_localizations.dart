@@ -182,6 +182,26 @@ abstract class AppLocalizations {
   String get selectNote;
   String get eraser;
 
+  // Scene Shop (additional strings)
+  String get yourPoints;
+  String get buyCollection;
+  String get useCollection;
+  String get currentlyUsing;
+  String get notEnoughPoints;
+  String get points;
+  String get free;
+  String get ownedBadge;
+  String get cozyHome;
+  String get forest;
+  String get beach;
+  String get japanese;
+  String get winter;
+  String get cozyHomeDesc;
+  String get forestDesc;
+  String get beachDesc;
+  String get japaneseDesc;
+  String get winterDesc;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
