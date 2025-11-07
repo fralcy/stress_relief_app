@@ -13,6 +13,8 @@ import 'core/providers/theme_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/score_provider.dart';
 import 'core/providers/scene_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 // Import test screens
 import 'screens/notifier_test_screen.dart';
@@ -25,6 +27,10 @@ void main() async {
   
   // Init DataManager (Hive)
   await DataManager().initialize();
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Init BGM Service
   await BgmService().initialize();
