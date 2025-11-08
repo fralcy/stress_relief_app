@@ -202,6 +202,24 @@ abstract class AppLocalizations {
   String get japaneseDesc;
   String get winterDesc;
 
+  // Authentication
+  String get signUp;
+  String get signIn;
+  String get email;
+  String get password;
+  String get confirmPassword;
+  String get username;
+  String get alreadyHaveAccount;
+  String get createAccount;
+  String get enterEmail;
+  String get enterPassword;
+  String get enterUsername;
+  String get passwordTooShort;
+  String get passwordsDoNotMatch;
+  String get invalidEmail;
+  String get usernameRequired;
+  String get letsGetStarted;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

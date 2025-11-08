@@ -498,4 +498,53 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get winterDesc => 'Xứ sở mùa đông ấm áp';
+
+  // Authentication
+  @override
+  String get signUp => 'Đăng ký';
+
+  @override
+  String get signIn => 'Đăng nhập';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Mật khẩu';
+
+  @override
+  String get confirmPassword => 'Xác nhận mật khẩu';
+
+  @override
+  String get username => 'Tên đăng nhập';
+
+  @override
+  String get alreadyHaveAccount => 'Đã có tài khoản?';
+
+  @override
+  String get createAccount => 'Tạo tài khoản';
+
+  @override
+  String get enterEmail => 'Nhập email';
+
+  @override
+  String get enterPassword => 'Nhập mật khẩu';
+
+  @override
+  String get enterUsername => 'Nhập tên đăng nhập';
+
+  @override
+  String get passwordTooShort => 'Mật khẩu phải có ít nhất 6 ký tự';
+
+  @override
+  String get passwordsDoNotMatch => 'Mật khẩu không khớp';
+
+  @override
+  String get invalidEmail => 'Email không hợp lệ';
+
+  @override
+  String get usernameRequired => 'Vui lòng nhập tên đăng nhập';
+
+  @override
+  String get letsGetStarted => 'Bắt đầu nào!';
 }

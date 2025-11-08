@@ -20,6 +20,7 @@ import 'firebase_options.dart';
 import 'screens/notifier_test_screen.dart';
 import 'screens/asset_test_screen.dart';
 import 'screens/component_showcase_screen.dart';
+import 'screens/mobile_portrait_register_screen.dart';
 import 'screens/mobile_portrait_screen.dart';
 
 void main() async {
@@ -186,6 +187,16 @@ class TestMenuScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const MobilePortraitScreen()),
+            ),
+          ),
+
+          _buildTestCard(
+            context,
+            title: '🔐 Register Screen',
+            description: 'Test registration form with l10n',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MobilePortraitRegisterScreen()),
             ),
           ),
         ],
