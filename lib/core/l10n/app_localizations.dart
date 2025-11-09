@@ -219,6 +219,8 @@ abstract class AppLocalizations {
   String get invalidEmail;
   String get usernameRequired;
   String get letsGetStarted;
+  String get welcomeBack;
+  String get dontHaveAccount;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

@@ -21,6 +21,7 @@ import 'screens/notifier_test_screen.dart';
 import 'screens/asset_test_screen.dart';
 import 'screens/component_showcase_screen.dart';
 import 'screens/mobile_portrait_register_screen.dart';
+import 'screens/mobile_portrait_login_screen.dart';
 import 'screens/mobile_portrait_screen.dart';
 
 void main() async {
@@ -192,7 +193,17 @@ class TestMenuScreen extends StatelessWidget {
 
           _buildTestCard(
             context,
-            title: '🔐 Register Screen',
+            title: '🔐 Login Screen',
+            description: 'Test login form with authentication',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MobilePortraitLoginScreen()),
+            ),
+          ),
+
+          _buildTestCard(
+            context,
+            title: '📝 Register Screen',
             description: 'Test registration form with l10n',
             onTap: () => Navigator.push(
               context,

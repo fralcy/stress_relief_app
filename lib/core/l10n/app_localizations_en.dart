@@ -547,4 +547,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get letsGetStarted => 'Let\'s get started!';
+
+  @override
+  String get welcomeBack => 'Welcome back!';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account?';
 }

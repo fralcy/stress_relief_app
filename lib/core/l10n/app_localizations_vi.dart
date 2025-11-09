@@ -547,4 +547,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get letsGetStarted => 'Bắt đầu nào!';
+
+  @override
+  String get welcomeBack => 'Chào mừng trở lại!';
+
+  @override
+  String get dontHaveAccount => 'Chưa có tài khoản?';
 }
