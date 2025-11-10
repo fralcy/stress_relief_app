@@ -221,6 +221,17 @@ abstract class AppLocalizations {
   String get letsGetStarted;
   String get welcomeBack;
   String get dontHaveAccount;
+  String get forgotPassword;
+  String get forgotPasswordTitle;
+  String get forgotPasswordDescription;
+  String get forgotPasswordEmailSentDescription;
+  String get sendResetEmail;
+  String get emailSent;
+  String get emailSentSuccessfully;
+  String get checkYourInbox;
+  String get sendAgain;
+  String get rememberPassword;
+  String get backToLogin;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

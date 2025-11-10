@@ -4,6 +4,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import 'mobile_portrait_register_screen.dart';
 import 'mobile_portrait_screen.dart';
+import 'mobile_portrait_forgot_password_screen.dart';
 
 /// Mobile Portrait Login Screen
 /// 
@@ -80,38 +81,13 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
     }
   }
 
-  Future<void> _resetPassword() async {
-    if (_emailController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please enter your email first'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    try {
-      await _authService.resetPassword(email: _emailController.text.trim());
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Password reset email sent!'),
-            backgroundColor: context.theme.primary,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  void _navigateToForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MobilePortraitForgotPasswordScreen(),
+      ),
+    );
   }
 
   @override
@@ -217,7 +193,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: _resetPassword,
+                      onPressed: _navigateToForgotPassword,
                       child: Text(
                         'Forgot Password?',
                         style: TextStyle(

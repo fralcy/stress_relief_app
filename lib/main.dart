@@ -22,6 +22,7 @@ import 'screens/asset_test_screen.dart';
 import 'screens/component_showcase_screen.dart';
 import 'screens/mobile_portrait_register_screen.dart';
 import 'screens/mobile_portrait_login_screen.dart';
+import 'screens/mobile_portrait_forgot_password_screen.dart';
 import 'screens/mobile_portrait_screen.dart';
 
 void main() async {
@@ -208,6 +209,16 @@ class TestMenuScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const MobilePortraitRegisterScreen()),
+            ),
+          ),
+
+          _buildTestCard(
+            context,
+            title: '🔑 Forgot Password',
+            description: 'Test forgot password functionality',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MobilePortraitForgotPasswordScreen()),
             ),
           ),
         ],

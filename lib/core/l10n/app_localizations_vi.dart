@@ -553,4 +553,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dontHaveAccount => 'Chưa có tài khoản?';
+
+  @override
+  String get forgotPassword => 'Quên mật khẩu?';
+
+  @override
+  String get forgotPasswordTitle => 'Quên mật khẩu?';
+
+  @override
+  String get forgotPasswordDescription => 'Đừng lo! Nhập địa chỉ email và chúng tôi sẽ gửi link đặt lại mật khẩu.';
+
+  @override
+  String get forgotPasswordEmailSentDescription => 'Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến email của bạn.';
+
+  @override
+  String get sendResetEmail => 'Gửi email đặt lại';
+
+  @override
+  String get emailSent => 'Đã gửi email!';
+
+  @override
+  String get emailSentSuccessfully => 'Đã gửi email đặt lại mật khẩu thành công!';
+
+  @override
+  String get checkYourInbox => 'Kiểm tra hộp thư và làm theo hướng dẫn để đặt lại mật khẩu.';
+
+  @override
+  String get sendAgain => 'Gửi lại';
+
+  @override
+  String get rememberPassword => 'Nhớ lại mật khẩu?';
+
+  @override
+  String get backToLogin => 'Quay lại đăng nhập';
 }
