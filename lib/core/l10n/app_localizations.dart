@@ -233,6 +233,11 @@ abstract class AppLocalizations {
   String get rememberPassword;
   String get backToLogin;
 
+  // Sync related
+  String get pleaseLoginFirst;
+  String get syncing;
+  String get login;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

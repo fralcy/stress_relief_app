@@ -66,9 +66,9 @@ class GardenProgressAdapter extends TypeAdapter<GardenProgress> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return GardenProgress(
-      plots: (fields[0] as List?)
-          ?.map((dynamic e) => (e as List).cast<PlantCell>())
-          ?.toList(),
+      plots: (fields[0] as List)
+          .map((dynamic e) => (e as List).cast<PlantCell>())
+          .toList(),
       inventory: (fields[1] as Map).cast<String, int>(),
       earnings: fields[2] as int,
     );

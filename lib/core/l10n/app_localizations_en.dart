@@ -586,4 +586,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToLogin => 'Back to Login';
+
+  @override
+  String get pleaseLoginFirst => 'Please login first to sync data';
+
+  @override
+  String get syncing => 'Syncing...';
+
+  @override
+  String get login => 'Login';
 }

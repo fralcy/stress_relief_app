@@ -27,6 +27,9 @@ class UserProfile {
   @HiveField(6)
   final DateTime lastSyncedAt;        // Timestamp lần sync gần nhất
   
+  @HiveField(11)
+  final DateTime lastUpdatedAt;       // Timestamp lần cập nhật dữ liệu gần nhất
+  
   // Progress
   @HiveField(7)
   final Map<SceneKey, bool> unlockedScenes;  // Các cảnh đã mở khóa
@@ -49,6 +52,7 @@ class UserProfile {
     required this.mascotName,
     required this.createdAt,
     required this.lastSyncedAt,
+    required this.lastUpdatedAt,
     required this.unlockedScenes,
     required this.currentPoints,
     required this.totalPoints,
@@ -63,14 +67,16 @@ class UserProfile {
     required String name,
     String mascotName = 'Cat',
   }) {
+    final now = DateTime.now();
     return UserProfile(
       id: id,
       username: username,
       email: email,
       name: name,
       mascotName: mascotName,
-      createdAt: DateTime.now(),
-      lastSyncedAt: DateTime.now(),
+      createdAt: now,
+      lastSyncedAt: now,
+      lastUpdatedAt: now,
       unlockedScenes: <SceneKey, bool>{
         SceneKey(SceneSet.defaultSet, SceneType.livingRoom): true,
         SceneKey(SceneSet.defaultSet, SceneType.garden): true,
@@ -93,6 +99,7 @@ class UserProfile {
     String? mascotName,
     DateTime? createdAt,
     DateTime? lastSyncedAt,
+    DateTime? lastUpdatedAt,
     Map<SceneKey, bool>? unlockedScenes,
     int? currentPoints,
     int? totalPoints,
@@ -106,6 +113,7 @@ class UserProfile {
       mascotName: mascotName ?? this.mascotName,
       createdAt: createdAt ?? this.createdAt,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
       unlockedScenes: unlockedScenes ?? Map<SceneKey, bool>.from(this.unlockedScenes),
       currentPoints: currentPoints ?? this.currentPoints,
       totalPoints: totalPoints ?? this.totalPoints,

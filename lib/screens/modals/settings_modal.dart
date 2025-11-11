@@ -10,8 +10,11 @@ import '../../core/widgets/app_dropdown.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/bgm_service.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/utils/sync_service.dart';
+import '../../core/utils/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/user_settings.dart';
+import '../mobile_portrait_login_screen.dart';
 
 /// Modal cài đặt app
 class SettingsModal extends StatefulWidget {
@@ -57,16 +60,82 @@ class _SettingsModalState extends State<SettingsModal> {
     DataManager().saveUserSettings(_settings);
   }
 
-  void _showSyncToast() {
+  Future<void> _handleSync() async {
     SfxService().buttonClick();
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.cloudSyncComingSoon),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
+    
+    // Import SyncService and AuthService
+    final syncService = SyncService();
+    final authService = AuthService();
+    
+    // Check if user is logged in
+    if (!authService.isLoggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.pleaseLoginFirst),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: l10n.login,
+            onPressed: () {
+              // Navigate to login screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const MobilePortraitLoginScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(l10n.syncing),
+          ],
+        ),
       ),
     );
+
+    try {
+      // Perform smart sync
+      final result = await syncService.smartSync();
+      
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: $e'),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _resetToDefault() {
@@ -323,7 +392,7 @@ class _SettingsModalState extends State<SettingsModal> {
           Center(
             child: AppButton(
               label: l10n.sync,
-              onPressed: _showSyncToast,
+              onPressed: _handleSync,
             ),
           ),
           const SizedBox(height: 16),

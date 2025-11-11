@@ -56,7 +56,7 @@ class PlantCell {
 @HiveType(typeId: 4)
 class GardenProgress {
   @HiveField(0)
-  final List<List<PlantCell>>? plots;  // Lưới các ô đất
+  final List<List<PlantCell>> plots;  // Lưới các ô đất
   
   @HiveField(1)
   final Map<String, int> inventory;   // Các hạt giống hiện có
@@ -65,7 +65,7 @@ class GardenProgress {
   final int earnings;                 // Tổng điểm kiếm được
 
   GardenProgress({
-    this.plots,
+    required this.plots,
     this.inventory = const {},
     this.earnings = 0,
   });

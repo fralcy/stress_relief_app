@@ -586,4 +586,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get backToLogin => 'Quay lại đăng nhập';
+
+  @override
+  String get pleaseLoginFirst => 'Vui lòng đăng nhập trước để đồng bộ dữ liệu';
+
+  @override
+  String get syncing => 'Đang đồng bộ...';
+
+  @override
+  String get login => 'Đăng nhập';
 }

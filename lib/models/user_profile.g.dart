@@ -24,6 +24,7 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       mascotName: fields[4] as String,
       createdAt: fields[5] as DateTime,
       lastSyncedAt: fields[6] as DateTime,
+      lastUpdatedAt: fields[11] as DateTime,
       unlockedScenes: (fields[7] as Map).cast<SceneKey, bool>(),
       currentPoints: fields[8] as int,
       totalPoints: fields[9] as int,
@@ -34,7 +35,7 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -49,6 +50,8 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..write(obj.createdAt)
       ..writeByte(6)
       ..write(obj.lastSyncedAt)
+      ..writeByte(11)
+      ..write(obj.lastUpdatedAt)
       ..writeByte(7)
       ..write(obj.unlockedScenes)
       ..writeByte(8)

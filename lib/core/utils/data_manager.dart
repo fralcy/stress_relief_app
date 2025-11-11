@@ -132,7 +132,9 @@ class DataManager {
   }
   
   Future<void> saveUserProfile(UserProfile profile) async {
-    await _userProfileHive.put('current', profile);
+    // Always update lastUpdatedAt when saving profile
+    final updatedProfile = profile.copyWith(lastUpdatedAt: DateTime.now());
+    await _userProfileHive.put('current', updatedProfile);
   }
   
   // ==================== USER SETTINGS ====================
@@ -160,18 +162,23 @@ class DataManager {
     for (int i = 0; i < tasks.length; i++) {
       await _scheduleTasksHive.put(i, tasks[i]);
     }
+    // Update lastUpdatedAt when data changes
+    await _updateLastModifiedTime();
   }
   
   Future<void> addScheduleTask(ScheduleTask task) async {
     await _scheduleTasksHive.add(task);
+    await _updateLastModifiedTime();
   }
   
   Future<void> removeScheduleTask(int index) async {
     await _scheduleTasksHive.deleteAt(index);
+    await _updateLastModifiedTime();
   }
   
   Future<void> updateScheduleTask(int index, ScheduleTask task) async {
     await _scheduleTasksHive.putAt(index, task);
+    await _updateLastModifiedTime();
   }
   
   // ==================== EMOTION DIARIES ====================
@@ -185,10 +192,12 @@ class DataManager {
     for (int i = 0; i < diaries.length; i++) {
       await _emotionDiariesHive.put(i, diaries[i]);
     }
+    await _updateLastModifiedTime();
   }
   
   Future<void> addEmotionDiary(EmotionDiary diary) async {
     await _emotionDiariesHive.add(diary);
+    await _updateLastModifiedTime();
   }
   
   // ==================== GARDEN PROGRESS ====================
@@ -229,5 +238,13 @@ class DataManager {
   
   Future<void> saveMusicProgress(MusicProgress progress) async {
     await _musicProgressHive.put('current', progress);
+  }
+
+  // Helper method to update lastUpdatedAt timestamp when any data changes
+  Future<void> _updateLastModifiedTime() async {
+    final currentProfile = userProfile;
+    final updatedProfile = currentProfile.copyWith(lastUpdatedAt: DateTime.now());
+    // Save without triggering another update (to avoid recursion)
+    await _userProfileHive.put('current', updatedProfile);
   }
 }
