@@ -595,4 +595,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get login => 'Đăng nhập';
+
+  @override
+  String get logout => 'Đăng xuất';
 }

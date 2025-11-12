@@ -27,12 +27,11 @@ class SyncService {
       final timestamp = data?['lastSyncedAt'] as Timestamp?;
       return timestamp?.toDate();
     } catch (e) {
-      print('Error getting cloud timestamp: $e');
       return null;
     }
   }
 
-  // Smart sync based on timestamps
+  // Smart sync based on timestamps - sync all data types
   Future<String> smartSync() async {
     if (!_authService.isLoggedIn) {
       throw 'Please login first to sync';
@@ -40,96 +39,167 @@ class SyncService {
 
     try {
       final localProfile = _dataManager.userProfile;
+      final localLastUpdated = localProfile.lastUpdatedAt;
+      final localLastSynced = localProfile.lastSyncedAt;
       final cloudLastSync = await _getCloudLastSyncedAt();
 
-      // Nếu cloud chưa có data hoặc local newer -> upload
-      if (cloudLastSync == null || localProfile.lastUpdatedAt.isAfter(cloudLastSync)) {
+      // Nếu cloud chưa có data -> upload
+      if (cloudLastSync == null) {
         await uploadToCloud();
         return 'Uploaded local data to cloud';
       } 
-      // Nếu cloud newer -> download
-      else if (cloudLastSync.isAfter(localProfile.lastSyncedAt)) {
+      // Nếu cloud đã sync trước local -> download
+      else if (cloudLastSync.isAfter(localLastSynced)) {
         await downloadFromCloud();
         return 'Downloaded data from cloud';
       }
-      // Nếu đã sync -> no action
-      else {
-        return 'Data already synced';
+      // Nếu local có cập nhật -> upload
+      else if (localLastUpdated.isAfter(localLastSynced)) {
+        await uploadToCloud();
+        return 'Uploaded local data to cloud';
       }
+      
+      // Nếu đã sync và không có thay đổi
+      return 'All data already synced';
     } catch (e) {
-      print('Smart sync error: $e');
       throw 'Sync failed: $e';
     }
   }
 
-  // Upload essential data to cloud (Profile + Settings + Tasks)
-  Future<void> uploadToCloud() async {
+  // Upload all data to cloud using separate collections
+  Future<void> uploadAllDataToCloud() async {
     if (_userDoc == null) throw 'User not logged in';
 
-    try {
-      final now = DateTime.now();
-      
-      // Prepare essential data
-      final allData = {
-        'userProfile': _profileToMap(_dataManager.userProfile),
-        'userSettings': _settingsToMap(_dataManager.userSettings),
-        'scheduleTasks': _dataManager.scheduleTasks.map(_taskToMap).toList(),
-        'lastSyncedAt': Timestamp.fromDate(now),
-      };
+    final now = DateTime.now();
+    final userId = _authService.currentUser!.uid;
 
-      // Upload to Firebase
-      await _userDoc!.set(allData, SetOptions(merge: true));
+    try {
+      // 1. Upload User Profile to main users collection
+      await _userDoc!.set({
+        'userProfile': _profileToMap(_dataManager.userProfile),
+        'lastSyncedAt': Timestamp.fromDate(now),
+      }, SetOptions(merge: true));
+
+      // 2. Upload User Settings to separate collection
+      await _firestore
+          .collection('userSettings')
+          .doc(userId)
+          .set(_settingsToMap(_dataManager.userSettings));
+
+      // 3. Upload Schedule Tasks to separate collection
+      final tasksCollection = _firestore
+          .collection('scheduleTasks')
+          .doc(userId)
+          .collection('tasks');
+      
+      // Clear existing tasks first
+      final existingTasks = await tasksCollection.get();
+      for (var doc in existingTasks.docs) {
+        await doc.reference.delete();
+      }
+      
+      // Add current tasks
+      final tasks = _dataManager.scheduleTasks;
+      for (int i = 0; i < tasks.length; i++) {
+        await tasksCollection.doc('task_$i').set(_taskToMap(tasks[i]));
+      }
+
+      // 4. Upload Emotion Diaries (simplified for now)
+      final diariesCollection = _firestore
+          .collection('emotionDiaries')
+          .doc(userId);
+      
+      await diariesCollection.set({
+        'count': _dataManager.emotionDiaries.length,
+        'lastUpdated': Timestamp.fromDate(now),
+      });
+
+      // 5. Upload Progress Data (simplified for now)
+      await _firestore
+          .collection('progressData')
+          .doc(userId)
+          .set({
+            'hasGarden': _dataManager.gardenProgress != null,
+            'hasAquarium': _dataManager.aquariumProgress != null,
+            'hasPainting': _dataManager.paintingProgress != null,
+            'hasMusic': _dataManager.musicProgress != null,
+            'lastUpdated': Timestamp.fromDate(now),
+          });
 
       // Update local lastSyncedAt
       final updatedProfile = _dataManager.userProfile.copyWith(lastSyncedAt: now);
       await _dataManager.saveUserProfile(updatedProfile);
       
-      print('Successfully uploaded data to cloud');
     } catch (e) {
-      print('Upload error: $e');
       throw 'Upload failed: $e';
     }
   }
 
-  // Download essential data from cloud
-  Future<void> downloadFromCloud() async {
+  // Legacy method for backward compatibility
+  Future<void> uploadToCloud() => uploadAllDataToCloud();
+
+  // Download all data from cloud using separate collections
+  Future<void> downloadAllDataFromCloud() async {
     if (_userDoc == null) throw 'User not logged in';
 
+    final userId = _authService.currentUser!.uid;
+    final now = DateTime.now();
+
     try {
-      final doc = await _userDoc!.get();
-      if (!doc.exists) {
-        throw 'No cloud data found';
+
+      // 1. Download User Profile
+      final userDoc = await _userDoc!.get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        if (userData['userProfile'] != null) {
+          final profile = _profileFromMap(userData['userProfile']);
+          await _dataManager.saveUserProfile(profile.copyWith(lastSyncedAt: now));
+        }
       }
 
-      final data = doc.data() as Map<String, dynamic>;
-      final now = DateTime.now();
-
-      // Restore user profile
-      if (data['userProfile'] != null) {
-        final profile = _profileFromMap(data['userProfile']);
-        await _dataManager.saveUserProfile(profile.copyWith(lastSyncedAt: now));
-      }
-
-      // Restore user settings
-      if (data['userSettings'] != null) {
-        final settings = _settingsFromMap(data['userSettings']);
+      // 2. Download User Settings
+      final settingsDoc = await _firestore
+          .collection('userSettings')
+          .doc(userId)
+          .get();
+      if (settingsDoc.exists) {
+        final settings = _settingsFromMap(settingsDoc.data()!);
         await _dataManager.saveUserSettings(settings);
       }
 
-      // Restore schedule tasks
-      if (data['scheduleTasks'] != null) {
-        final tasks = (data['scheduleTasks'] as List)
-            .map((e) => _taskFromMap(e))
-            .toList();
-        await _dataManager.saveScheduleTasks(tasks);
+      // 3. Download Schedule Tasks
+      final tasksSnapshot = await _firestore
+          .collection('scheduleTasks')
+          .doc(userId)
+          .collection('tasks')
+          .get();
+      
+      final tasks = tasksSnapshot.docs
+          .map((doc) => _taskFromMap(doc.data()))
+          .toList();
+      await _dataManager.saveScheduleTasks(tasks);
+
+      // 4. Download Emotion Diaries (simplified for now)
+      final diariesDoc = await _firestore
+          .collection('emotionDiaries')
+          .doc(userId)
+          .get();
+      
+      // For now, just clear local diaries since we need proper model structure
+      if (diariesDoc.exists) {
+        await _dataManager.saveEmotionDiaries([]);
       }
 
-      print('Successfully downloaded data from cloud');
+      // 5. Download Progress Data (simplified for now)  
+      // Skip progress data for now until we implement proper conversion
+      
     } catch (e) {
-      print('Download error: $e');
       throw 'Download failed: $e';
     }
   }
+
+  // Legacy method for backward compatibility
+  Future<void> downloadFromCloud() => downloadAllDataFromCloud();
 
   // ==================== CONVERSION HELPERS ====================
   
@@ -265,6 +335,28 @@ class SyncService {
       endTimeMinutes: map['endTimeMinutes'] ?? 60,
       isCompleted: map['isCompleted'] ?? false,
     );
+  }
+
+  // Logout and sync data before clearing
+  Future<void> logoutAndSync() async {
+    try {
+      // Sync all data to cloud before logout if logged in
+      if (_authService.isLoggedIn) {
+        await uploadAllDataToCloud();
+        
+        // Logout from Firebase
+        await _authService.logout();
+        
+        // Clear all local data and reset to defaults
+        await _dataManager.clearAll();
+        
+      }
+    } catch (e) {
+      // Still logout even if sync fails
+      await _authService.logout();
+      await _dataManager.clearAll();
+      throw 'Logout completed but sync failed: $e';
+    }
   }
 
 

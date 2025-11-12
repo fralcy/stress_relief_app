@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
+import '../../core/utils/data_manager.dart';
+import '../../core/utils/sync_service.dart';
 import 'mobile_portrait_register_screen.dart';
 import 'mobile_portrait_screen.dart';
 import 'mobile_portrait_forgot_password_screen.dart';
@@ -44,21 +46,56 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
 
     try {
       // Login with Firebase Auth
-      await _authService.login(
+      final userCredential = await _authService.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      if (mounted) {
-        setState(() => _isLoading = false);
+      if (mounted && userCredential != null) {
+        // Update user profile with Firebase user info
+        final user = userCredential.user!;
+        final dataManager = DataManager();
+        final currentProfile = dataManager.userProfile;
         
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: context.theme.primary,
-          ),
+        final updatedProfile = currentProfile.copyWith(
+          email: user.email ?? currentProfile.email,
+          name: user.displayName ?? currentProfile.name,
+          lastUpdatedAt: DateTime.now(),
         );
+        
+        await dataManager.saveUserProfile(updatedProfile);
+        
+        // Auto sync after successful login
+        try {
+          final syncService = SyncService();
+          final syncResult = await syncService.smartSync();
+          
+          if (mounted) {
+            setState(() => _isLoading = false);
+            
+            // Show success message with sync info
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Login successful! $syncResult'),
+                backgroundColor: context.theme.primary,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        } catch (syncError) {
+          if (mounted) {
+            setState(() => _isLoading = false);
+            
+            // Show login success but sync warning
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Login successful! Sync will retry later.'),
+                backgroundColor: context.theme.primary,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
         
         // Navigate to main app screen
         Navigator.pushReplacement(

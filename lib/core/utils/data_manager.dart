@@ -149,6 +149,7 @@ class DataManager {
   
   Future<void> saveUserSettings(UserSettings settings) async {
     await _userSettingsHive.put('current', settings);
+    await _updateLastModifiedTime();
   }
   
   // ==================== SCHEDULE TASKS ====================
@@ -208,6 +209,7 @@ class DataManager {
   
   Future<void> saveGardenProgress(GardenProgress progress) async {
     await _gardenProgressHive.put('current', progress);
+    await _updateLastModifiedTime();
   }
   
   // ==================== AQUARIUM PROGRESS ====================
@@ -218,6 +220,7 @@ class DataManager {
   
   Future<void> saveAquariumProgress(AquariumProgress progress) async {
     await _aquariumProgressHive.put('current', progress);
+    await _updateLastModifiedTime();
   }
   
   // ==================== PAINTING PROGRESS ====================
@@ -228,6 +231,7 @@ class DataManager {
   
   Future<void> savePaintingProgress(PaintingProgress progress) async {
     await _paintingProgressHive.put('current', progress);
+    await _updateLastModifiedTime();
   }
   
   // ==================== MUSIC PROGRESS ====================
@@ -238,6 +242,7 @@ class DataManager {
   
   Future<void> saveMusicProgress(MusicProgress progress) async {
     await _musicProgressHive.put('current', progress);
+    await _updateLastModifiedTime();
   }
 
   // Helper method to update lastUpdatedAt timestamp when any data changes

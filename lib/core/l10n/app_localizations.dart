@@ -237,6 +237,7 @@ abstract class AppLocalizations {
   String get pleaseLoginFirst;
   String get syncing;
   String get login;
+  String get logout;
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

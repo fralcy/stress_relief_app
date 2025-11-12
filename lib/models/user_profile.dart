@@ -75,7 +75,7 @@ class UserProfile {
       name: name,
       mascotName: mascotName,
       createdAt: now,
-      lastSyncedAt: now,
+      lastSyncedAt: DateTime.fromMillisecondsSinceEpoch(0), // Epoch time để force upload lần đầu
       lastUpdatedAt: now,
       unlockedScenes: <SceneKey, bool>{
         SceneKey(SceneSet.defaultSet, SceneType.livingRoom): true,

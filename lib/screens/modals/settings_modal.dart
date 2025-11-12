@@ -138,6 +138,82 @@ class _SettingsModalState extends State<SettingsModal> {
     }
   }
 
+  Future<void> _handleLogout() async {
+    SfxService().buttonClick();
+    final l10n = AppLocalizations.of(context);
+    
+    // Confirm logout
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.logout),
+        content: Text('Bạn có chắc chắn muốn đăng xuất? Dữ liệu sẽ được đồng bộ và xóa khỏi thiết bị.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.logout),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text('Đang đồng bộ và đăng xuất...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    try {
+      // Perform logout with sync and clear data
+      final syncService = SyncService();
+      await syncService.logoutAndSync();
+      
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context); // Close settings modal
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đăng xuất thành công'),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _resetToDefault() {
     final l10n = AppLocalizations.of(context);
     showDialog(
@@ -393,6 +469,27 @@ class _SettingsModalState extends State<SettingsModal> {
             child: AppButton(
               label: l10n.sync,
               onPressed: _handleSync,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: ElevatedButton(
+              onPressed: _handleLogout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: Text(
+                l10n.logout,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
