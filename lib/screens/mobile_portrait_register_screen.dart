@@ -3,7 +3,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
-import '../../models/user_profile.dart';
 
 /// Mobile Portrait Register Screen
 /// 
@@ -54,26 +53,34 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
         password: _passwordController.text,
       );
 
+      // Check if upgrading from guest mode
+      final wasGuest = await _authService.isGuestMode;
+      
       // Create user profile after successful Firebase registration
       if (userCredential?.user != null) {
-        final userProfile = UserProfile.initial(
-          id: userCredential!.user!.uid,
-          username: _usernameController.text.trim(),
-          email: _emailController.text.trim(),
-          name: _usernameController.text.trim(), // Use username as display name
-        );
+        if (wasGuest) {
+          await _authService.upgradeFromGuest();
+        }
         
-        // Save user profile to local storage
-        await DataManager().saveUserProfile(userProfile);
+        // Switch to logged in user mode
+        await DataManager().switchToLoggedInUser(
+          userId: userCredential!.user!.uid,
+          email: _emailController.text.trim(),
+          displayName: _usernameController.text.trim(),
+          hasCloudData: false, // New account
+        );
       }
 
       if (mounted) {
         setState(() => _isLoading = false);
         
-        // Show success message and navigate back
+        // Show success message
+        String message = wasGuest 
+            ? AppLocalizations.of(context).welcomeUpgradedFromGuest
+            : AppLocalizations.of(context).registrationSuccessful;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration successful!'),
+            content: Text(message),
             backgroundColor: context.theme.primary,
           ),
         );

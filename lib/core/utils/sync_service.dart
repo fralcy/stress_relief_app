@@ -37,21 +37,29 @@ class SyncService {
       throw 'Please login first to sync';
     }
 
+    // Check if user can sync (not guest)
+    if (!await _dataManager.canSync) {
+      throw 'Guest users cannot sync. Please create an account.';
+    }
+
     try {
+      // Update DataManager with Firebase UID if needed
+      await _ensureUserIdSync();
+      
       final localProfile = _dataManager.userProfile;
       final localLastUpdated = localProfile.lastUpdatedAt;
       final localLastSynced = localProfile.lastSyncedAt;
       final cloudLastSync = await _getCloudLastSyncedAt();
 
-      // Nếu cloud chưa có data -> upload
+      // Nếu cloud chưa có data -> upload (tài khoản mới)
       if (cloudLastSync == null) {
         await uploadToCloud();
-        return 'Uploaded local data to cloud';
+        return 'Uploaded local data to cloud (new account)';
       } 
-      // Nếu cloud đã sync trước local -> download
+      // Nếu cloud đã sync trước local -> download (tài khoản cũ)
       else if (cloudLastSync.isAfter(localLastSynced)) {
         await downloadFromCloud();
-        return 'Downloaded data from cloud';
+        return 'Downloaded data from cloud (existing account)';
       }
       // Nếu local có cập nhật -> upload
       else if (localLastUpdated.isAfter(localLastSynced)) {
@@ -63,6 +71,36 @@ class SyncService {
       return 'All data already synced';
     } catch (e) {
       throw 'Sync failed: $e';
+    }
+  }
+  
+  // Ensure DataManager has correct Firebase UID
+  Future<void> _ensureUserIdSync() async {
+    if (!_authService.isLoggedIn) return;
+    
+    final currentUser = _authService.currentUser!;
+    final localProfile = _dataManager.userProfile;
+    
+    // If local profile doesn't have Firebase UID, update it
+    if (localProfile.id != currentUser.uid) {
+      await _dataManager.switchToLoggedInUser(
+        userId: currentUser.uid,
+        email: currentUser.email!,
+        displayName: currentUser.displayName,
+        hasCloudData: await _hasCloudData(),
+      );
+    }
+  }
+  
+  // Check if user has existing data in cloud
+  Future<bool> _hasCloudData() async {
+    if (_userDoc == null) return false;
+    
+    try {
+      final doc = await _userDoc!.get();
+      return doc.exists;
+    } catch (e) {
+      return false;
     }
   }
 

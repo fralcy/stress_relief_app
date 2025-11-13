@@ -52,18 +52,23 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
       );
 
       if (mounted && userCredential != null) {
-        // Update user profile with Firebase user info
+        // Check if upgrading from guest mode
+        final wasGuest = await _authService.isGuestMode;
+        if (wasGuest) {
+          await _authService.upgradeFromGuest();
+        }
+        
+        // Update DataManager with Firebase user info
         final user = userCredential.user!;
         final dataManager = DataManager();
-        final currentProfile = dataManager.userProfile;
         
-        final updatedProfile = currentProfile.copyWith(
-          email: user.email ?? currentProfile.email,
-          name: user.displayName ?? currentProfile.name,
-          lastUpdatedAt: DateTime.now(),
+        // Switch to logged in user mode
+        await dataManager.switchToLoggedInUser(
+          userId: user.uid,
+          email: user.email!,
+          displayName: user.displayName,
+          hasCloudData: false, // Will be checked during sync
         );
-        
-        await dataManager.saveUserProfile(updatedProfile);
         
         // Auto sync after successful login
         try {
@@ -74,9 +79,12 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
             setState(() => _isLoading = false);
             
             // Show success message with sync info
+            String message = wasGuest 
+                ? '${AppLocalizations.of(context).upgradedFromGuestMode} $syncResult'
+                : '${AppLocalizations.of(context).loginSuccessful} $syncResult';
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Login successful! $syncResult'),
+                content: Text(message),
                 backgroundColor: context.theme.primary,
                 duration: const Duration(seconds: 4),
               ),
@@ -87,9 +95,12 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
             setState(() => _isLoading = false);
             
             // Show login success but sync warning
+            String message = wasGuest
+                ? '${AppLocalizations.of(context).upgradedFromGuestMode} ${AppLocalizations.of(context).syncWillRetryLater}'
+                : '${AppLocalizations.of(context).loginSuccessful} ${AppLocalizations.of(context).syncWillRetryLater}';
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Login successful! Sync will retry later.'),
+                content: Text(message),
                 backgroundColor: context.theme.primary,
                 duration: const Duration(seconds: 3),
               ),
@@ -111,6 +122,43 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _useAsGuest() async {
+    try {
+      // Set guest mode
+      await _authService.setGuestMode();
+      
+      // Switch DataManager to guest mode
+      await DataManager().switchToGuestMode();
+      
+      if (mounted) {
+        // Show guest mode message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).usingAsGuestMessage),
+            backgroundColor: context.theme.primary,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        // Navigate to main app screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MobilePortraitScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppLocalizations.of(context).failedToStartGuestMode}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -232,7 +280,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                     child: TextButton(
                       onPressed: _navigateToForgotPassword,
                       child: Text(
-                        'Forgot Password?',
+                        AppLocalizations.of(context).forgotPassword,
                         style: TextStyle(
                           color: theme.primary,
                           fontWeight: FontWeight.w500,
@@ -271,6 +319,28 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Guest mode button
+                  OutlinedButton(
+                    onPressed: _useAsGuest,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: theme.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context).useAsGuest,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: theme.primary,
+                      ),
+                    ),
                   ),
                   
                   const SizedBox(height: 24),

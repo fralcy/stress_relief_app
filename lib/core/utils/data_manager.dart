@@ -1,5 +1,6 @@
 import '../../models/index.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'auth_service.dart';
 
 /// Singleton để quản lý toàn bộ app data với Hive persistence
 /// 
@@ -7,11 +8,16 @@ import 'package:hive_flutter/hive_flutter.dart';
 /// - Persistent storage với Hive
 /// - Singleton pattern: 1 instance duy nhất trong app
 /// - CRUD operations cho tất cả models
+/// - Support cho guest mode và user authentication
+/// - 3 trạng thái: first_launch, guest, logged_in
 class DataManager {
   // Singleton instance
   static final DataManager _instance = DataManager._internal();
   factory DataManager() => _instance;
   DataManager._internal();
+  
+  // AuthService instance for user state checks
+  final AuthService _authService = AuthService();
   
   // Hive box names
   static const String _userProfileBox = 'userProfileBox';
@@ -78,14 +84,54 @@ class DataManager {
     _paintingProgressHive = await Hive.openBox<PaintingProgress>(_paintingProgressBox);
     _musicProgressHive = await Hive.openBox<MusicProgress>(_musicProgressBox);
     
-    // Tạo default data nếu chưa có
+    // Tạo default data theo user mode
+    await _initializeUserData();
+    
+    _isInitialized = true;
+  }
+  
+  /// Initialize user data based on current mode (first_launch/guest/logged_in)
+  Future<void> _initializeUserData() async {
+    final userMode = await _authService.userMode;
+    final userId = await _authService.userId;
+    
     if (_userProfileHive.isEmpty) {
-      final defaultProfile = UserProfile.initial(
-        id: 'user_001',
-        username: 'guest',
-        email: 'guest@example.com',
-        name: 'Guest User',
-      );
+      UserProfile defaultProfile;
+      
+      switch (userMode) {
+        case 'first_launch':
+          defaultProfile = UserProfile.initial(
+            id: 'initial_user',
+            username: 'new_user',
+            email: 'initial@example.com',
+            name: 'New User',
+          );
+          break;
+        case 'guest':
+          defaultProfile = UserProfile.initial(
+            id: 'guest_user',
+            username: 'guest',
+            email: 'guest@example.com',
+            name: 'Guest User',
+          );
+          break;
+        case 'logged_in':
+          defaultProfile = UserProfile.initial(
+            id: userId,
+            username: _authService.userEmail?.split('@')[0] ?? 'user',
+            email: _authService.userEmail ?? 'user@example.com',
+            name: _authService.currentUser?.displayName ?? 'User',
+          );
+          break;
+        default:
+          defaultProfile = UserProfile.initial(
+            id: 'initial_user',
+            username: 'new_user',
+            email: 'initial@example.com',
+            name: 'New User',
+          );
+      }
+      
       await _userProfileHive.put('current', defaultProfile);
     }
     
@@ -93,8 +139,52 @@ class DataManager {
       final defaultSettings = UserSettings.initial();
       await _userSettingsHive.put('current', defaultSettings);
     }
+  }
+  
+  /// Switch to guest mode - preserve current data
+  Future<void> switchToGuestMode() async {
+    final currentProfile = userProfile;
+    final guestProfile = currentProfile.copyWith(
+      id: 'guest_user',
+      username: 'guest',
+      email: 'guest@example.com',
+      name: 'Guest User',
+      lastUpdatedAt: DateTime.now(),
+    );
+    await _userProfileHive.put('current', guestProfile);
+  }
+  
+  /// Switch to logged in user - merge or replace data based on cloud data existence
+  Future<void> switchToLoggedInUser({
+    required String userId,
+    required String email,
+    String? displayName,
+    bool hasCloudData = false,
+  }) async {
+    UserProfile newProfile;
     
-    _isInitialized = true;
+    if (hasCloudData) {
+      // Nếu có data trên cloud, sẽ được ghi đè bởi sync service
+      // Tạo profile tạm thời với thông tin Firebase
+      newProfile = UserProfile.initial(
+        id: userId,
+        username: email.split('@')[0],
+        email: email,
+        name: displayName ?? email.split('@')[0],
+      );
+    } else {
+      // Tài khoản mới, giữ nguyên data hiện tại nhưng update user info
+      final currentProfile = userProfile;
+      newProfile = currentProfile.copyWith(
+        id: userId,
+        username: email.split('@')[0],
+        email: email,
+        name: displayName ?? currentProfile.name,
+        lastUpdatedAt: DateTime.now(),
+      );
+    }
+    
+    await _userProfileHive.put('current', newProfile);
   }
   
   /// Clear all data (reset app)
@@ -108,17 +198,14 @@ class DataManager {
     await _paintingProgressHive.clear();
     await _musicProgressHive.clear();
     
-    // Tạo lại default data
-    final defaultProfile = UserProfile.initial(
-      id: 'user_001',
-      username: 'guest',
-      email: 'guest@example.com',
-      name: 'Guest User',
-    );
-    await _userProfileHive.put('current', defaultProfile);
-    
-    final defaultSettings = UserSettings.initial();
-    await _userSettingsHive.put('current', defaultSettings);
+    // Tạo lại default data theo user mode hiện tại
+    await _initializeUserData();
+  }
+  
+  /// Check if current user can sync (not guest mode)
+  Future<bool> get canSync async {
+    final userMode = await _authService.userMode;
+    return userMode == 'logged_in';
   }
   
   // ==================== USER PROFILE ====================

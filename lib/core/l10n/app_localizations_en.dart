@@ -598,4 +598,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logout => 'Logout';
+
+  @override
+  String get useAsGuest => 'Use as Guest';
+
+  @override
+  String get usingAsGuestMessage => 'Using as Guest. You can sign up anytime!';
+
+  @override
+  String get failedToStartGuestMode => 'Failed to start guest mode';
+
+  @override
+  String get welcomeUpgradedFromGuest => 'Welcome! Successfully upgraded from guest mode!';
+
+  @override
+  String get registrationSuccessful => 'Registration successful!';
+
+  @override
+  String get loginSuccessful => 'Login successful!';
+
+  @override
+  String get upgradedFromGuestMode => 'Welcome! Upgraded from guest mode.';
+
+  @override
+  String get syncWillRetryLater => 'Sync will retry later.';
 }

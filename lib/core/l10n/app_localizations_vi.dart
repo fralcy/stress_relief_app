@@ -598,4 +598,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get logout => 'Đăng xuất';
+
+  @override
+  String get useAsGuest => 'Dùng như khách';
+
+  @override
+  String get usingAsGuestMessage => 'Đang dùng như khách. Bạn có thể đăng ký bất cứ lúc nào!';
+
+  @override
+  String get failedToStartGuestMode => 'Không thể bắt đầu chế độ khách';
+
+  @override
+  String get welcomeUpgradedFromGuest => 'Chào mừng! Đã nâng cấp từ chế độ khách thành công!';
+
+  @override
+  String get registrationSuccessful => 'Đăng ký thành công!';
+
+  @override
+  String get loginSuccessful => 'Đăng nhập thành công!';
+
+  @override
+  String get upgradedFromGuestMode => 'Chào mừng! Đã nâng cấp từ chế độ khách.';
+
+  @override
+  String get syncWillRetryLater => 'Sync sẽ thử lại sau.';
 }

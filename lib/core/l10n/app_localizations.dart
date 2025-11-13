@@ -239,6 +239,16 @@ abstract class AppLocalizations {
   String get login;
   String get logout;
 
+  // Guest mode
+  String get useAsGuest;
+  String get usingAsGuestMessage;
+  String get failedToStartGuestMode;
+  String get welcomeUpgradedFromGuest;
+  String get registrationSuccessful;
+  String get loginSuccessful;
+  String get upgradedFromGuestMode;
+  String get syncWillRetryLater;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

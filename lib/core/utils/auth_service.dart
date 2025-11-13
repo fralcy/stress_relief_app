@@ -1,16 +1,64 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  // Keys for SharedPreferences
+  static const String _isGuestKey = 'is_guest_mode';
+  static const String _isFirstLaunchKey = 'is_first_launch';
 
   // Get current user
   User? get currentUser => _auth.currentUser;
 
-  // Check if logged in
+  // Check if logged in (Firebase auth)
   bool get isLoggedIn => currentUser != null;
+  
+  // Check if in guest mode
+  Future<bool> get isGuestMode async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_isGuestKey) ?? false;
+  }
+  
+  // Check if first launch
+  Future<bool> get isFirstLaunch async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_isFirstLaunchKey) ?? true;
+  }
+  
+  // Get current user mode: 'first_launch', 'guest', 'logged_in'
+  Future<String> get userMode async {
+    if (await isFirstLaunch) return 'first_launch';
+    if (await isGuestMode) return 'guest';
+    if (isLoggedIn) return 'logged_in';
+    return 'first_launch'; // fallback
+  }
 
   // Get current user email
   String? get userEmail => currentUser?.email;
+  
+  // Get current user ID (Firebase UID or guest identifier)
+  Future<String> get userId async {
+    if (isLoggedIn) {
+      return currentUser!.uid;
+    } else if (await isGuestMode) {
+      return 'guest_user';
+    }
+    return 'initial_user';
+  }
+
+  // Set guest mode
+  Future<void> setGuestMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isGuestKey, true);
+    await prefs.setBool(_isFirstLaunchKey, false);
+  }
+  
+  // Mark first launch as completed
+  Future<void> markFirstLaunchComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isFirstLaunchKey, false);
+  }
 
   // Register with email & password
   Future<UserCredential?> register({
@@ -68,6 +116,15 @@ class AuthService {
   // Logout
   Future<void> logout() async {
     await _auth.signOut();
+    // Clear guest mode when logging out
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isGuestKey, false);
+  }
+  
+  // Switch from guest to registered user
+  Future<void> upgradeFromGuest() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isGuestKey, false);
   }
 
   // Reset password
