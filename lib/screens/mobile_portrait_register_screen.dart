@@ -23,7 +23,6 @@ class MobilePortraitRegisterScreen extends StatefulWidget {
 class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _authService = AuthService();
@@ -35,7 +34,6 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
   @override
   void dispose() {
     _emailController.dispose();
-    _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -66,7 +64,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
         await DataManager().switchToLoggedInUser(
           userId: userCredential!.user!.uid,
           email: _emailController.text.trim(),
-          displayName: _usernameController.text.trim(),
+          displayName: _emailController.text.trim().split('@')[0],
           hasCloudData: false, // New account
         );
       }
@@ -169,22 +167,6 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                       // Simple email validation
                       if (!value.contains('@') || !value.contains('.')) {
                         return l10n.invalidEmail;
-                      }
-                      return null;
-                    },
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Username field
-                  _buildTextField(
-                    controller: _usernameController,
-                    label: l10n.username,
-                    hint: l10n.enterUsername,
-                    prefixIcon: Icons.person_outline,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.usernameRequired;
                       }
                       return null;
                     },

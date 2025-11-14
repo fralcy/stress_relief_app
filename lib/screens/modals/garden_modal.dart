@@ -45,7 +45,7 @@ class _GardenModalState extends State<GardenModal> {
   void _loadProgress() {
     var progress = DataManager().gardenProgress;
     
-    if (progress == null || progress.plots == null) {
+    if (progress == null) {
       final emptyPlots = List.generate(4, (row) {
         return List.generate(4, (col) {
           return PlantCell(
@@ -78,7 +78,7 @@ class _GardenModalState extends State<GardenModal> {
     } else {
       // UPDATE tất cả cells dựa trên timestamp
       progress = progress.copyWith(
-        plots: GardenService.updateAllCells(progress.plots!),
+        plots: GardenService.updateAllCells(progress.plots),
       );
     }
     
@@ -95,8 +95,7 @@ class _GardenModalState extends State<GardenModal> {
 
   // Kiểm tra có ô trống không
   bool get _hasEmptyPlot {
-    if (_progress.plots == null) return false;
-    for (var row in _progress.plots!) {
+    for (var row in _progress.plots) {
       for (var cell in row) {
         if (cell.plantType == null) return true;
       }
@@ -105,8 +104,7 @@ class _GardenModalState extends State<GardenModal> {
   }
 
   bool get _hasPlantNeedingWater {
-    if (_progress.plots == null) return false;
-    for (var row in _progress.plots!) {
+    for (var row in _progress.plots) {
       for (var cell in row) {
         if (cell.plantType != null && cell.needsWater) {
           return true;
@@ -117,8 +115,7 @@ class _GardenModalState extends State<GardenModal> {
   }
 
   bool get _hasPlantWithPest {
-    if (_progress.plots == null) return false;
-    for (var row in _progress.plots!) {
+    for (var row in _progress.plots) {
       for (var cell in row) {
         if (cell.plantType != null && cell.hasPest) {
           return true;
@@ -129,8 +126,7 @@ class _GardenModalState extends State<GardenModal> {
   }
 
   bool get _hasPlantReadyToHarvest {
-    if (_progress.plots == null) return false;
-    for (var row in _progress.plots!) {
+    for (var row in _progress.plots) {
       for (var cell in row) {
         if (cell.plantType != null && cell.growthStage >= 100) {
           return true;
@@ -161,7 +157,7 @@ class _GardenModalState extends State<GardenModal> {
   void _onCellTap(int row, int col) async {
     if (_selectedAction == null) return;
     
-    final cell = _progress.plots![row][col];
+    final cell = _progress.plots[row][col];
     final l10n = AppLocalizations.of(context);
     
     switch (_selectedAction!) {
@@ -171,7 +167,7 @@ class _GardenModalState extends State<GardenModal> {
         
         final now = DateTime.now();
         final plots = List<List<PlantCell>>.from(
-          _progress.plots!.map((row) => List<PlantCell>.from(row))
+          _progress.plots.map((row) => List<PlantCell>.from(row))
         );
         
         plots[row][col] = PlantCell(
@@ -200,7 +196,7 @@ class _GardenModalState extends State<GardenModal> {
         if (cell.plantType == null || !cell.needsWater) return;
         
         final plots = List<List<PlantCell>>.from(
-          _progress.plots!.map((row) => List<PlantCell>.from(row))
+          _progress.plots.map((row) => List<PlantCell>.from(row))
         );
         
         plots[row][col] = cell.copyWith(
@@ -219,7 +215,7 @@ class _GardenModalState extends State<GardenModal> {
         if (cell.plantType == null || !cell.hasPest) return;
         
         final plots = List<List<PlantCell>>.from(
-          _progress.plots!.map((row) => List<PlantCell>.from(row))
+          _progress.plots.map((row) => List<PlantCell>.from(row))
         );
         
         plots[row][col] = cell.copyWith(hasPest: false);
@@ -239,7 +235,7 @@ class _GardenModalState extends State<GardenModal> {
         if (config == null) return;
         
         final plots = List<List<PlantCell>>.from(
-          _progress.plots!.map((row) => List<PlantCell>.from(row))
+          _progress.plots.map((row) => List<PlantCell>.from(row))
         );
         
         // Reset ô về trống
@@ -352,7 +348,7 @@ class _GardenModalState extends State<GardenModal> {
               itemBuilder: (context, index) {
                 final row = index ~/ 4;
                 final col = index % 4;
-                return _buildPlotCell(row, col, _progress.plots![row][col], theme);
+                return _buildPlotCell(row, col, _progress.plots[row][col], theme);
               },
             ),
           ),
