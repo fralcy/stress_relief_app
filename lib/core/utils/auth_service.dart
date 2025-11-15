@@ -9,7 +9,14 @@ class AuthService {
   static const String _isFirstLaunchKey = 'is_first_launch';
 
   // Get current user
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser {
+    try {
+      return _auth.currentUser;
+    } catch (e) {
+      // Firebase not initialized yet
+      return null;
+    }
+  }
 
   // Check if logged in (Firebase auth)
   bool get isLoggedIn => currentUser != null;
@@ -28,14 +35,23 @@ class AuthService {
   
   // Get current user mode: 'first_launch', 'guest', 'logged_in'
   Future<String> get userMode async {
-    if (await isFirstLaunch) return 'first_launch';
-    if (await isGuestMode) return 'guest';
+    // Priority 1: Firebase authenticated user (highest priority)
     if (isLoggedIn) return 'logged_in';
+    // Priority 2: Guest mode
+    if (await isGuestMode) return 'guest';
+    // Priority 3: First launch
+    if (await isFirstLaunch) return 'first_launch';
     return 'first_launch'; // fallback
   }
 
   // Get current user email
-  String? get userEmail => currentUser?.email;
+  String? get userEmail {
+    try {
+      return currentUser?.email;
+    } catch (e) {
+      return null;
+    }
+  }
   
   // Get current user ID (Firebase UID or guest identifier)
   Future<String> get userId async {
@@ -70,6 +86,8 @@ class AuthService {
         email: email,
         password: password,
       );
+      // Auto clear guest mode when registration succeeds
+      await upgradeFromGuest();
       return userCredential;
     } on FirebaseAuthException catch (e) {
       // Handle errors
@@ -97,6 +115,8 @@ class AuthService {
         email: email,
         password: password,
       );
+      // Auto clear guest mode when login succeeds
+      await upgradeFromGuest();
       return userCredential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -142,5 +162,25 @@ class AuthService {
     } catch (e) {
       throw 'Failed to send reset email: $e';
     }
+  }
+
+  // Debug method to check auth state
+  Future<Map<String, dynamic>> getAuthDebugInfo() async {
+    return {
+      'currentUser': currentUser?.uid ?? 'null',
+      'userEmail': userEmail ?? 'null',
+      'isLoggedIn': isLoggedIn,
+      'isGuestMode': await isGuestMode,
+      'isFirstLaunch': await isFirstLaunch,
+      'userMode': await userMode,
+      'userId': await userId,
+    };
+  }
+
+  // Force clear all auth flags (for testing)
+  Future<void> clearAuthFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isGuestKey, false);
+    await prefs.setBool(_isFirstLaunchKey, false);
   }
 }

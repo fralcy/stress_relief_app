@@ -1,6 +1,7 @@
 import '../../models/index.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'auth_service.dart';
+import 'encryption_util.dart';
 
 /// Singleton để quản lý toàn bộ app data với Hive persistence
 /// 
@@ -18,6 +19,9 @@ class DataManager {
   
   // AuthService instance for user state checks
   final AuthService _authService = AuthService();
+  
+  // EncryptionUtil instance for sensitive data
+  final EncryptionUtil _encryption = EncryptionUtil.instance;
   
   // Hive box names
   static const String _userProfileBox = 'userProfileBox';
@@ -73,6 +77,11 @@ class DataManager {
     Hive.registerAdapter(InstrumentAdapter());
     Hive.registerAdapter(NoteAdapter());
     Hive.registerAdapter(MusicTrackAdapter());
+    
+    // Initialize encryption
+    if (!_encryption.isInitialized) {
+      _encryption.initialize();
+    }
     
     // Open boxes
     _userProfileHive = await Hive.openBox<UserProfile>(_userProfileBox);
@@ -202,10 +211,10 @@ class DataManager {
     await _initializeUserData();
   }
   
-  /// Check if current user can sync (not guest mode)
+  /// Check if current user can sync (Firebase authenticated)
   Future<bool> get canSync async {
-    final userMode = await _authService.userMode;
-    return userMode == 'logged_in';
+    // Direct check Firebase auth state for more reliability
+    return _authService.isLoggedIn;
   }
   
   // ==================== USER PROFILE ====================
@@ -253,6 +262,8 @@ class DataManager {
     // Update lastUpdatedAt when data changes
     await _updateLastModifiedTime();
   }
+  
+
   
   Future<void> addScheduleTask(ScheduleTask task) async {
     await _scheduleTasksHive.add(task);

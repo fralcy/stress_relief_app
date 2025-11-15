@@ -28,12 +28,13 @@ import 'screens/mobile_portrait_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Init DataManager (Hive)
-  await DataManager().initialize();
-  // Initialize Firebase
+  // Initialize Firebase FIRST (AuthService depends on it)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Init DataManager (Hive) AFTER Firebase
+  await DataManager().initialize();
 
   // Init BGM Service
   await BgmService().initialize();

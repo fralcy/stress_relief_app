@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
 import 'data_manager.dart';
+import 'encryption_util.dart';
 import '../../models/index.dart';
 
 class SyncService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthService _authService = AuthService();
   final DataManager _dataManager = DataManager();
+  final EncryptionUtil _encryption = EncryptionUtil.instance;
 
   // Get user's document reference
   DocumentReference? get _userDoc {
@@ -33,13 +35,18 @@ class SyncService {
 
   // Smart sync based on timestamps - sync all data types
   Future<String> smartSync() async {
+    // Debug auth state
+    final debugInfo = await _authService.getAuthDebugInfo();
+    print('🔍 Auth Debug Info: $debugInfo');
+    
     if (!_authService.isLoggedIn) {
       throw 'Please login first to sync';
     }
 
     // Check if user can sync (not guest)
     if (!await _dataManager.canSync) {
-      throw 'Guest users cannot sync. Please create an account.';
+      final canSyncResult = await _dataManager.canSync;
+      throw 'Guest users cannot sync. Please create an account. (canSync: $canSyncResult, isLoggedIn: ${_authService.isLoggedIn})';
     }
 
     try {
@@ -56,8 +63,8 @@ class SyncService {
         await uploadToCloud();
         return 'Uploaded local data to cloud (new account)';
       } 
-      // Nếu cloud đã sync trước local -> download (tài khoản cũ)
-      else if (cloudLastSync.isAfter(localLastSynced)) {
+      // Nếu cloud đã sync trước local với buffer 2 giây -> download (tài khoản cũ)
+      else if (cloudLastSync.isAfter(localLastSynced.add(Duration(seconds: 2)))) {
         await downloadFromCloud();
         return 'Downloaded data from cloud (existing account)';
       }
@@ -112,9 +119,13 @@ class SyncService {
     final userId = _authService.currentUser!.uid;
 
     try {
+      // Update local lastSyncedAt FIRST to ensure same timestamp
+      final updatedProfile = _dataManager.userProfile.copyWith(lastSyncedAt: now);
+      await _dataManager.saveUserProfile(updatedProfile);
+      
       // 1. Upload User Profile to main users collection
       await _userDoc!.set({
-        'userProfile': _profileToMap(_dataManager.userProfile),
+        'userProfile': _profileToMap(updatedProfile),
         'lastSyncedAt': Timestamp.fromDate(now),
       }, SetOptions(merge: true));
 
@@ -136,21 +147,53 @@ class SyncService {
         await doc.reference.delete();
       }
       
-      // Add current tasks
+      // Add current tasks (encrypted)
       final tasks = _dataManager.scheduleTasks;
-      for (int i = 0; i < tasks.length; i++) {
-        await tasksCollection.doc('task_$i').set(_taskToMap(tasks[i]));
+      if (tasks.isNotEmpty) {
+        try {
+          final taskMaps = tasks.map((task) => _taskToMap(task)).toList();
+          final encryptedTasks = _encryption.encryptList(taskMaps);
+          await tasksCollection.doc('encrypted_data').set({
+            'data': encryptedTasks,
+            'count': tasks.length,
+            'lastUpdated': Timestamp.fromDate(now),
+          });
+        } catch (e) {
+          // Fallback to unencrypted if encryption fails
+          for (int i = 0; i < tasks.length; i++) {
+            await tasksCollection.doc('task_$i').set(_taskToMap(tasks[i]));
+          }
+        }
       }
 
-      // 4. Upload Emotion Diaries (simplified for now)
+      // 4. Upload Emotion Diaries (encrypted)
       final diariesCollection = _firestore
           .collection('emotionDiaries')
           .doc(userId);
       
-      await diariesCollection.set({
-        'count': _dataManager.emotionDiaries.length,
-        'lastUpdated': Timestamp.fromDate(now),
-      });
+      final diaries = _dataManager.emotionDiaries;
+      if (diaries.isNotEmpty) {
+        try {
+          final diaryMaps = diaries.map((diary) => _diaryToMap(diary)).toList();
+          final encryptedDiaries = _encryption.encryptList(diaryMaps);
+          await diariesCollection.set({
+            'data': encryptedDiaries,
+            'count': diaries.length,
+            'lastUpdated': Timestamp.fromDate(now),
+          });
+        } catch (e) {
+          // Fallback to count only if encryption fails
+          await diariesCollection.set({
+            'count': diaries.length,
+            'lastUpdated': Timestamp.fromDate(now),
+          });
+        }
+      } else {
+        await diariesCollection.set({
+          'count': 0,
+          'lastUpdated': Timestamp.fromDate(now),
+        });
+      }
 
       // 5. Upload Progress Data (simplified for now)
       await _firestore
@@ -163,10 +206,6 @@ class SyncService {
             'hasMusic': _dataManager.musicProgress != null,
             'lastUpdated': Timestamp.fromDate(now),
           });
-
-      // Update local lastSyncedAt
-      final updatedProfile = _dataManager.userProfile.copyWith(lastSyncedAt: now);
-      await _dataManager.saveUserProfile(updatedProfile);
       
     } catch (e) {
       throw 'Upload failed: $e';
@@ -205,28 +244,67 @@ class SyncService {
         await _dataManager.saveUserSettings(settings);
       }
 
-      // 3. Download Schedule Tasks
+      // 3. Download Schedule Tasks (decrypt if available)
       final tasksSnapshot = await _firestore
           .collection('scheduleTasks')
           .doc(userId)
           .collection('tasks')
           .get();
       
-      final tasks = tasksSnapshot.docs
-          .map((doc) => _taskFromMap(doc.data()))
-          .toList();
+      List<ScheduleTask> tasks = [];
+      
+      // Try to get encrypted data first
+      final encryptedTaskDoc = tasksSnapshot.docs
+          .where((doc) => doc.id == 'encrypted_data')
+          .firstOrNull;
+      
+      if (encryptedTaskDoc != null && encryptedTaskDoc.exists) {
+        try {
+          final encryptedData = encryptedTaskDoc.data()['data'] as String?;
+          if (encryptedData != null && encryptedData.isNotEmpty) {
+            final decryptedList = _encryption.decryptList(encryptedData);
+            tasks = decryptedList.map((map) => _taskFromMap(map as Map<String, dynamic>)).toList();
+          }
+        } catch (e) {
+          // If decryption fails, fall back to individual task documents
+          tasks = tasksSnapshot.docs
+              .where((doc) => doc.id != 'encrypted_data')
+              .map((doc) => _taskFromMap(doc.data()))
+              .toList();
+        }
+      } else {
+        // Legacy: read individual task documents
+        tasks = tasksSnapshot.docs
+            .map((doc) => _taskFromMap(doc.data()))
+            .toList();
+      }
+      
       await _dataManager.saveScheduleTasks(tasks);
 
-      // 4. Download Emotion Diaries (simplified for now)
+      // 4. Download Emotion Diaries (decrypt if available)
       final diariesDoc = await _firestore
           .collection('emotionDiaries')
           .doc(userId)
           .get();
       
-      // For now, just clear local diaries since we need proper model structure
+      List<EmotionDiary> diaries = [];
+      
       if (diariesDoc.exists) {
-        await _dataManager.saveEmotionDiaries([]);
+        try {
+          final data = diariesDoc.data() as Map<String, dynamic>;
+          final encryptedData = data['data'] as String?;
+          
+          if (encryptedData != null && encryptedData.isNotEmpty) {
+            final decryptedList = _encryption.decryptList(encryptedData);
+            diaries = decryptedList.map((map) => _diaryFromMap(map as Map<String, dynamic>)).toList();
+          }
+        } catch (e) {
+          // If decryption fails, keep empty list
+          diaries = [];
+        }
       }
+      
+      await _dataManager.saveEmotionDiaries(diaries);
 
       // 5. Download Progress Data (simplified for now)  
       // Skip progress data for now until we implement proper conversion
@@ -372,6 +450,26 @@ class SyncService {
       startTimeMinutes: map['startTimeMinutes'] ?? 0,
       endTimeMinutes: map['endTimeMinutes'] ?? 60,
       isCompleted: map['isCompleted'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> _diaryToMap(EmotionDiary diary) {
+    return {
+      'date': diary.date.toIso8601String(),
+      'q1': diary.q1,
+      'q2': diary.q2,
+      'q3': diary.q3,
+      'notes': diary.notes,
+    };
+  }
+
+  EmotionDiary _diaryFromMap(Map<String, dynamic> map) {
+    return EmotionDiary(
+      date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
+      q1: map['q1'] ?? 3,
+      q2: map['q2'] ?? 3,
+      q3: map['q3'] ?? 3,
+      notes: map['notes'] ?? '',
     );
   }
 
