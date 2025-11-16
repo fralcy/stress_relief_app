@@ -91,6 +91,7 @@ flutter:
     - assets/images/mascot/
     - assets/images/plants/
     - assets/images/aquarium/
+    - assets/images/
     # Audio - BGM
     - assets/audio/bgm/lofi_beats.mp3
     - assets/audio/bgm/rain_sounds.mp3

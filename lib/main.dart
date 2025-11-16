@@ -24,6 +24,7 @@ import 'screens/mobile_portrait_register_screen.dart';
 import 'screens/mobile_portrait_login_screen.dart';
 import 'screens/mobile_portrait_forgot_password_screen.dart';
 import 'screens/mobile_portrait_screen.dart';
+import 'screens/mobile_portrait_splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -122,8 +123,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      // Choose which screen to test
-      home: const TestMenuScreen(),
+      // Bắt đầu với splash screen
+      home: const MobilePortraitSplashScreen(),
     );
   }
 }
