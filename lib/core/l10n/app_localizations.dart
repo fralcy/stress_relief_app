@@ -249,6 +249,20 @@ abstract class AppLocalizations {
   String get upgradedFromGuestMode;
   String get syncWillRetryLater;
 
+  // Welcome Screen
+  String get chooseYourTheme;
+  String get pickColorScheme;
+  String get selectLanguage;
+  String get choosePreferredLanguage;
+  String get audioSettings;
+  String get customizeAudioExperience;
+  String get backgroundMusic;
+  String get soundEffects;
+  String get enableSFX;
+  String get back;
+  String get next;
+  String get getStarted;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

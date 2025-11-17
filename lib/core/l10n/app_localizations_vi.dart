@@ -622,4 +622,41 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get syncWillRetryLater => 'Sync sẽ thử lại sau.';
+
+  // Welcome Screen
+  @override
+  String get chooseYourTheme => 'Chọn giao diện';
+
+  @override
+  String get pickColorScheme => 'Chọn bảng màu phù hợp với tâm trạng của bạn';
+
+  @override
+  String get selectLanguage => 'Chọn ngôn ngữ';
+
+  @override
+  String get choosePreferredLanguage => 'Chọn ngôn ngữ ưa thích của bạn';
+
+  @override
+  String get audioSettings => 'Cài đặt âm thanh';
+
+  @override
+  String get customizeAudioExperience => 'Tùy chỉnh trải nghiệm âm thanh';
+
+  @override
+  String get backgroundMusic => 'Nhạc nền';
+
+  @override
+  String get soundEffects => 'Hiệu ứng âm thanh';
+
+  @override
+  String get enableSFX => 'Bật SFX';
+
+  @override
+  String get back => 'Quay lại';
+
+  @override
+  String get next => 'Tiếp theo';
+
+  @override
+  String get getStarted => 'Bắt đầu! 🎉';
 }

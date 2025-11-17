@@ -622,4 +622,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncWillRetryLater => 'Sync will retry later.';
+
+  // Welcome Screen
+  @override
+  String get chooseYourTheme => 'Choose Your Theme';
+
+  @override
+  String get pickColorScheme => 'Pick a color scheme that suits your mood';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get choosePreferredLanguage => 'Choose your preferred language';
+
+  @override
+  String get audioSettings => 'Audio Settings';
+
+  @override
+  String get customizeAudioExperience => 'Customize your audio experience';
+
+  @override
+  String get backgroundMusic => 'Background Music';
+
+  @override
+  String get soundEffects => 'Sound Effects';
+
+  @override
+  String get enableSFX => 'Enable SFX';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get getStarted => 'Get Started! 🎉';
 }
