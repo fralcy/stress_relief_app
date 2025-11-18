@@ -8,15 +8,17 @@ import '../../screens/modals/settings_modal.dart';
 
 /// Header cố định ở top màn hình
 /// 
-/// Layout: [Scene Shop] [Coin: 1234] [Settings]
+/// Layout: [Scene Shop] [Coin: 1234] [Help] [Settings]
 /// - Background: transparent
 /// - Items: primary bg, background text
 class AppHeader extends StatefulWidget {
   final VoidCallback onSceneShopPressed;
+  final VoidCallback? onHelpPressed;
 
   const AppHeader({
     super.key,
     required this.onSceneShopPressed,
+    this.onHelpPressed,
   });
 
   @override
@@ -56,18 +58,32 @@ class _AppHeaderState extends State<AppHeader> {
       height: 68,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildHeaderButton(
             icon: Icons.landscape,
             onPressed: widget.onSceneShopPressed,
             theme: theme,
           ),
+          const Spacer(),
           _buildCoinDisplay(currentPoints, theme),
-          _buildHeaderButton(
-            icon: Icons.settings,
-            onPressed: () => SettingsModal.show(context),
-            theme: theme,
+          const Spacer(),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.onHelpPressed != null) ...[
+                _buildHeaderButton(
+                  icon: Icons.help_outline,
+                  onPressed: widget.onHelpPressed!,
+                  theme: theme,
+                ),
+                const SizedBox(width: 8),
+              ],
+              _buildHeaderButton(
+                icon: Icons.settings,
+                onPressed: () => SettingsModal.show(context),
+                theme: theme,
+              ),
+            ],
           ),
         ],
       ),

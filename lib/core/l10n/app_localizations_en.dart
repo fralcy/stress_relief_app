@@ -659,4 +659,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get getStarted => 'Get Started! 🎉';
+
+  // Tutorial Screen
+  @override
+  String get tutorialTitle => 'User Guide';
+
+  @override
+  String get tutorialOverviewTitle => 'Overview - Layout & Navigation';
+
+  @override
+  String get tutorialOverviewDesc => 'The app allows you to journey alongside an adorable cat mascot in peaceful moments. The main interface consists of 5 areas of a house, each corresponding to different functions such as the living room as a control center, garden for planting and relaxation, aquarium for raising fish and collecting coins, painting room for creating art, and music room for composing music. Use the navigation buttons below to move between areas.';
+
+  @override
+  String get tutorialPointsTitle => 'Points & Shop System';
+
+  @override
+  String get tutorialPointsDesc => 'Earn points by completing daily tasks, writing diary entries, or playing mini-games. Use points to buy new backgrounds for rooms.';
+
+  @override
+  String get tutorialLifestyleSupportTitle => 'Life Management - Tasks & Emotion Diary';
+
+  @override
+  String get tutorialLifestyleSupportDesc => 'Take better care of yourself with time management and emotion diary tools. Create daily to-do lists and get helpful reminders. Simple diary helps you reflect on your day through 3 quick questions and personal notes.';
+
+  @override
+  String get tutorialRewardingTitle => 'Rewarding Mini-games - Garden & Aquarium';
+
+  @override
+  String get tutorialRewardingDesc => 'Mini-games help you earn points. Plant and care for crops in the garden, raise fish in the aquarium and feed them regularly.';
+
+  @override
+  String get tutorialCreativeTitle => 'Creative Minigames - Drawing & Music';
+
+  @override
+  String get tutorialCreativeDesc => 'Draw simple pictures with basic colors and save them. The music room lets you experiment with musical notes from different instruments.';
+
+  @override
+  String get tutorialSettingsTitle => 'Settings & Sync';
+
+  @override
+  String get tutorialSettingsDesc => 'Settings allow you to customize your personal experience:\n\n• Change themes and colors\n• Choose language (Vietnamese/English)\n• Adjust background music and sound effects volume\n• Set up reminder notifications\n\nYou can sync data with cloud storage to better preserve your progress by registering an account or using guest mode.';
+
+  @override
+  String get tutorialPrevious => 'Previous';
+
+  @override
+  String get tutorialNext => 'Next';
+
+  @override
+  String get tutorialGotIt => 'Got it!';
+
+  @override
+  String get tutorialSkip => 'Skip';
+
+  @override
+  String tutorialPageOf(int current, int total) => 'Page $current/$total';
 }

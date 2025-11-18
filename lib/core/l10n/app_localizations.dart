@@ -263,6 +263,26 @@ abstract class AppLocalizations {
   String get next;
   String get getStarted;
 
+  // Tutorial Screen
+  String get tutorialTitle;
+  String get tutorialOverviewTitle;
+  String get tutorialOverviewDesc;
+  String get tutorialPointsTitle;
+  String get tutorialPointsDesc;
+  String get tutorialLifestyleSupportTitle;
+  String get tutorialLifestyleSupportDesc;
+  String get tutorialRewardingTitle;
+  String get tutorialRewardingDesc;
+  String get tutorialCreativeTitle;
+  String get tutorialCreativeDesc;
+  String get tutorialSettingsTitle;
+  String get tutorialSettingsDesc;
+  String get tutorialPrevious;
+  String get tutorialNext;
+  String get tutorialGotIt;
+  String get tutorialSkip;
+  String tutorialPageOf(int current, int total);
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

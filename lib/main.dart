@@ -26,6 +26,7 @@ import 'screens/mobile_portrait_forgot_password_screen.dart';
 import 'screens/mobile_portrait_screen.dart';
 import 'screens/mobile_portrait_splash_screen.dart';
 import 'screens/mobile_portrait_welcome_screen.dart';
+import 'screens/mobile_portrait_tutorial_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -232,6 +233,16 @@ class TestMenuScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const MobilePortraitWelcomeScreen()),
+            ),
+          ),
+
+          _buildTestCard(
+            context,
+            title: '📖 Tutorial Screen',
+            description: 'Test tutorial/guide screen with navigation',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MobilePortraitTutorialScreen()),
             ),
           ),
         ],

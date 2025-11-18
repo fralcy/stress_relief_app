@@ -659,4 +659,59 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get getStarted => 'Bắt đầu! 🎉';
+
+  // Tutorial Screen
+  @override
+  String get tutorialTitle => 'Hướng dẫn sử dụng';
+
+  @override
+  String get tutorialOverviewTitle => 'Tổng quan - Giao diện & Điều hướng';
+
+  @override
+  String get tutorialOverviewDesc => 'Ứng dụng cho phép đồng hành cùng một linh vật mèo dễ thương trong những khoảnh khắc bình yên. Giao diện chính là 5 khu vực của một căn nhà, tương ứng với chúng là các chức năng khác nhau như phòng khách làm trung tâm điều khiển, khu vườn để trồng cây thư giãn, bể cá để nuôi cá và thu thập xu, phòng tranh để sáng tác nghệ thuật, và phòng nhạc để sáng tác âm nhạc. Dùng các nút phía dưới để điều hướng giữa các khu vực.';
+
+  @override
+  String get tutorialPointsTitle => 'Hệ thống Điểm & Cửa hàng';
+
+  @override
+  String get tutorialPointsDesc => 'Bạn có thể nhận điểm khi làm việc hàng ngày, viết nhật ký hoặc chăm sóc cây cá. Dùng điểm để mua bối cảnh mới cho các phòng.';
+
+  @override
+  String get tutorialLifestyleSupportTitle => 'Quản lý Cuộc sống - Nhiệm vụ & Nhật ký';
+
+  @override
+  String get tutorialLifestyleSupportDesc => 'Chăm sóc bản thân tốt hơn với công cụ quản lý thời gian và nhật ký cảm xúc. Lập danh sách việc cần làm và nhận thông báo nhắc nhở. Nhật ký đơn giản giúp bạn nhìn lại ngày qua 3 câu hỏi ngắn và ghi chú suy nghĩ.';
+
+  @override
+  String get tutorialRewardingTitle => 'Mini-game có thưởng - Vườn & Bể cá';
+
+  @override
+  String get tutorialRewardingDesc => 'Minigame giúp bạn nhận điểm. Trồng và chăm sóc cây trong vườn, nuôi cá trong bể và cho chúng ăn định kỳ.';
+
+  @override
+  String get tutorialCreativeTitle => 'Mini-game Sáng tạo - Vẽ & Âm nhạc';
+
+  @override
+  String get tutorialCreativeDesc => 'Vẽ tranh đơn giản với các màu sắc cơ bản và lưu lại. Phòng nhạc cho phép thử nghiệm với các nốt nhạc từ những nhạc cụ khác nhau.';
+
+  @override
+  String get tutorialSettingsTitle => 'Cài đặt & Đồng bộ';
+
+  @override
+  String get tutorialSettingsDesc => 'Cài đặt cho phép tùy chỉnh trải nghiệm cá nhân:\n\n• Thay đổi màu sắc chủ đề\n• Chọn ngôn ngữ (Tiếng Việt/English)\n• Điều chỉnh âm lượng nhạc nền và hiệu ứng âm thanh\n• Cài đặt thông báo nhắc nhở\n\nBạn có thể đồng bộ dữ liệu với lưu trữ đám mây để giữ tiến độ tốt hơn thông qua việc đăng ký tài khoản hoặc sử dụng chế độ khách.';
+
+  @override
+  String get tutorialPrevious => 'Trước';
+
+  @override
+  String get tutorialNext => 'Tiếp';
+
+  @override
+  String get tutorialGotIt => 'Đã hiểu!';
+
+  @override
+  String get tutorialSkip => 'Bỏ qua';
+
+  @override
+  String tutorialPageOf(int current, int total) => 'Trang $current/$total';
 }

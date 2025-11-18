@@ -18,6 +18,7 @@ import 'modals/drawing_modal.dart';
 import 'modals/gallery_modal.dart';
 import 'modals/composing_modal.dart';
 import 'modals/library_modal.dart';
+import 'mobile_portrait_tutorial_screen.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -84,6 +85,15 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                   onSceneShopPressed: () {
                     SfxService().buttonClick();
                     SceneShopModal.show(context);
+                  },
+                  onHelpPressed: () {
+                    SfxService().buttonClick();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MobilePortraitTutorialScreen(),
+                      ),
+                    );
                   },
                 ),
               ),
