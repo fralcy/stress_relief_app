@@ -17,9 +17,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 // Import test screens
-import 'screens/notifier_test_screen.dart';
-import 'screens/asset_test_screen.dart';
-import 'screens/component_showcase_screen.dart';
 import 'screens/mobile_portrait_register_screen.dart';
 import 'screens/mobile_portrait_login_screen.dart';
 import 'screens/mobile_portrait_forgot_password_screen.dart';
@@ -155,36 +152,6 @@ class TestMenuScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          
-          _buildTestCard(
-            context,
-            title: '🔔 Notifier Test',
-            description: 'Test notification scheduling',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NotifierTestScreen()),
-            ),
-          ),
-          
-          _buildTestCard(
-            context,
-            title: '🎨 Asset Test',
-            description: 'Test asset loading and preview',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AssetTestScreen()),
-            ),
-          ),
-          
-          _buildTestCard(
-            context,
-            title: '🧩 Component Showcase',
-            description: 'Test UI components',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ComponentShowcaseScreen()),
-            ),
-          ),
           
           _buildTestCard(
             context,
