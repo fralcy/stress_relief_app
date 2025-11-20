@@ -16,14 +16,8 @@ import 'core/providers/scene_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-// Import test screens
-import 'screens/mobile_portrait_register_screen.dart';
-import 'screens/mobile_portrait_login_screen.dart';
-import 'screens/mobile_portrait_forgot_password_screen.dart';
-import 'screens/mobile_portrait_screen.dart';
+// Import splash screen
 import 'screens/mobile_portrait_splash_screen.dart';
-import 'screens/mobile_portrait_welcome_screen.dart';
-import 'screens/mobile_portrait_tutorial_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -124,141 +118,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ],
       // Bắt đầu với splash screen
       home: const MobilePortraitSplashScreen(),
-    );
-  }
-}
-
-/// Menu để chọn test screen nào
-class TestMenuScreen extends StatelessWidget {
-  const TestMenuScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Test Menu'),
-        backgroundColor: context.theme.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Select a test screen:',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: context.theme.text,
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          _buildTestCard(
-            context,
-            title: '📱 Mobile Layout',
-            description: 'Test mobile portrait screen',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MobilePortraitScreen()),
-            ),
-          ),
-
-          _buildTestCard(
-            context,
-            title: '🔐 Login Screen',
-            description: 'Test login form with authentication',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MobilePortraitLoginScreen()),
-            ),
-          ),
-
-          _buildTestCard(
-            context,
-            title: '📝 Register Screen',
-            description: 'Test registration form with l10n',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MobilePortraitRegisterScreen()),
-            ),
-          ),
-
-          _buildTestCard(
-            context,
-            title: '🔑 Forgot Password',
-            description: 'Test forgot password functionality',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MobilePortraitForgotPasswordScreen()),
-            ),
-          ),
-
-          _buildTestCard(
-            context,
-            title: '🎨 Welcome Setup',
-            description: 'Test initial setup welcome screen',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MobilePortraitWelcomeScreen()),
-            ),
-          ),
-
-          _buildTestCard(
-            context,
-            title: '📖 Tutorial Screen',
-            description: 'Test tutorial/guide screen with navigation',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MobilePortraitTutorialScreen()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildTestCard(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios, size: 20),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

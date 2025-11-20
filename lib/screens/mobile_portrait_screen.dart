@@ -19,6 +19,8 @@ import 'modals/gallery_modal.dart';
 import 'modals/composing_modal.dart';
 import 'modals/library_modal.dart';
 import 'mobile_portrait_tutorial_screen.dart';
+import 'package:flutter/foundation.dart';
+import '../core/utils/auth_service.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -39,9 +41,86 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   SceneType _currentScene = SceneType.livingRoom;
   MascotExpression _currentExpression = MascotExpression.idle;
 
+  // Debug functionality
+  void _showDebugDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Navigation Debug'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Expected Flow:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('🔄 First Launch:\nSplash → Welcome → Tutorial → Login → Main'),
+            const Text('👤 Guest Mode: Splash → Main'),
+            const Text('🔐 Logged In: Splash → Main'),
+            const SizedBox(height: 16),
+            const Text('Test Actions:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => _resetToFirstLaunch(context),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Reset to First Launch'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => _setGuestMode(context),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text('Set Guest Mode'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resetToFirstLaunch(BuildContext context) async {
+    final authService = AuthService();
+    await authService.clearAuthFlags();
+    
+    if (context.mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reset to first launch. Restart app to test flow.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  Future<void> _setGuestMode(BuildContext context) async {
+    final authService = AuthService();
+    await authService.setGuestMode();
+    
+    if (context.mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Set to guest mode. Restart app to test flow.'),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Debug FAB (only in debug mode)
+      floatingActionButton: kDebugMode ? FloatingActionButton(
+        mini: true,
+        onPressed: () => _showDebugDialog(context),
+        backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.bug_report, color: Colors.white),
+      ) : null,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -91,7 +170,9 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MobilePortraitTutorialScreen(),
+                        builder: (context) => const MobilePortraitTutorialScreen(
+                          isFromMainScreen: true,
+                        ),
                       ),
                     );
                   },

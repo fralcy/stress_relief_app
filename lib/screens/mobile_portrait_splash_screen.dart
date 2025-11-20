@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
-import '../main.dart';
+import '../core/utils/navigation_service.dart';
+import 'mobile_portrait_welcome_screen.dart';
+import 'mobile_portrait_screen.dart';
 
 /// Mobile Portrait Splash Screen
 /// 
@@ -51,16 +53,24 @@ class _MobilePortraitSplashScreenState extends State<MobilePortraitSplashScreen>
     
     if (!mounted) return;
     
-    // Navigate với page transition mượt đến TestMenuScreen
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const TestMenuScreen(),
-        transitionDuration: const Duration(milliseconds: 300),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
+    // Xác định màn hình đích dựa trên trạng thái user
+    final navigationService = NavigationService();
+    final targetRoute = await navigationService.getInitialRoute();
+    
+    Widget targetScreen;
+    switch (targetRoute) {
+      case '/welcome':
+        targetScreen = const MobilePortraitWelcomeScreen();
+        break;
+      case '/main':
+        targetScreen = const MobilePortraitScreen();
+        break;
+      default:
+        targetScreen = const MobilePortraitWelcomeScreen();
+    }
+    
+    // Navigate với page transition mượt
+    NavigationService.navigateWithFade(context, targetScreen);
   }
 
   @override

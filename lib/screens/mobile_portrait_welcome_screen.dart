@@ -9,8 +9,10 @@ import '../core/widgets/app_dropdown.dart';
 import '../core/utils/data_manager.dart';
 import '../core/utils/bgm_service.dart';
 import '../core/utils/sfx_service.dart';
+import '../core/utils/navigation_service.dart';
 import '../core/l10n/app_localizations.dart';
 import '../models/user_settings.dart';
+import 'mobile_portrait_tutorial_screen.dart';
 
 /// Welcome Screen với Initial Setup
 class MobilePortraitWelcomeScreen extends StatefulWidget {
@@ -75,7 +77,11 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
     SfxService().setEnabled(_settings.sfxEnabled);
     SfxService().changeVolume(_settings.sfxVolume);
     
-    // TO DO: Navigate to another screen
+    // Navigate to tutorial screen
+    NavigationService.navigateWithFade(
+      context, 
+      const MobilePortraitTutorialScreen(),
+    );
   }
 
   @override

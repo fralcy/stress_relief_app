@@ -3,6 +3,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
+import '../../core/utils/navigation_service.dart';
+import 'mobile_portrait_screen.dart';
 
 /// Mobile Portrait Register Screen
 /// 
@@ -83,8 +85,11 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
           ),
         );
         
-        // Navigate back to login screen
-        Navigator.pop(context);
+        // Navigate to main app screen (skip login since already registered)
+        NavigationService.navigateAndClearStack(
+          context,
+          const MobilePortraitScreen(),
+        );
       }
     } catch (e) {
       if (mounted) {

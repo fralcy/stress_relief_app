@@ -3,10 +3,18 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_theme.dart';
 import '../core/l10n/app_localizations.dart';
 import '../core/utils/sfx_service.dart';
+import '../core/utils/navigation_service.dart';
+import '../core/utils/auth_service.dart';
+import 'mobile_portrait_login_screen.dart';
 
 /// Tutorial Screen với phong cách doc-style
 class MobilePortraitTutorialScreen extends StatefulWidget {
-  const MobilePortraitTutorialScreen({super.key});
+  final bool isFromMainScreen;
+  
+  const MobilePortraitTutorialScreen({
+    super.key,
+    this.isFromMainScreen = false,
+  });
 
   @override
   State<MobilePortraitTutorialScreen> createState() => _MobilePortraitTutorialScreenState();
@@ -47,9 +55,20 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
     }
   }
 
-  void _finish() {
+  void _finish() async {
     SfxService().buttonClick();
-    Navigator.pop(context);
+    
+    if (widget.isFromMainScreen) {
+      // Nếu xem tutorial từ main screen, quay về main
+      Navigator.pop(context);
+    } else {
+      // Lần đầu xem tutorial, mark complete và đến login
+      await AuthService().markFirstLaunchComplete();
+      NavigationService.navigateWithFade(
+        context, 
+        const MobilePortraitLoginScreen(),
+      );
+    }
   }
 
   @override
@@ -72,7 +91,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.isFromMainScreen,
       ),
       body: Column(
         children: [

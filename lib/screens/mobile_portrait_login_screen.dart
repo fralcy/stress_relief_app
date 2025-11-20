@@ -4,6 +4,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sync_service.dart';
+import '../../core/utils/navigation_service.dart';
 import 'mobile_portrait_register_screen.dart';
 import 'mobile_portrait_screen.dart';
 import 'mobile_portrait_forgot_password_screen.dart';
@@ -109,9 +110,9 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         }
         
         // Navigate to main app screen
-        Navigator.pushReplacement(
+        NavigationService.navigateAndClearStack(
           context,
-          MaterialPageRoute(builder: (context) => const MobilePortraitScreen()),
+          const MobilePortraitScreen(),
         );
       }
     } catch (e) {
@@ -148,9 +149,9 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         );
         
         // Navigate to main app screen
-        Navigator.pushReplacement(
+        NavigationService.navigateAndClearStack(
           context,
-          MaterialPageRoute(builder: (context) => const MobilePortraitScreen()),
+          const MobilePortraitScreen(),
         );
       }
     } catch (e) {
