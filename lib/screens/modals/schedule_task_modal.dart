@@ -398,7 +398,6 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Widget _buildTaskItem(int index, AppTheme theme) {
-    final l10n = AppLocalizations.of(context);
     final task = _tasks[index];
     final isEditing = _editingMode[index] ?? false;
     final hasOverlap = _overlappingIndexes.contains(index);
@@ -522,22 +521,22 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   style: TextStyle(color: theme.text, fontSize: 14),
                 ),
               if (isEditing)
-                AppButton(
-                  label: l10n.save,
+                IconButton(
                   onPressed: () => _updateTask(index),
-                  width: 70,
-                  height: 32,
+                  icon: Icon(Icons.check, color: theme.primary),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
                 )
               else
-                AppButton(
-                  label: l10n.edit,
+                IconButton(
                   onPressed: () {
                     setState(() {
                       _editingMode[index] = true;
                     });
                   },
-                  width: 70,
-                  height: 32,
+                  icon: Icon(Icons.edit, color: theme.primary),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
                 ),
             ],
           ),

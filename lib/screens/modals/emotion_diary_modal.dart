@@ -39,7 +39,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   int? _productivity;
   
   final TextEditingController _diaryController = TextEditingController();
-  final int _maxDiaryLength = 200;
+  final int _maxDiaryLength = 400;
 
   @override
   void initState() {
@@ -95,9 +95,12 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     final l10n = AppLocalizations.of(context);
     final history = _getHistory();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
         // ========== HISTORY SECTION ==========
         _buildHistorySection(history, theme),
         
@@ -107,7 +110,9 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         
         // ========== CHECK-IN SECTION ==========
         _buildCheckInSection(l10n, theme),
-      ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -369,7 +374,8 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         TextField(
           controller: _diaryController,
           readOnly: isReadOnly,
-          maxLines: 4,
+          maxLines: 10,
+          minLines: 5,
           maxLength: _maxDiaryLength,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           decoration: InputDecoration(
