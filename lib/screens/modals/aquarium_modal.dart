@@ -396,19 +396,25 @@ class _AquariumModalState extends State<AquariumModal> {
         
         const SizedBox(height: 12),
         
-        // Buttons
-        Row(
+        // Buttons - improved layout to prevent text overflow
+        Column(
           children: [
-            Expanded(
+            // Feed button - full width
+            SizedBox(
+              width: double.infinity,
               child: AppButton(
                 label: '🍞 ${l10n.feedNow}',
                 onPressed: canFeed ? _onFeed : null,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
+            const SizedBox(height: 8),
+            // Claim button - full width with better text handling
+            SizedBox(
+              width: double.infinity,
               child: AppButton(
-                label: '🪙 ${l10n.claimCoins} ($claimablePoints)',
+                label: claimablePoints > 0 
+                    ? '🪙 ${l10n.claimCoins} ($claimablePoints)'
+                    : '🪙 ${l10n.claimCoins}',
                 onPressed: claimablePoints > 0 ? _onClaim : null,
               ),
             ),

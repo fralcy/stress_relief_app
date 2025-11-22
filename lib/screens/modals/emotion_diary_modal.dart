@@ -460,7 +460,6 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     _diaryController.text = _diaryController.text.substring(0, _maxDiaryLength);
   }
 
-    final l10n = AppLocalizations.of(context);
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     
@@ -504,12 +503,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     if (mounted) {
       setState(() {}); // Force rebuild to update save button state
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.journalSaved),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+
     }
   }
 

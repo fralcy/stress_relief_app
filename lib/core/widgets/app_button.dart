@@ -35,14 +35,26 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     
-    // Determine background color based on state
+    // Determine colors based on state and theme type
     Color backgroundColor;
+    Color foregroundColor;
+    
     if (isDisabled) {
-      backgroundColor = theme.secondary.withOpacity(0.5);
+      if (theme.isDark) {
+        // Dark theme: use border color for better contrast
+        backgroundColor = theme.border;
+        foregroundColor = theme.text.withOpacity(0.6);
+      } else {
+        // Light theme: use opacity (works well)
+        backgroundColor = theme.secondary.withOpacity(0.5);
+        foregroundColor = theme.background.withOpacity(0.6);
+      }
     } else if (isActive) {
       backgroundColor = theme.secondary;
+      foregroundColor = theme.background;
     } else {
       backgroundColor = theme.primary;
+      foregroundColor = theme.background;
     }
 
     return SizedBox(
@@ -52,7 +64,7 @@ class AppButton extends StatelessWidget {
         onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          foregroundColor: theme.background,
+          foregroundColor: foregroundColor,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(

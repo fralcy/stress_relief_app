@@ -167,6 +167,8 @@ abstract class AppLocalizations {
   String get gallery;
   String get myPaintings;
   String paintingNumber(int number);
+  String get zoom;
+  String get myTracks;
 
   // Music Room
   String get music;

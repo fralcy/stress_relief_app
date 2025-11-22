@@ -111,7 +111,7 @@ class AppThemes {
     id: 'serene_green_night',
     name: 'Serene Green Night',
     primary: Color(0xFF86EFAC),
-    secondary: Color(0xFFA7F3D0),
+    secondary: Color(0xFF7DD3FC),
     text: Color(0xFFF3F4F6),
     background: Color(0xFF111827),
     border: Color(0xFF374151),

@@ -72,6 +72,7 @@ class _LibraryModalState extends State<LibraryModal> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final l10n = AppLocalizations.of(context);
 
     if (_tracks.isEmpty) {
       return Center(
@@ -87,7 +88,7 @@ class _LibraryModalState extends State<LibraryModal> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Bản nhạc của tôi',
+            l10n.myTracks,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -96,7 +97,7 @@ class _LibraryModalState extends State<LibraryModal> {
           ),
           const SizedBox(height: 16),
           
-          // List của các đoạn nhạc
+          // List của các đoạn nhạc với preview và preview button
           ..._tracks.asMap().entries.map((entry) {
             final index = entry.key;
             final track = entry.value;

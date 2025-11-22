@@ -406,6 +406,12 @@ class AppLocalizationsEn extends AppLocalizations {
   
   @override
   String paintingNumber(int number) => 'Painting $number';
+  
+  @override
+  String get zoom => 'Zoom';
+  
+  @override
+  String get myTracks => 'My Tracks';
 
   // Music Room
   @override

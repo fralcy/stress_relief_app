@@ -158,7 +158,6 @@ class _GardenModalState extends State<GardenModal> {
     if (_selectedAction == null) return;
     
     final cell = _progress.plots[row][col];
-    final l10n = AppLocalizations.of(context);
     
     switch (_selectedAction!) {
       case 'plant':
@@ -189,7 +188,6 @@ class _GardenModalState extends State<GardenModal> {
           );
         });
         _saveProgress();
-        _showToast(l10n.plantedSuccessfully);
         break;
         
       case 'water':
@@ -208,7 +206,6 @@ class _GardenModalState extends State<GardenModal> {
           _progress = _progress.copyWith(plots: plots);
         });
         _saveProgress();
-        _showToast(l10n.wateredSuccessfully);
         break;
         
       case 'pestControl':
@@ -224,7 +221,6 @@ class _GardenModalState extends State<GardenModal> {
           _progress = _progress.copyWith(plots: plots);
         });
         _saveProgress();
-        _showToast(l10n.pestControlSuccessfully);
         break;
         
       case 'harvest':
@@ -269,20 +265,11 @@ class _GardenModalState extends State<GardenModal> {
         // Cộng điểm vào UserProfile
         await context.read<ScoreProvider>().addPoints(pointsGained);
 
-        _showToast(l10n.harvestedSuccessfully(1, pointsGained));
         break;
     }
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -622,7 +609,8 @@ class _GardenModalState extends State<GardenModal> {
       label: label,
       icon: icon,
       isActive: isSelected,
-      onPressed: canEnable ? () => _toggleAction(actionKey) : null,
+      onPressed: () => _toggleAction(actionKey),
+      isDisabled: !canEnable,
     );
   }
 }

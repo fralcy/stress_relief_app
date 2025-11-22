@@ -289,9 +289,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
       return AppButton(
         icon: Icons.shopping_cart,
         label: collection.isFree ? AppLocalizations.of(context).free : AppLocalizations.of(context).buyCollection,
-        onPressed: collection.canAfford || collection.isFree
-            ? () => _handlePurchaseCollection(collection)
-            : null,
+        onPressed: () => _handlePurchaseCollection(collection),
         isDisabled: !collection.canAfford && !collection.isFree,
         width: double.infinity,
       );

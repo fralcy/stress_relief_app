@@ -406,6 +406,12 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String paintingNumber(int number) => 'Tranh $number';
+  
+  @override
+  String get zoom => 'Phóng to';
+  
+  @override
+  String get myTracks => 'Bản nhạc của tôi';
 
   // Music Room
   @override

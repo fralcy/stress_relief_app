@@ -83,11 +83,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Future<void> _addTask() async {
-    final l10n = AppLocalizations.of(context);
-    
     if (_titleController.text.trim().isEmpty) {
       SfxService().error();
-      _showToast(l10n.enterTaskName);
       return;
     }
 
@@ -102,7 +99,6 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     _loadTasks();
     await _updateNotifications();
     SfxService().buttonClick();
-    _showToast(l10n.taskAdded);
   }
 
   Future<void> _toggleTask(int index) async {
@@ -121,22 +117,17 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Future<void> _deleteTask(int index) async {
-    final l10n = AppLocalizations.of(context);
-    
     await DataManager().removeScheduleTask(index);
     _loadTasks();
     await _updateNotifications();
     SfxService().buttonClick();
-    _showToast(l10n.taskDeleted);
   }
 
   Future<void> _updateTask(int index) async {
-    final l10n = AppLocalizations.of(context);
     final controller = _editControllers[index];
     
     if (controller == null || controller.text.trim().isEmpty) {
       SfxService().error();
-      _showToast(l10n.taskNameRequired);
       return;
     }
 
@@ -158,12 +149,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     });
     _loadTasks();
     SfxService().buttonClick();
-    _showToast(l10n.taskUpdated);
   }
 
   Future<void> _claimPoints() async {
-    final l10n = AppLocalizations.of(context);
-    
     // Lấy profile từ provider
     final profile = context.read<ScoreProvider>().profile;
     final tasks = DataManager().scheduleTasks;
@@ -171,7 +159,6 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     // Check đã claim hôm nay chưa
     if (!SchedulePointsService.canClaimToday(profile.lastPointsClaimDate)) {
       SfxService().error();
-      _showToast(l10n.alreadyClaimedOrNoTasks);
       return;
     }
     
@@ -179,7 +166,6 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final points = SchedulePointsService.calculatePoints(tasks);
     if (points == 0) {
       SfxService().error();
-      _showToast(l10n.alreadyClaimedOrNoTasks);
       return;
     }
     
@@ -194,19 +180,10 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     await DataManager().saveScheduleTasks(remainingTasks);
     
     SfxService().reward();
-    _showToast('${l10n.pointsClaimed.replaceAll('{points}', '$points')} 🎉');
     _loadTasks();
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+
 
   Future<void> _pickTime({
     required TimeOfDay initialTime,
@@ -579,7 +556,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         // Button claim điểm
         AppButton(
           label: l10n.endDayAndClaimPoints,
-          onPressed: canClaim ? _claimPoints : null,
+          onPressed: _claimPoints,
+          isDisabled: !canClaim,
         ),
         
         const SizedBox(height: 8),

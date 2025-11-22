@@ -50,6 +50,11 @@ class _DrawingModalState extends State<DrawingModal> {
   
   // Scroll control
   bool _isDrawing = false;
+  
+  // Zoom and pan controls
+  int _zoomLevel = 1; // 1, 2, 4
+  double _panX = 0;
+  double _panY = 0;
 
   @override
   void initState() {
@@ -215,6 +220,66 @@ class _DrawingModalState extends State<DrawingModal> {
     });
   }
 
+  void _onZoomIn() {
+    SfxService().buttonClick();
+    if (_zoomLevel < 4) {
+      setState(() {
+        _zoomLevel *= 2;
+        // Reset pan khi zoom
+        _panX = 0;
+        _panY = 0;
+      });
+    }
+  }
+
+  void _onZoomOut() {
+    SfxService().buttonClick();
+    if (_zoomLevel > 1) {
+      setState(() {
+        _zoomLevel ~/= 2;
+        // Reset pan khi zoom
+        _panX = 0;
+        _panY = 0;
+      });
+    }
+  }
+
+  void _onPanLeft() {
+    SfxService().buttonClick();
+    if (_zoomLevel > 1) {
+      setState(() {
+        _panX = (_panX - 0.25).clamp(-(_zoomLevel - 1).toDouble(), 0);
+      });
+    }
+  }
+
+  void _onPanRight() {
+    SfxService().buttonClick();
+    if (_zoomLevel > 1) {
+      setState(() {
+        _panX = (_panX + 0.25).clamp(0, (_zoomLevel - 1).toDouble());
+      });
+    }
+  }
+
+  void _onPanUp() {
+    SfxService().buttonClick();
+    if (_zoomLevel > 1) {
+      setState(() {
+        _panY = (_panY - 0.25).clamp(-(_zoomLevel - 1).toDouble(), 0);
+      });
+    }
+  }
+
+  void _onPanDown() {
+    SfxService().buttonClick();
+    if (_zoomLevel > 1) {
+      setState(() {
+        _panY = (_panY + 0.25).clamp(0, (_zoomLevel - 1).toDouble());
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -251,9 +316,17 @@ class _DrawingModalState extends State<DrawingModal> {
                   pixels: _pixels,
                   selectedColorIndex: _selectedColorIndex,
                   onPixelPaint: _onPixelPaint,
+                  zoomLevel: _zoomLevel,
+                  panX: _panX,
+                  panY: _panY,
                 ),
               ),
             ),
+            
+            const SizedBox(height: 16),
+            
+            // ========== ZOOM AND PAN CONTROLS ==========
+            _buildZoomPanControls(l10n, theme),
             
             const SizedBox(height: 16),
             
@@ -381,11 +454,112 @@ class _DrawingModalState extends State<DrawingModal> {
           children: [
             AppButton(
               icon: Icons.undo, 
-              onPressed: _history.length > 1 ? _onUndo : null,
+              onPressed: _onUndo,
+              isDisabled: _history.length <= 1,
               width: 56,
             ),
             AppButton(icon: Icons.clear, onPressed: _onClear, width: 56),
             AppButton(icon: Icons.folder_open, onPressed: _onOpen, width: 56),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildZoomPanControls(AppLocalizations l10n, dynamic theme) {
+    final displayGridSize = 32 ~/ _zoomLevel;
+    
+    return Column(
+      children: [
+        // Zoom info
+        Text(
+          '${l10n.zoom}: ${_zoomLevel}x (${displayGridSize}x$displayGridSize pixels)',
+          style: TextStyle(
+            fontSize: 14,
+            color: theme.text,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Controls layout
+        Column(
+          children: [
+            // Top row: Up arrow
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppButton(
+                  icon: Icons.keyboard_arrow_up,
+                  onPressed: _onPanUp,
+                  isDisabled: _zoomLevel <= 1,
+                  width: 48,
+                  height: 48,
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Middle row: Left, Zoom controls, Right
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                AppButton(
+                  icon: Icons.keyboard_arrow_left,
+                  onPressed: _onPanLeft,
+                  isDisabled: _zoomLevel <= 1,
+                  width: 48,
+                  height: 48,
+                ),
+                
+                // Zoom controls
+                Row(
+                  children: [
+                    AppButton(
+                      icon: Icons.zoom_out,
+                      onPressed: _onZoomOut,
+                      isDisabled: _zoomLevel <= 1,
+                      width: 56,
+                      height: 48,
+                    ),
+                    const SizedBox(width: 12),
+                    AppButton(
+                      icon: Icons.zoom_in,
+                      onPressed: _onZoomIn,
+                      isDisabled: _zoomLevel >= 4,
+                      width: 56,
+                      height: 48,
+                    ),
+                  ],
+                ),
+                
+                AppButton(
+                  icon: Icons.keyboard_arrow_right,
+                  onPressed: _onPanRight,
+                  isDisabled: _zoomLevel <= 1,
+                  width: 48,
+                  height: 48,
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Bottom row: Down arrow
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppButton(
+                  icon: Icons.keyboard_arrow_down,
+                  onPressed: _onPanDown,
+                  isDisabled: _zoomLevel <= 1,
+                  width: 48,
+                  height: 48,
+                ),
+              ],
+            ),
           ],
         ),
       ],
@@ -412,12 +586,12 @@ class _DrawingModalState extends State<DrawingModal> {
                   decoration: BoxDecoration(
                     color: Color(DrawingPalette.hexToInt(colorHex)),
                     border: Border.all(
-                      color: isSelected ? Colors.white : theme.border,
+                      color: isSelected ? theme.primary : theme.border,
                       width: isSelected ? 3 : 1.5,
                     ),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: isSelected
-                        ? [BoxShadow(color: Colors.white.withOpacity(0.5), blurRadius: 8)]
+                        ? [BoxShadow(color: theme.primary.withOpacity(0.5), blurRadius: 8)]
                         : null,
                   ),
                 ),
