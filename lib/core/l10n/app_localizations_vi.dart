@@ -720,4 +720,54 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String tutorialPageOf(int current, int total) => 'Trang $current/$total';
+
+  // Theme names
+  @override
+  String get themePastelBlueBreeze => 'Làn gió xanh dương';
+
+  @override
+  String get themeCalmLavender => 'Tím oải hương';
+
+  @override
+  String get themeSunnyPastelYellow => 'Vàng nhạt nắng';
+
+  @override
+  String get themeMintyFresh => 'Xanh bạc hà';
+
+  @override
+  String get themeMidnightBlue => 'Xanh đêm';
+
+  @override
+  String get themeSoftPurpleNight => 'Đêm tím nhẹ';
+
+  @override
+  String get themeWarmSunset => 'Hoàng hôn ấm';
+
+  @override
+  String get themeSereneGreenNight => 'Đêm xanh tĩnh lặng';
+
+  // BGM names
+  @override
+  String get bgmLofiBeats => 'Nhạc Lofi';
+
+  @override
+  String get bgmRainSounds => 'Tiếng mưa';
+
+  @override
+  String get bgmPianoMusic => 'Nhạc piano';
+
+  @override
+  String get bgmAcousticBallad => 'Ballad nhẹ nhàng';
+
+  @override
+  String get bgmFolkSong => 'Dân ca';
+
+  @override
+  String get bgmIndieVibes => 'Nhạc indie';
+
+  @override
+  String get bgmSoftPop => 'Pop nhẹ nhàng';
+
+  @override
+  String get bgmChillAcoustic => 'Acoustic thư giãn';
 }

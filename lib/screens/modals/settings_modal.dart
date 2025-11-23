@@ -12,6 +12,7 @@ import '../../core/utils/bgm_service.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/auth_service.dart';
+import '../../core/utils/notifier.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/user_settings.dart';
 import '../mobile_portrait_login_screen.dart';
@@ -37,6 +38,7 @@ class SettingsModal extends StatefulWidget {
 
 class _SettingsModalState extends State<SettingsModal> {
   late UserSettings _settings;
+  final AuthService _authService = AuthService();
 
   // Available BGM options
   final List<String> _bgmList = [
@@ -44,11 +46,13 @@ class _SettingsModalState extends State<SettingsModal> {
     'Rain Sounds',
     'Piano Music',
     'Acoustic Ballad',
-    'Traditional Melodies',
+    'Folk Song',
     'Indie Vibes',
     'Soft Pop',
     'Chill Acoustic',
   ];
+
+  bool get _isLoggedIn => _authService.isLoggedIn;
 
   @override
   void initState() {
@@ -111,30 +115,28 @@ class _SettingsModalState extends State<SettingsModal> {
       // Perform smart sync
       final result = await syncService.smartSync();
       
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sync failed: $e'),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sync failed: $e'),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -165,53 +167,59 @@ class _SettingsModalState extends State<SettingsModal> {
     if (confirmed != true) return;
 
     // Show loading
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text('Đang đồng bộ và đăng xuất...'),
-            ],
-          ),
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Đang đồng bộ và đăng xuất...'),
+          ],
         ),
-      );
-    }
+      ),
+    );
 
     try {
       // Perform logout with sync and clear data
       final syncService = SyncService();
       await syncService.logoutAndSync();
       
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        Navigator.pop(context); // Close settings modal
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đăng xuất thành công'),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context); // Close settings modal
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đăng xuất thành công'),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Logout failed: $e'),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout failed: $e'),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
+
+  Future<void> _handleLogin() async {
+    SfxService().buttonClick();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const MobilePortraitLoginScreen(),
+      ),
+    );
   }
 
   void _resetToDefault() {
@@ -262,7 +270,38 @@ class _SettingsModalState extends State<SettingsModal> {
           AppDropdown<String>(
             value: _settings.bgm,
             items: _bgmList,
-            itemBuilder: (bgm) => Text(bgm),
+            itemBuilder: (bgm) {
+              String localizedName;
+              switch (bgm) {
+                case 'Lofi Beats':
+                  localizedName = l10n.bgmLofiBeats;
+                  break;
+                case 'Rain Sounds':
+                  localizedName = l10n.bgmRainSounds;
+                  break;
+                case 'Piano Music':
+                  localizedName = l10n.bgmPianoMusic;
+                  break;
+                case 'Acoustic Ballad':
+                  localizedName = l10n.bgmAcousticBallad;
+                  break;
+                case 'Folk Song':
+                  localizedName = l10n.bgmFolkSong;
+                  break;
+                case 'Indie Vibes':
+                  localizedName = l10n.bgmIndieVibes;
+                  break;
+                case 'Soft Pop':
+                  localizedName = l10n.bgmSoftPop;
+                  break;
+                case 'Chill Acoustic':
+                  localizedName = l10n.bgmChillAcoustic;
+                  break;
+                default:
+                  localizedName = bgm;
+              }
+              return Text(localizedName);
+            },
             onChanged: (bgm) {
               SfxService().buttonClick();
               setState(() {
@@ -303,7 +342,7 @@ class _SettingsModalState extends State<SettingsModal> {
               ),
               Switch(
                 value: _settings.sfxEnabled,
-                activeColor: theme.primary,
+                activeThumbColor: theme.primary,
                 onChanged: (val) {
                   setState(() {
                     _settings = _settings.copyWith(sfxEnabled: val);
@@ -363,36 +402,6 @@ class _SettingsModalState extends State<SettingsModal> {
 
         const SizedBox(height: 32),
 
-        // ========== MASCOT ==========
-        _buildSection(l10n.mascot, theme, [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${l10n.name}:',
-                style: TextStyle(
-                  color: theme.text,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: theme.border, width: 1.5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  l10n.mascotName,
-                  style: TextStyle(color: theme.text, fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        ]),
-
-        const SizedBox(height: 32),
-
         // ========== NOTIFICATION ==========
         _buildSection(l10n.notification, theme, [
           Row(
@@ -402,13 +411,30 @@ class _SettingsModalState extends State<SettingsModal> {
                 '${l10n.sleepReminder}:',
                 style: TextStyle(color: theme.text, fontSize: 16),
               ),
-              _buildToggleButtons(
+              Switch(
                 value: _settings.sleepReminderEnabled,
-                onChanged: (val) {
+                activeThumbColor: theme.primary,
+                onChanged: (val) async {
+                  if (val) {
+                    // Request notification permission when enabling
+                    final permitted = await Notifier.requestPermissions();
+                    if (!permitted) {
+                      SfxService().error();
+                      return;
+                    }
+                  }
+                  
                   setState(() {
                     _settings = _settings.copyWith(sleepReminderEnabled: val);
                     _saveSettings();
                   });
+                  
+                  // Update notification schedule
+                  if (val) {
+                    await Notifier.scheduleSleepReminder(_settings);
+                  } else {
+                    await Notifier.cancelSleepReminder();
+                  }
                 },
               ),
             ],
@@ -435,13 +461,30 @@ class _SettingsModalState extends State<SettingsModal> {
                 '${l10n.taskReminder}:',
                 style: TextStyle(color: theme.text, fontSize: 16),
               ),
-              _buildToggleButtons(
+              Switch(
                 value: _settings.taskReminderEnabled,
-                onChanged: (val) {
+                activeThumbColor: theme.primary,
+                onChanged: (val) async {
+                  if (val) {
+                    // Request notification permission when enabling
+                    final permitted = await Notifier.requestPermissions();
+                    if (!permitted) {
+                      SfxService().error();
+                      return;
+                    }
+                  }
+                  
                   setState(() {
                     _settings = _settings.copyWith(taskReminderEnabled: val);
                     _saveSettings();
                   });
+                  
+                  // Update task notifications
+                  final tasks = DataManager().scheduleTasks;
+                  await Notifier.updateAllTaskReminders(
+                    tasks: tasks,
+                    settings: _settings,
+                  );
                 },
               ),
             ],
@@ -463,35 +506,46 @@ class _SettingsModalState extends State<SettingsModal> {
 
         const SizedBox(height: 32),
 
-        // ========== CLOUD SYNC ==========
+        // ========== ACCOUNT ==========
         _buildSection(l10n.cloudSync, theme, [
-          Center(
-            child: AppButton(
-              label: l10n.sync,
-              onPressed: _handleSync,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: ElevatedButton(
-              onPressed: _handleLogout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              child: Text(
-                l10n.logout,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+          if (_isLoggedIn) ...[
+            // Logged in: Show sync and logout buttons
+            Center(
+              child: AppButton(
+                label: l10n.sync,
+                onPressed: _handleSync,
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            Center(
+              child: ElevatedButton(
+                onPressed: _handleLogout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: Text(
+                  l10n.logout,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            // Guest mode: Show login button
+            Center(
+              child: AppButton(
+                label: l10n.login,
+                onPressed: _handleLogin,
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Center(
             child: TextButton(
@@ -541,30 +595,45 @@ class _SettingsModalState extends State<SettingsModal> {
     );
   }
 
-  Widget _buildToggleButtons({required bool value, required Function(bool) onChanged}) {
-    final l10n = AppLocalizations.of(context);
-    
-    return SizedBox(
-      width: 80,
-      height: 36,
-      child: AppButton(
-        label: value ? l10n.on : l10n.off,
-        isActive: value,
-        onPressed: () {
-          SfxService().buttonClick();
-          onChanged(!value);
-        },
-      ),
-    );
-  }
+
 
   Widget _buildThemeSelector(AppTheme currentTheme) {
+    final l10n = AppLocalizations.of(context);
     return AppDropdown<String>(
       value: _settings.currentTheme,
       items: AppThemes.all.map((t) => t.id).toList(),
       itemBuilder: (themeId) {
-        final theme = AppThemes.getById(themeId);
-        return Text(theme.name);
+        String localizedName;
+        switch (themeId) {
+          case 'pastel_blue_breeze':
+            localizedName = l10n.themePastelBlueBreeze;
+            break;
+          case 'calm_lavender':
+            localizedName = l10n.themeCalmLavender;
+            break;
+          case 'sunny_pastel_yellow':
+            localizedName = l10n.themeSunnyPastelYellow;
+            break;
+          case 'minty_fresh':
+            localizedName = l10n.themeMintyFresh;
+            break;
+          case 'midnight_blue':
+            localizedName = l10n.themeMidnightBlue;
+            break;
+          case 'soft_purple_night':
+            localizedName = l10n.themeSoftPurpleNight;
+            break;
+          case 'warm_sunset':
+            localizedName = l10n.themeWarmSunset;
+            break;
+          case 'serene_green_night':
+            localizedName = l10n.themeSereneGreenNight;
+            break;
+          default:
+            final theme = AppThemes.getById(themeId);
+            localizedName = theme.name;
+        }
+        return Text(localizedName);
       },
       onChanged: (themeId) {
         SfxService().buttonClick();

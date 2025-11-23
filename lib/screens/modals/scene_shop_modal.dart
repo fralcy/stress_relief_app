@@ -31,26 +31,18 @@ class SceneShopModal extends StatefulWidget {
 }
 
 class _SceneShopModalState extends State<SceneShopModal> {
-  late SceneShopService _shopService;
-  
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final sceneProvider = Provider.of<SceneProvider>(context, listen: false);
-    final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
-    _shopService = SceneShopService(
-      sceneProvider: sceneProvider,
-      scoreProvider: scoreProvider,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     
     return Consumer2<SceneProvider, ScoreProvider>(
       builder: (context, sceneProvider, scoreProvider, child) {
-        final collections = _shopService.getSceneCollections();
+        // Create fresh service instance with current providers for reactive updates
+        final shopService = SceneShopService(
+          sceneProvider: sceneProvider,
+          scoreProvider: scoreProvider,
+        );
+        final collections = shopService.getSceneCollections();
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +52,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
             
             const SizedBox(height: 20),
             
-            // Collections list
+            // Collections list - rebuild each time for reactive state
             ...collections.map((collection) => 
               _buildCollectionCard(collection, theme)
             ),
@@ -75,7 +67,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.secondary.withOpacity(0.1),
+        color: theme.secondary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.border),
       ),
@@ -178,7 +170,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
           description,
           style: TextStyle(
             fontSize: 14,
-            color: theme.text.withOpacity(0.7),
+            color: theme.text.withValues(alpha: 0.7),
           ),
         ),
         
@@ -188,7 +180,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -226,7 +218,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -252,9 +244,9 @@ class _SceneShopModalState extends State<SceneShopModal> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.1),
+          color: Colors.green.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green.withOpacity(0.3)),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -300,7 +292,16 @@ class _SceneShopModalState extends State<SceneShopModal> {
 
   Future<void> _handlePurchaseCollection(SceneCollectionInfo collection) async {
     try {
-      await _shopService.purchaseSceneCollection(collection.sceneSet);
+      final sceneProvider = Provider.of<SceneProvider>(context, listen: false);
+      final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
+      final shopService = SceneShopService(
+        sceneProvider: sceneProvider,
+        scoreProvider: scoreProvider,
+      );
+      
+      await shopService.purchaseSceneCollection(collection.sceneSet);
+      // Providers will automatically notify listeners and update UI
+      // No manual setState needed due to Consumer2 watching providers
     } catch (e) {
       // Silent fail for performance
     }
@@ -308,7 +309,14 @@ class _SceneShopModalState extends State<SceneShopModal> {
 
   Future<void> _handleUseCollection(SceneCollectionInfo collection) async {
     try {
-      await _shopService.useSceneCollection(collection.sceneSet);
+      final sceneProvider = Provider.of<SceneProvider>(context, listen: false);
+      final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
+      final shopService = SceneShopService(
+        sceneProvider: sceneProvider,
+        scoreProvider: scoreProvider,
+      );
+      
+      await shopService.useSceneCollection(collection.sceneSet);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       // Silent fail for performance

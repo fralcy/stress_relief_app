@@ -31,7 +31,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
     'Rain Sounds',
     'Piano Music',
     'Acoustic Ballad',
-    'Traditional Melodies',
+    'Folk Song',
     'Indie Vibes',
     'Soft Pop',
     'Chill Acoustic',
@@ -534,13 +534,44 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 AppDropdown<String>(
                   value: _settings.bgm,
                   items: _bgmList,
-                  itemBuilder: (bgm) => Row(
-                    children: [
-                      Icon(Icons.music_note, size: 16, color: theme.primary),
-                      const SizedBox(width: 8),
-                      Text(bgm),
-                    ],
-                  ),
+                  itemBuilder: (bgm) {
+                    String localizedName;
+                    switch (bgm) {
+                      case 'Lofi Beats':
+                        localizedName = AppLocalizations.of(context).bgmLofiBeats;
+                        break;
+                      case 'Rain Sounds':
+                        localizedName = AppLocalizations.of(context).bgmRainSounds;
+                        break;
+                      case 'Piano Music':
+                        localizedName = AppLocalizations.of(context).bgmPianoMusic;
+                        break;
+                      case 'Acoustic Ballad':
+                        localizedName = AppLocalizations.of(context).bgmAcousticBallad;
+                        break;
+                      case 'Folk Song':
+                        localizedName = AppLocalizations.of(context).bgmFolkSong;
+                        break;
+                      case 'Indie Vibes':
+                        localizedName = AppLocalizations.of(context).bgmIndieVibes;
+                        break;
+                      case 'Soft Pop':
+                        localizedName = AppLocalizations.of(context).bgmSoftPop;
+                        break;
+                      case 'Chill Acoustic':
+                        localizedName = AppLocalizations.of(context).bgmChillAcoustic;
+                        break;
+                      default:
+                        localizedName = bgm;
+                    }
+                    return Row(
+                      children: [
+                        Icon(Icons.music_note, size: 16, color: theme.primary),
+                        const SizedBox(width: 8),
+                        Text(localizedName),
+                      ],
+                    );
+                  },
                   onChanged: (bgm) {
                     SfxService().buttonClick();
                     setState(() {

@@ -199,4 +199,25 @@ class SceneProvider extends ChangeNotifier {
     
     return true;
   }
+
+  /// Mở khóa scene set mà không trừ điểm (dùng khi điểm đã được trừ trước đó)
+  Future<bool> unlockSceneSetOnly(SceneSet sceneSet) async {
+    // Kiểm tra đã unlock chưa
+    if (isSceneSetUnlocked(sceneSet)) {
+      return false; // Đã mua rồi
+    }
+
+    // Mở khóa tất cả scenes trong set
+    Map<SceneKey, bool> updatedUnlocked = Map.from(_profile.unlockedScenes);
+    for (SceneType sceneType in SceneType.values) {
+      SceneKey key = SceneKey(sceneSet, sceneType);
+      updatedUnlocked[key] = true;
+    }
+    
+    _profile = _profile.copyWith(unlockedScenes: updatedUnlocked);
+    await DataManager().saveUserProfile(_profile);
+    notifyListeners();
+    
+    return true;
+  }
 }

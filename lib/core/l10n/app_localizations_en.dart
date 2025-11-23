@@ -720,4 +720,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tutorialPageOf(int current, int total) => 'Page $current/$total';
+
+  // Theme names
+  @override
+  String get themePastelBlueBreeze => 'Pastel Blue Breeze';
+
+  @override
+  String get themeCalmLavender => 'Calm Lavender';
+
+  @override
+  String get themeSunnyPastelYellow => 'Sunny Pastel Yellow';
+
+  @override
+  String get themeMintyFresh => 'Minty Fresh';
+
+  @override
+  String get themeMidnightBlue => 'Midnight Blue';
+
+  @override
+  String get themeSoftPurpleNight => 'Soft Purple Night';
+
+  @override
+  String get themeWarmSunset => 'Warm Sunset';
+
+  @override
+  String get themeSereneGreenNight => 'Serene Green Night';
+
+  // BGM names
+  @override
+  String get bgmLofiBeats => 'Lofi Beats';
+
+  @override
+  String get bgmRainSounds => 'Rain Sounds';
+
+  @override
+  String get bgmPianoMusic => 'Piano Music';
+
+  @override
+  String get bgmAcousticBallad => 'Acoustic Ballad';
+
+  @override
+  String get bgmFolkSong => 'Folk Song';
+
+  @override
+  String get bgmIndieVibes => 'Indie Vibes';
+
+  @override
+  String get bgmSoftPop => 'Soft Pop';
+
+  @override
+  String get bgmChillAcoustic => 'Chill Acoustic';
 }

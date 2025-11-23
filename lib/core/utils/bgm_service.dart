@@ -18,7 +18,7 @@ class BgmService {
     'Rain Sounds': 'audio/bgm/rain_sounds.mp3',
     'Piano Music': 'audio/bgm/piano_music.mp3',
     'Acoustic Ballad': 'audio/bgm/acoustic_ballad.mp3',
-    'Traditional Melodies': 'audio/bgm/traditional_melodies.mp3',
+    'Folk Song': 'audio/bgm/folk_song.mp3',
     'Indie Vibes': 'audio/bgm/indie_vibes.mp3',
     'Soft Pop': 'audio/bgm/soft_pop.mp3',
     'Chill Acoustic': 'audio/bgm/chill_acoustic.mp3',

@@ -54,7 +54,7 @@ class AppAssets {
   static const String bgmRainSounds = 'assets/audio/bgm/rain_sounds.mp3';
   static const String bgmPianoMusic = 'assets/audio/bgm/piano_music.mp3';
   static const String bgmAcousticBallad = 'assets/audio/bgm/acoustic_ballad.mp3';
-  static const String bgmTraditionalMelodies = 'assets/audio/bgm/traditional_melodies.mp3';
+  static const String bgmFolkSong = 'assets/audio/bgm/folk_song.mp3';
   static const String bgmIndieVibes = 'assets/audio/bgm/indie_vibes.mp3';
   static const String bgmSoftPop = 'assets/audio/bgm/soft_pop.mp3';
   static const String bgmChillAcoustic = 'assets/audio/bgm/chill_acoustic.mp3';
@@ -151,7 +151,7 @@ class AppAssets {
     'Rain Sounds': bgmRainSounds,
     'Piano Music': bgmPianoMusic,
     'Acoustic Ballad': bgmAcousticBallad,
-    'Traditional Melodies': bgmTraditionalMelodies,
+    'Folk Song': bgmFolkSong,
     'Indie Vibes': bgmIndieVibes,
     'Soft Pop': bgmSoftPop,
     'Chill Acoustic': bgmChillAcoustic,

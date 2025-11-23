@@ -285,6 +285,26 @@ abstract class AppLocalizations {
   String get tutorialSkip;
   String tutorialPageOf(int current, int total);
 
+  // Theme names
+  String get themePastelBlueBreeze;
+  String get themeCalmLavender;
+  String get themeSunnyPastelYellow;
+  String get themeMintyFresh;
+  String get themeMidnightBlue;
+  String get themeSoftPurpleNight;
+  String get themeWarmSunset;
+  String get themeSereneGreenNight;
+
+  // BGM names
+  String get bgmLofiBeats;
+  String get bgmRainSounds;
+  String get bgmPianoMusic;
+  String get bgmAcousticBallad;
+  String get bgmFolkSong;
+  String get bgmIndieVibes;
+  String get bgmSoftPop;
+  String get bgmChillAcoustic;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

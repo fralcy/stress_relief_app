@@ -113,22 +113,31 @@ class _AppHeaderState extends State<AppHeader> {
 
   Widget _buildCoinDisplay(int points, AppTheme theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      constraints: const BoxConstraints(
+        minWidth: 120,
+        maxWidth: 160,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: theme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.monetization_on, size: 24, color: theme.background),
-          const SizedBox(width: 8),
-          Text(
-            points.toString(),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: theme.background,
+          Icon(Icons.monetization_on, size: 20, color: theme.background),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              points.toString(),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: theme.background,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],

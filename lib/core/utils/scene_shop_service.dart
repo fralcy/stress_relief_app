@@ -20,7 +20,9 @@ class SceneShopService {
       Map<String, dynamic> info = AppAssets.sceneCollections[sceneSet]!;
       bool isUnlocked = _sceneProvider.isSceneSetUnlocked(sceneSet);
       bool isCurrentSet = _sceneProvider.getCurrentSceneSet() == sceneSet;
-      bool canAfford = _sceneProvider.canAffordSceneSet(sceneSet);
+      // Use ScoreProvider for real-time points instead of SceneProvider
+      int price = info['price'] ?? 0;
+      bool canAfford = _scoreProvider.currentPoints >= price;
       int unlockedCount = _sceneProvider.getUnlockedScenesCount(sceneSet);
 
       return SceneCollectionInfo(
@@ -45,7 +47,9 @@ class SceneShopService {
 
     bool isUnlocked = _sceneProvider.isSceneSetUnlocked(sceneSet);
     bool isCurrentSet = _sceneProvider.getCurrentSceneSet() == sceneSet;
-    bool canAfford = _sceneProvider.canAffordSceneSet(sceneSet);
+    // Use ScoreProvider for real-time points instead of SceneProvider
+    int price = info['price'] ?? 0;
+    bool canAfford = _scoreProvider.currentPoints >= price;
     int unlockedCount = _sceneProvider.getUnlockedScenesCount(sceneSet);
 
     return SceneCollectionInfo(
@@ -69,8 +73,15 @@ class SceneShopService {
     int price = AppAssets.sceneCollections[sceneSet]?['price'] ?? 0;
     if (_scoreProvider.currentPoints < price) return;
 
-    bool success = await _sceneProvider.purchaseSceneSet(sceneSet);
-    if (success) _scoreProvider.refresh();
+    // Subtract points first through ScoreProvider
+    await _scoreProvider.subtractPoints(price);
+    
+    // Then unlock the scene set without subtracting points again
+    bool success = await _sceneProvider.unlockSceneSetOnly(sceneSet);
+    if (success) {
+      _scoreProvider.refresh();
+      _sceneProvider.refresh();
+    }
   }
 
   /// Chuyển sang sử dụng scene collection

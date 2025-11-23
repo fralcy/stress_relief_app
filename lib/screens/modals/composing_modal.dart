@@ -673,7 +673,7 @@ class _ComposingModalState extends State<ComposingModal> {
       case InstrumentType.synth:
         return '🎛️';
       case InstrumentType.bass:
-        return '🎻';
+        return '🎸';
       case InstrumentType.drum:
         return '🥁';
     }
