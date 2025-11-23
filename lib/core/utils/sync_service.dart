@@ -35,10 +35,6 @@ class SyncService {
 
   // Smart sync based on timestamps - sync all data types
   Future<String> smartSync() async {
-    // Debug auth state
-    final debugInfo = await _authService.getAuthDebugInfo();
-    print('🔍 Auth Debug Info: $debugInfo');
-    
     if (!_authService.isLoggedIn) {
       throw 'Please login first to sync';
     }
@@ -195,17 +191,29 @@ class SyncService {
         });
       }
 
-      // 5. Upload Progress Data (simplified for now)
+      // 5. Upload Garden Progress
       await _firestore
-          .collection('progressData')
+          .collection('gardenProgress')
           .doc(userId)
-          .set({
-            'hasGarden': _dataManager.gardenProgress != null,
-            'hasAquarium': _dataManager.aquariumProgress != null,
-            'hasPainting': _dataManager.paintingProgress != null,
-            'hasMusic': _dataManager.musicProgress != null,
-            'lastUpdated': Timestamp.fromDate(now),
-          });
+          .set(_gardenProgressToMap(_dataManager.gardenProgress));
+
+      // 6. Upload Aquarium Progress
+      await _firestore
+          .collection('aquariumProgress')
+          .doc(userId)
+          .set(_aquariumProgressToMap(_dataManager.aquariumProgress));
+
+      // 7. Upload Painting Progress
+      await _firestore
+          .collection('paintingProgress')
+          .doc(userId)
+          .set(_paintingProgressToMap(_dataManager.paintingProgress));
+
+      // 8. Upload Music Progress
+      await _firestore
+          .collection('musicProgress')
+          .doc(userId)
+          .set(_musicProgressToMap(_dataManager.musicProgress));
       
     } catch (e) {
       throw 'Upload failed: $e';
@@ -306,8 +314,53 @@ class SyncService {
       
       await _dataManager.saveEmotionDiaries(diaries);
 
-      // 5. Download Progress Data (simplified for now)  
-      // Skip progress data for now until we implement proper conversion
+      // 5. Download Garden Progress
+      final gardenDoc = await _firestore
+          .collection('gardenProgress')
+          .doc(userId)
+          .get();
+      if (gardenDoc.exists) {
+        final gardenProgress = _gardenProgressFromMap(gardenDoc.data()!);
+        if (gardenProgress != null) {
+          await _dataManager.saveGardenProgress(gardenProgress);
+        }
+      }
+
+      // 6. Download Aquarium Progress
+      final aquariumDoc = await _firestore
+          .collection('aquariumProgress')
+          .doc(userId)
+          .get();
+      if (aquariumDoc.exists) {
+        final aquariumProgress = _aquariumProgressFromMap(aquariumDoc.data()!);
+        if (aquariumProgress != null) {
+          await _dataManager.saveAquariumProgress(aquariumProgress);
+        }
+      }
+
+      // 7. Download Painting Progress
+      final paintingDoc = await _firestore
+          .collection('paintingProgress')
+          .doc(userId)
+          .get();
+      if (paintingDoc.exists) {
+        final paintingProgress = _paintingProgressFromMap(paintingDoc.data()!);
+        if (paintingProgress != null) {
+          await _dataManager.savePaintingProgress(paintingProgress);
+        }
+      }
+
+      // 8. Download Music Progress
+      final musicDoc = await _firestore
+          .collection('musicProgress')
+          .doc(userId)
+          .get();
+      if (musicDoc.exists) {
+        final musicProgress = _musicProgressFromMap(musicDoc.data()!);
+        if (musicProgress != null) {
+          await _dataManager.saveMusicProgress(musicProgress);
+        }
+      }
       
     } catch (e) {
       throw 'Download failed: $e';
@@ -470,6 +523,317 @@ class SyncService {
       q2: map['q2'] ?? 3,
       q3: map['q3'] ?? 3,
       notes: map['notes'] ?? '',
+    );
+  }
+
+  // ==================== GARDEN PROGRESS CONVERSION ====================
+  
+  Map<String, dynamic> _gardenProgressToMap(GardenProgress? progress) {
+    if (progress == null) {
+      return {
+        'hasData': false,
+        'lastUpdated': Timestamp.fromDate(DateTime.now()),
+      };
+    }
+
+    // Flatten 2D plots array to avoid nested arrays
+    final flatPlots = <String, dynamic>{};
+    for (int row = 0; row < progress.plots.length; row++) {
+      for (int col = 0; col < progress.plots[row].length; col++) {
+        flatPlots['${row}_$col'] = _plantCellToMap(progress.plots[row][col]);
+      }
+    }
+
+    return {
+      'hasData': true,
+      'plots': flatPlots,
+      'plotsRows': progress.plots.length,
+      'plotsCols': progress.plots.isNotEmpty ? progress.plots[0].length : 0,
+      'inventory': progress.inventory,
+      'earnings': progress.earnings,
+      'lastUpdated': Timestamp.fromDate(DateTime.now()),
+    };
+  }
+
+  GardenProgress? _gardenProgressFromMap(Map<String, dynamic> map) {
+    if (!(map['hasData'] ?? false)) return null;
+
+    final plotsData = map['plots'] as Map<String, dynamic>?;
+    if (plotsData == null) return null;
+
+    final rows = map['plotsRows'] as int? ?? 0;
+    final cols = map['plotsCols'] as int? ?? 0;
+    
+    if (rows == 0 || cols == 0) return null;
+
+    // Reconstruct 2D array from flat map
+    final plots = List.generate(rows, (row) => 
+      List.generate(cols, (col) {
+        final cellData = plotsData['${row}_$col'] as Map<String, dynamic>?;
+        return cellData != null 
+          ? _plantCellFromMap(cellData)
+          : PlantCell(
+              plantType: null,
+              growthStage: 0,
+              lastWatered: DateTime.now(),
+              needsWater: false,
+              hasPest: false,
+              plantedAt: null,
+            ); // Default empty cell
+      })
+    );
+
+    return GardenProgress(
+      plots: plots,
+      inventory: Map<String, int>.from(map['inventory'] ?? {}),
+      earnings: map['earnings'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> _plantCellToMap(PlantCell cell) {
+    return {
+      'plantType': cell.plantType,
+      'growthStage': cell.growthStage,
+      'lastWatered': Timestamp.fromDate(cell.lastWatered),
+      'needsWater': cell.needsWater,
+      'hasPest': cell.hasPest,
+      'plantedAt': cell.plantedAt != null ? Timestamp.fromDate(cell.plantedAt!) : null,
+    };
+  }
+
+  PlantCell _plantCellFromMap(Map<String, dynamic> map) {
+    return PlantCell(
+      plantType: map['plantType'],
+      growthStage: map['growthStage'] ?? 0,
+      lastWatered: (map['lastWatered'] as Timestamp).toDate(),
+      needsWater: map['needsWater'] ?? false,
+      hasPest: map['hasPest'] ?? false,
+      plantedAt: map['plantedAt'] != null ? (map['plantedAt'] as Timestamp).toDate() : null,
+    );
+  }
+
+  // ==================== AQUARIUM PROGRESS CONVERSION ====================
+  
+  Map<String, dynamic> _aquariumProgressToMap(AquariumProgress? progress) {
+    if (progress == null) {
+      return {
+        'hasData': false,
+        'lastUpdated': Timestamp.fromDate(DateTime.now()),
+      };
+    }
+
+    return {
+      'hasData': true,
+      'fishes': progress.fishes.map((fish) => _fishToMap(fish)).toList(),
+      'lastFed': Timestamp.fromDate(progress.lastFed),
+      'earnings': progress.earnings,
+      'lastClaimed': progress.lastClaimed != null 
+          ? Timestamp.fromDate(progress.lastClaimed!) : null,
+      'lastUpdated': Timestamp.fromDate(DateTime.now()),
+    };
+  }
+
+  AquariumProgress? _aquariumProgressFromMap(Map<String, dynamic> map) {
+    if (!(map['hasData'] ?? false)) return null;
+
+    final fishesData = map['fishes'] as List<dynamic>?;
+    if (fishesData == null) return null;
+
+    final fishes = fishesData.map((fishData) => 
+      _fishFromMap(fishData as Map<String, dynamic>)
+    ).toList();
+
+    return AquariumProgress(
+      fishes: fishes,
+      lastFed: (map['lastFed'] as Timestamp).toDate(),
+      earnings: map['earnings'] ?? 0,
+      lastClaimed: map['lastClaimed'] != null 
+          ? (map['lastClaimed'] as Timestamp).toDate() : null,
+    );
+  }
+
+  Map<String, dynamic> _fishToMap(Fish fish) {
+    return {
+      'type': fish.type,
+    };
+  }
+
+  Fish _fishFromMap(Map<String, dynamic> map) {
+    return Fish(
+      type: map['type'] ?? 'betta',
+    );
+  }
+
+  // ==================== PAINTING PROGRESS CONVERSION ====================
+  
+  Map<String, dynamic> _paintingProgressToMap(PaintingProgress? progress) {
+    if (progress == null) {
+      return {
+        'hasData': false,
+        'lastUpdated': Timestamp.fromDate(DateTime.now()),
+      };
+    }
+
+    return {
+      'hasData': true,
+      'savedPaintings': progress.savedPaintings?.map((painting) => 
+        _paintingToMap(painting)).toList() ?? [],
+      'selected': progress.selected,
+      'lastUpdated': Timestamp.fromDate(DateTime.now()),
+    };
+  }
+
+  PaintingProgress? _paintingProgressFromMap(Map<String, dynamic> map) {
+    if (!(map['hasData'] ?? false)) return null;
+
+    final paintingsData = map['savedPaintings'] as List<dynamic>?;
+    List<Painting>? paintings;
+    
+    if (paintingsData != null && paintingsData.isNotEmpty) {
+      paintings = paintingsData.map((paintingData) => 
+        _paintingFromMap(paintingData as Map<String, dynamic>)
+      ).toList();
+    }
+
+    return PaintingProgress(
+      savedPaintings: paintings,
+      selected: map['selected'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> _paintingToMap(Painting painting) {
+    // Flatten pixels 2D array to avoid nested arrays
+    final flatPixels = <String, int>{};
+    for (int row = 0; row < painting.pixels.length; row++) {
+      for (int col = 0; col < painting.pixels[row].length; col++) {
+        flatPixels['${row}_$col'] = painting.pixels[row][col];
+      }
+    }
+
+    return {
+      'name': painting.name,
+      'pixels': flatPixels,
+      'pixelsRows': painting.pixels.length,
+      'pixelsCols': painting.pixels.isNotEmpty ? painting.pixels[0].length : 0,
+      'createdAt': Timestamp.fromDate(painting.createdAt),
+    };
+  }
+
+  Painting _paintingFromMap(Map<String, dynamic> map) {
+    final flatPixels = Map<String, int>.from(map['pixels'] ?? {});
+    final rows = map['pixelsRows'] as int? ?? 0;
+    final cols = map['pixelsCols'] as int? ?? 0;
+    
+    // Reconstruct 2D pixels array from flat map
+    final pixels = List.generate(rows, (row) => 
+      List.generate(cols, (col) => 
+        flatPixels['${row}_$col'] ?? 0
+      )
+    );
+
+    return Painting(
+      name: map['name'] ?? 'Untitled',
+      pixels: pixels,
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+    );
+  }
+
+  // ==================== MUSIC PROGRESS CONVERSION ====================
+  
+  Map<String, dynamic> _musicProgressToMap(MusicProgress? progress) {
+    if (progress == null) {
+      return {
+        'hasData': false,
+        'lastUpdated': Timestamp.fromDate(DateTime.now()),
+      };
+    }
+
+    return {
+      'hasData': true,
+      'savedTracks': progress.savedTracks.map((track) => 
+        _musicTrackToMap(track)).toList(),
+      'selected': progress.selected,
+      'lastUpdated': Timestamp.fromDate(DateTime.now()),
+    };
+  }
+
+  MusicProgress? _musicProgressFromMap(Map<String, dynamic> map) {
+    if (!(map['hasData'] ?? false)) return null;
+
+    final tracksData = map['savedTracks'] as List<dynamic>?;
+    if (tracksData == null) return null;
+
+    final tracks = tracksData.map((trackData) => 
+      _musicTrackFromMap(trackData as Map<String, dynamic>)
+    ).toList();
+
+    return MusicProgress(
+      savedTracks: tracks,
+      selected: map['selected'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> _musicTrackToMap(MusicTrack track) {
+    // Flatten tracks to avoid nested arrays
+    final flatTracks = <String, dynamic>{};
+    
+    track.tracks.forEach((instrument, notes) {
+      flatTracks['${instrument.name}_count'] = notes.length;
+      for (int i = 0; i < notes.length; i++) {
+        flatTracks['${instrument.name}_$i'] = _noteToMap(notes[i]);
+      }
+    });
+
+    return {
+      'name': track.name,
+      'createdAt': Timestamp.fromDate(track.createdAt),
+      'tracks': flatTracks,
+      'instrumentNames': track.tracks.keys.map((i) => i.name).toList(),
+    };
+  }
+
+  MusicTrack _musicTrackFromMap(Map<String, dynamic> map) {
+    final flatTracks = Map<String, dynamic>.from(map['tracks'] ?? {});
+    final instrumentNames = List<String>.from(map['instrumentNames'] ?? []);
+    final tracks = <Instrument, List<Note>>{};
+    
+    for (String instrumentName in instrumentNames) {
+      final instrument = Instrument.values.firstWhere(
+        (i) => i.name == instrumentName,
+        orElse: () => Instrument.key,
+      );
+      
+      final noteCount = flatTracks['${instrumentName}_count'] as int? ?? 0;
+      final notes = <Note>[];
+      
+      for (int i = 0; i < noteCount; i++) {
+        final noteData = flatTracks['${instrumentName}_$i'] as Map<String, dynamic>?;
+        if (noteData != null) {
+          notes.add(_noteFromMap(noteData));
+        }
+      }
+      
+      tracks[instrument] = notes;
+    }
+
+    return MusicTrack(
+      name: map['name'] ?? 'Untitled Track',
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      tracks: tracks,
+    );
+  }
+
+  Map<String, dynamic> _noteToMap(Note note) {
+    return {
+      'pitch': note.pitch,
+      'startTimeMilliseconds': note.startTimeMilliseconds,
+    };
+  }
+
+  Note _noteFromMap(Map<String, dynamic> map) {
+    return Note(
+      pitch: map['pitch'] ?? 'C4',
+      startTimeMilliseconds: map['startTimeMilliseconds'] ?? 0,
     );
   }
 
