@@ -24,6 +24,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get edit => 'Sửa';
   
   @override
+  String get load => 'Tải';
+  
+  @override
   String get livingRoom => 'Phòng khách';
   
   @override
@@ -52,6 +55,48 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get library => 'Thư viện';
+  
+  @override
+  String get templates => 'Mẫu vẽ';
+  
+  @override
+  String get samples => 'Mẫu nhạc';
+  
+  @override
+  String get useTemplate => 'Sử dụng mẫu này?';
+  
+  @override
+  String get useSample => 'Sử dụng mẫu nhạc này?';
+  
+  @override
+  String get selectTemplate => 'Chọn mẫu vẽ';
+  
+  @override
+  String get selectSample => 'Chọn mẫu nhạc';
+  
+  @override
+  String currentWillBeReplaced(String type) {
+    final typeVi = type == 'drawing' ? 'bức tranh hiện tại' : 'bản nhạc hiện tại';
+    return '$typeVi sẽ bị thay thế.';
+  }
+  
+  @override
+  String get templateHeart => 'Trái tim';
+  
+  @override
+  String get templateStar => 'Ngôi sao';
+  
+  @override
+  String get templateFlower => 'Hoa';
+  
+  @override
+  String get templateApple => 'Quả táo';
+  
+  @override
+  String get templateTree => 'Cây';
+  
+  @override
+  String get templateCat => 'Mèo';
   
   @override
   String get settings => 'Cài đặt';

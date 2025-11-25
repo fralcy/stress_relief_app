@@ -287,6 +287,17 @@ class ComposingService {
     
     final beatDurationMs = (60000 / bpm).round();
     
+    // Mapping từ pitch letter sang note value (C major scale)
+    final pitchToValue = {
+      'C': 1,
+      'D': 2,
+      'E': 3,
+      'F': 4,
+      'G': 5,
+      'A': 6,
+      'B': 7,
+    };
+    
     for (final entry in tracks.entries) {
       final instrument = entry.key;
       final notes = entry.value;
@@ -296,8 +307,17 @@ class ComposingService {
         final beatIndex = note.startTimeMilliseconds ~/ beatDurationMs;
         if (beatIndex < totalBeats) {
           // Extract note value từ pitch
-          final pitchStr = note.pitch.replaceAll('note_', '');
-          final noteValue = int.tryParse(pitchStr);
+          int? noteValue;
+          
+          // Nếu pitch là chữ cái (C, D, E...) từ samples
+          if (pitchToValue.containsKey(note.pitch)) {
+            noteValue = pitchToValue[note.pitch];
+          } else {
+            // Nếu pitch là 'note_1', 'note_2'... từ saved tracks
+            final pitchStr = note.pitch.replaceAll('note_', '');
+            noteValue = int.tryParse(pitchStr);
+          }
+          
           if (noteValue != null && noteValue >= 1 && noteValue <= 8) {
             timeline[beatIndex][instrumentIndex] = noteValue;
           }

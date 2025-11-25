@@ -13,6 +13,7 @@ abstract class AppLocalizations {
   String get open;
   String get reset;
   String get edit;
+  String get load;
   
   // Navigation - 5 phòng
   String get livingRoom;
@@ -27,6 +28,23 @@ abstract class AppLocalizations {
   String get draw;
   String get compose;
   String get library;
+  String get templates;
+  String get samples;
+  
+  // Template/Sample selection
+  String get useTemplate;
+  String get useSample;
+  String get selectTemplate;
+  String get selectSample;
+  String currentWillBeReplaced(String type);
+  
+  // Template names (localized)
+  String get templateHeart;
+  String get templateStar;
+  String get templateFlower;
+  String get templateApple;
+  String get templateTree;
+  String get templateCat;
   
   // Settings
   String get settings;

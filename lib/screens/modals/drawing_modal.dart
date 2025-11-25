@@ -8,6 +8,8 @@ import '../../core/constants/drawing_palette.dart';
 import '../../core/widgets/pixel_canvas.dart';
 import '../../core/utils/painting_service.dart';
 import 'gallery_modal.dart';
+import 'templates_modal.dart';
+import '../../models/painting_progress.dart';
 
 /// Modal vẽ tranh
 class DrawingModal extends StatefulWidget {
@@ -218,6 +220,23 @@ class _DrawingModalState extends State<DrawingModal> {
     setState(() {
       _isEditingName = false;
     });
+  }
+
+  Future<void> _onTemplates() async {
+    SfxService().buttonClick();
+    
+    // Show templates modal
+    await TemplatesModal.show(
+      context,
+      onTemplateSelected: (Painting template) {
+        // Load template vào canvas
+        _saveToHistory();
+        setState(() {
+          _pixels = template.pixels.map((row) => List<int>.from(row)).toList();
+        });
+        _paintingService.savePainting(_pixels, name: _drawingName);
+      },
+    );
   }
 
   void _onZoomIn() {
@@ -460,6 +479,7 @@ class _DrawingModalState extends State<DrawingModal> {
             ),
             AppButton(icon: Icons.clear, onPressed: _onClear, width: 56),
             AppButton(icon: Icons.folder_open, onPressed: _onOpen, width: 56),
+            AppButton(icon: Icons.star, onPressed: _onTemplates, width: 56),
           ],
         ),
       ],

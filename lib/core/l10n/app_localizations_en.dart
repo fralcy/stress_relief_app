@@ -24,6 +24,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit => 'Edit';
   
   @override
+  String get load => 'Load';
+  
+  @override
   String get livingRoom => 'Living Room';
   
   @override
@@ -52,6 +55,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get library => 'Library';
+  
+  @override
+  String get templates => 'Templates';
+  
+  @override
+  String get samples => 'Samples';
+  
+  @override
+  String get useTemplate => 'Use this template?';
+  
+  @override
+  String get useSample => 'Use this sample?';
+  
+  @override
+  String get selectTemplate => 'Select a Template';
+  
+  @override
+  String get selectSample => 'Select a Sample';
+  
+  @override
+  String currentWillBeReplaced(String type) => 'Current $type will be replaced.';
+  
+  @override
+  String get templateHeart => 'Heart';
+  
+  @override
+  String get templateStar => 'Star';
+  
+  @override
+  String get templateFlower => 'Flower';
+  
+  @override
+  String get templateApple => 'Apple';
+  
+  @override
+  String get templateTree => 'Tree';
+  
+  @override
+  String get templateCat => 'Cat';
   
   @override
   String get settings => 'Settings';

@@ -7,6 +7,8 @@ import '../../core/l10n/app_localizations.dart';
 import 'dart:async';
 import '../../core/utils/bgm_service.dart';
 import 'library_modal.dart';
+import 'music_samples_modal.dart';
+import '../../models/music_progress.dart';
 
 /// Modal sáng tác nhạc
 class ComposingModal extends StatefulWidget {
@@ -50,7 +52,7 @@ class _ComposingModalState extends State<ComposingModal> {
   
   // Music settings
   static const int _bpm = 120;
-  static const int _durationSeconds = 8;
+  static const int _durationSeconds = 12;
   static const int _beatsPerBar = 4;
   static const int _totalBeats = (_durationSeconds * _bpm) ~/ 60;
   
@@ -301,6 +303,52 @@ class _ComposingModalState extends State<ComposingModal> {
     });
   }
 
+  Future<void> _onSamples() async {
+    // Stop playback if playing
+    if (_isPlaying) {
+      _stopPlayback();
+    }
+    
+    // Show samples modal
+    await MusicSamplesModal.show(
+      context,
+      onSampleSelected: (MusicTrack sample) {
+        // Load sample vào timeline
+        setState(() {
+          _isLoading = true;
+        });
+        
+        // Clear current timeline
+        for (int beat = 0; beat < _timeline.length; beat++) {
+          for (int track = 0; track < InstrumentType.values.length; track++) {
+            _timeline[beat][track] = null;
+          }
+        }
+        
+        // Convert sample tracks to timeline
+        final convertedTimeline = _composingService.convertTracksToTimeline(
+          sample.tracks,
+          _totalBeats,
+          _bpm,
+        );
+        
+        // Load vào timeline (chỉ piano track - index 0)
+        for (int beat = 0; beat < _totalBeats && beat < convertedTimeline.length; beat++) {
+          if (beat < convertedTimeline.length && convertedTimeline[beat].isNotEmpty) {
+            _timeline[beat][0] = convertedTimeline[beat][0]; // Piano only
+          }
+        }
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Auto-save
+        _saveTrack();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -525,9 +573,15 @@ class _ComposingModalState extends State<ComposingModal> {
           width: 56,
         ),
         const SizedBox(width: 12),
-                AppButton(
+        AppButton(
           icon: Icons.folder_open, 
           onPressed: _onOpen,
+          width: 56,
+        ),
+        const SizedBox(width: 12),
+        AppButton(
+          icon: Icons.library_music,
+          onPressed: _onSamples,
           width: 56,
         ),
       ],
