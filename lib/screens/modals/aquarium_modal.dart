@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -34,21 +35,49 @@ class AquariumModal extends StatefulWidget {
   }
 }
 
-class _AquariumModalState extends State<AquariumModal> {
+class _AquariumModalState extends State<AquariumModal> with TickerProviderStateMixin {
   late AquariumProgress _progress;
   final List<_FishAnimationData> _fishAnimations = [];
   Timer? _animationTimer;
+  
+  // Animation controllers cho effects
+  AnimationController? _feedAnimationController;
+  AnimationController? _claimAnimationController;
+  AnimationController? _borderPulseController;
+  
+  bool _showFeedParticles = false;
+  bool _showClaimCoins = false;
+  int _claimedPoints = 0;
 
   @override
   void initState() {
     super.initState();
     _loadProgress();
     _startAnimationTimer();
+    
+    // Initialize animation controllers
+    _feedAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000), // 3 giây cho thức ăn rơi chậm
+    );
+    
+    _claimAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    
+    _borderPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _animationTimer?.cancel();
+    _feedAnimationController?.dispose();
+    _claimAnimationController?.dispose();
+    _borderPulseController?.dispose();
     super.dispose();
   }
 
@@ -141,6 +170,15 @@ class _AquariumModalState extends State<AquariumModal> {
         lastFed: DateTime.now(),
         lastClaimed: null, // Reset lastClaimed khi feed mới
       );
+      _showFeedParticles = true;
+    });
+    
+    _feedAnimationController?.forward(from: 0).then((_) {
+      if (mounted) {
+        setState(() {
+          _showFeedParticles = false;
+        });
+      }
     });
     
     _saveProgress();
@@ -164,6 +202,16 @@ class _AquariumModalState extends State<AquariumModal> {
         earnings: _progress.earnings + claimablePoints,
         lastClaimed: DateTime.now(),
       );
+      _claimedPoints = claimablePoints;
+      _showClaimCoins = true;
+    });
+    
+    _claimAnimationController?.forward(from: 0).then((_) {
+      if (mounted) {
+        setState(() {
+          _showClaimCoins = false;
+        });
+      }
     });
     
     _saveProgress();
@@ -189,7 +237,7 @@ class _AquariumModalState extends State<AquariumModal> {
       
       _progress = _progress.copyWith(fishes: newFishes);
       
-      // Add animation cho cá mới
+      // Add animation cho cá mới với smooth entry
       final containerSize = MediaQuery.of(context).size.width;
       final pos = AquariumService.getRandomPosition(containerSize, containerSize);
       _fishAnimations.add(_FishAnimationData(
@@ -198,8 +246,8 @@ class _AquariumModalState extends State<AquariumModal> {
         targetX: pos['x']!,
         targetY: pos['y']!,
         oldX: pos['x']!, 
-        currentScale: 1.0,
-        targetScale: 1.0,
+        currentScale: 0.0, // Start from scale 0
+        targetScale: 1.0,  // Grow to normal size
         flipHorizontal: false, 
       ));
     });
@@ -366,14 +414,29 @@ class _AquariumModalState extends State<AquariumModal> {
         // Bể cá với background image
         AspectRatio(
           aspectRatio: 1.0,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: canFeed ? Colors.green : theme.border,
-                width: canFeed ? 3 : 2,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
+          child: AnimatedBuilder(
+            animation: _borderPulseController!,
+            builder: (context, child) {
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: canFeed 
+                        ? Color.lerp(Colors.green, Colors.lightGreenAccent, _borderPulseController!.value)!
+                        : theme.border,
+                    width: canFeed ? 2 + (_borderPulseController!.value * 2) : 2,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: canFeed ? [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.3 * _borderPulseController!.value),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ] : null,
+                ),
+                child: child,
+              );
+            },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Stack(
@@ -388,6 +451,14 @@ class _AquariumModalState extends State<AquariumModal> {
                   
                   // Các con cá với animation
                   ..._buildAnimatedFish(),
+                  
+                  // Feed particles animation
+                  if (_showFeedParticles)
+                    ..._buildFeedParticles(),
+                    
+                  // Claim coins animation
+                  if (_showClaimCoins)
+                    _buildClaimCoinsEffect(),
                 ],
               ),
             ),
@@ -474,6 +545,106 @@ class _AquariumModalState extends State<AquariumModal> {
     }
 
     return fishWidgets;
+  }
+  
+  List<Widget> _buildFeedParticles() {
+    // Tạo 8 food particles rơi từ trên xuống với timing và vị trí ngẫu nhiên
+    final containerSize = MediaQuery.of(context).size.width;
+    final centerX = containerSize / 2;
+    final centerY = containerSize / 2;
+    final random = Random();
+    
+    return List.generate(8, (index) {
+      // Vị trí ngẫu nhiên trong vùng gần trung tâm (±30% từ center)
+      final offsetX = centerX + (random.nextDouble() - 0.5) * containerSize * 0.6;
+      final offsetY = centerY + (random.nextDouble() - 0.5) * containerSize * 0.6;
+      
+      // Delay ngẫu nhiên cho mỗi hạt (0 - 400ms)
+      final delay = random.nextDouble() * 0.4;
+      
+      return AnimatedBuilder(
+        animation: _feedAnimationController!,
+        builder: (context, child) {
+          // Tính progress với delay
+          final adjustedProgress = ((_feedAnimationController!.value - delay) / (1.0 - delay)).clamp(0.0, 1.0);
+          
+          // Vị trí Y: rơi từ -20 xuống vị trí đích
+          final startY = -20.0;
+          final endY = offsetY;
+          final currentY = startY + (endY - startY) * adjustedProgress;
+          
+          // Chỉ hiển thị khi đã đến lượt (sau delay)
+          if (_feedAnimationController!.value < delay) {
+            return const SizedBox.shrink();
+          }
+          
+          return Positioned(
+            left: offsetX,
+            top: currentY,
+            child: Opacity(
+              opacity: (1.0 - adjustedProgress * 0.3).clamp(0.0, 1.0),
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Colors.brown,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+  
+  Widget _buildClaimCoinsEffect() {
+    return Center(
+      child: AnimatedBuilder(
+        animation: _claimAnimationController!,
+        builder: (context, child) {
+          final progress = _claimAnimationController!.value;
+          
+          return Transform.translate(
+            offset: Offset(0, -progress * 50), // Move up
+            child: Opacity(
+              opacity: 1.0 - progress,
+              child: Transform.scale(
+                scale: 1.0 + (progress * 0.5),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    '+$_claimedPoints 🪙',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildFishShop(AppTheme theme, AppLocalizations l10n, int currentPoints) {

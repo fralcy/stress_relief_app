@@ -10,22 +10,18 @@ class GardenService {
     final config = PlantConfigs.getConfig(cell.plantType!);
     if (config == null) return cell.growthStage;
     
-    // Nếu cây thiếu nước → không grow
-    if (cell.needsWater) return cell.growthStage;
-    
-    // Tính thời gian đã trồng (tính từ lần tưới gần nhất)
     final now = DateTime.now();
     final timeSincePlanted = now.difference(cell.plantedAt!);
     final timeSinceWatered = now.difference(cell.lastWatered);
     
-    // Nếu quá 20h không tưới → thiếu nước
-    if (timeSinceWatered.inHours >= 20) {
-      return cell.growthStage; // Ngừng grow
-    }
+    // Nếu quá 20h từ lastWatered, chỉ tính growth đến hết 20h đó
+    final maxGrowthMinutes = timeSinceWatered.inHours >= 20
+        ? (timeSincePlanted.inMinutes - timeSinceWatered.inMinutes + (20 * 60))
+        : timeSincePlanted.inMinutes;
     
     // Tính % growth
     final totalGrowthTime = Duration(hours: config.growthTimeHours);
-    final growthProgress = (timeSincePlanted.inMinutes / totalGrowthTime.inMinutes) * 100;
+    final growthProgress = (maxGrowthMinutes.clamp(0, totalGrowthTime.inMinutes) / totalGrowthTime.inMinutes) * 100;
     
     return growthProgress.clamp(0, 100).toInt();
   }
@@ -40,13 +36,13 @@ class GardenService {
     return timeSinceWatered.inHours >= 20;
   }
   
-  // Random spawn pest khi mở modal (tỉ lệ thấp)
+  // Random spawn pest khi update (tỉ lệ thấp)
   static bool shouldSpawnPest(PlantCell cell) {
     if (cell.plantType == null) return false;
     if (cell.hasPest) return true; // Đã có sâu rồi
     
-    // 5% chance spawn pest mỗi lần mở modal
-    return Random().nextDouble() < 0.05;
+    // 1.5% chance spawn pest mỗi lần update
+    return Random().nextDouble() < 0.015;
   }
   
   // Update tất cả cells khi mở modal

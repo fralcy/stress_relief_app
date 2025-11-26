@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -31,15 +33,45 @@ class GardenModal extends StatefulWidget {
   }
 }
 
-class _GardenModalState extends State<GardenModal> {
+class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin {
   late GardenProgress _progress;
   String? _selectedPlantType;
   String? _selectedAction;
+  Timer? _growthTimer;
+  
+  // Animation controllers cho các action
+  final Map<String, AnimationController> _cellAnimations = {};
+  final Map<String, String> _cellEffects = {}; // Lưu effect type cho mỗi cell
+  final Map<String, int> _cellHarvestPoints = {}; // Lưu points khi harvest
 
   @override
   void initState() {
     super.initState();
     _loadProgress();
+    _startGrowthTimer();
+  }
+  
+  @override
+  void dispose() {
+    _growthTimer?.cancel();
+    for (var controller in _cellAnimations.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+  
+  void _startGrowthTimer() {
+    // Update growth every 8 seconds (balanced realtime update)
+    _growthTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
+      if (mounted) {
+        setState(() {
+          _progress = _progress.copyWith(
+            plots: GardenService.updateAllCells(_progress.plots),
+          );
+        });
+        _saveProgress();
+      }
+    });
   }
 
   void _loadProgress() {
@@ -91,6 +123,31 @@ class _GardenModalState extends State<GardenModal> {
 
   void _saveProgress() {
     DataManager().saveGardenProgress(_progress);
+  }
+  
+  AnimationController _getCellAnimationController(int row, int col) {
+    final key = '$row-$col';
+    if (!_cellAnimations.containsKey(key)) {
+      _cellAnimations[key] = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 600),
+      );
+    }
+    return _cellAnimations[key]!;
+  }
+  
+  void _playCellAnimation(int row, int col, String effectType) {
+    final key = '$row-$col';
+    _cellEffects[key] = effectType;
+    final controller = _getCellAnimationController(row, col);
+    controller.forward(from: 0).then((_) {
+      if (mounted) {
+        setState(() {
+          _cellEffects.remove(key);
+          _cellHarvestPoints.remove(key); // Cleanup harvest points
+        });
+      }
+    });
   }
 
   // Kiểm tra có ô trống không
@@ -188,6 +245,7 @@ class _GardenModalState extends State<GardenModal> {
           );
         });
         _saveProgress();
+        _playCellAnimation(row, col, 'plant');
         break;
         
       case 'water':
@@ -206,6 +264,7 @@ class _GardenModalState extends State<GardenModal> {
           _progress = _progress.copyWith(plots: plots);
         });
         _saveProgress();
+        _playCellAnimation(row, col, 'water');
         break;
         
       case 'pestControl':
@@ -221,6 +280,7 @@ class _GardenModalState extends State<GardenModal> {
           _progress = _progress.copyWith(plots: plots);
         });
         _saveProgress();
+        _playCellAnimation(row, col, 'pest');
         break;
         
       case 'harvest':
@@ -264,6 +324,11 @@ class _GardenModalState extends State<GardenModal> {
         
         // Cộng điểm vào UserProfile
         await context.read<ScoreProvider>().addPoints(pointsGained);
+        
+        // Lưu points để hiển thị animation
+        final key = '$row-$col';
+        _cellHarvestPoints[key] = pointsGained;
+        _playCellAnimation(row, col, 'harvest');
 
         break;
     }
@@ -345,6 +410,10 @@ class _GardenModalState extends State<GardenModal> {
   }
 
   Widget _buildPlotCell(int row, int col, PlantCell cell, AppTheme theme) {
+    final key = '$row-$col';
+    final effectType = _cellEffects[key];
+    final animController = _getCellAnimationController(row, col);
+    
     return InkWell(
       onTap: () => _onCellTap(row, col),
       child: Container(
@@ -353,22 +422,105 @@ class _GardenModalState extends State<GardenModal> {
         ),
         child: Stack(
           children: [
-            // Cây ở giữa
+            // Cây ở giữa với animation
             Center(
               child: cell.plantType != null
-                  ? Image.asset(
-                      AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
-                      width: 40,
-                      height: 40,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Text(
-                          _getPlantIcon(cell.plantType!),
-                          style: const TextStyle(fontSize: 24),
+                  ? AnimatedBuilder(
+                      animation: animController,
+                      builder: (context, child) {
+                        // Animation dựa trên effect type
+                        Widget plantWidget = Image.asset(
+                          AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
+                          width: 40,
+                          height: 40,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Text(
+                              _getPlantIcon(cell.plantType!),
+                              style: const TextStyle(fontSize: 24),
+                            );
+                          },
                         );
+                        
+                        if (effectType == 'plant') {
+                          // Scale from 0 to 1
+                          return Transform.scale(
+                            scale: animController.value,
+                            child: plantWidget,
+                          );
+                        } else if (effectType == 'harvest') {
+                          // Scale up + fade out
+                          return Opacity(
+                            opacity: 1.0 - animController.value,
+                            child: Transform.scale(
+                              scale: 1.0 + (animController.value * 0.5),
+                              child: plantWidget,
+                            ),
+                          );
+                        } else if (effectType == 'pest') {
+                          // Shake effect
+                          final shake = math.sin(animController.value * 4 * 3.14159) * 4;
+                          return Transform.translate(
+                            offset: Offset(shake, 0),
+                            child: plantWidget,
+                          );
+                        }
+                        
+                        return plantWidget;
                       },
                     )
                   : null,
             ),
+            
+            // Water ripple effect
+            if (effectType == 'water')
+              Center(
+                child: AnimatedBuilder(
+                  animation: animController,
+                  builder: (context, child) {
+                    return Container(
+                      width: 40 * (1 + animController.value),
+                      height: 40 * (1 + animController.value),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.blue.withOpacity(1.0 - animController.value),
+                          width: 2,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            
+            // Floating points text khi harvest
+            if (effectType == 'harvest' && _cellHarvestPoints.containsKey(key))
+              Center(
+                child: AnimatedBuilder(
+                  animation: animController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, -animController.value * 30),
+                      child: Opacity(
+                        opacity: 1.0 - animController.value,
+                        child: Text(
+                          '+${_cellHarvestPoints[key]}',
+                          style: TextStyle(
+                            fontSize: 16 + (animController.value * 8),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             
             // Indicators ở góc
             if (cell.plantType != null) ...[
@@ -429,7 +581,7 @@ class _GardenModalState extends State<GardenModal> {
                   ),
                 ),
               
-              // Thanh % ở dưới (TÙY CHỌN)
+              // Thanh % ở dưới (TÙY CHỌN) với smooth animation
               if (cell.growthStage < 100)
                 Positioned(
                   bottom: 2,
@@ -441,15 +593,22 @@ class _GardenModalState extends State<GardenModal> {
                       color: Colors.grey.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: cell.growthStage / 100,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.lightGreen,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: cell.growthStage / 100),
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOut,
+                      builder: (context, value, child) {
+                        return FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: value,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.lightGreen,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
