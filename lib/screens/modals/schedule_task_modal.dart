@@ -6,7 +6,7 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/notifier.dart';
-import '../../core/utils/schedule_points_service.dart';
+import '../../core/utils/schedule_task_service.dart';
 import '../../core/utils/overlap_detector.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -107,13 +107,21 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     await DataManager().updateScheduleTask(index, updatedTask);
     _loadTasks();
     await _updateNotifications();
-    
+
     // Play appropriate sound
     if (updatedTask.isCompleted) {
       SfxService().taskComplete();
     } else {
       SfxService().buttonClick();
     }
+  }
+
+  Future<void> _toggleIsDaily(int index) async {
+    final task = _tasks[index];
+    final updatedTask = task.copyWith(isDaily: !task.isDaily);
+    await DataManager().updateScheduleTask(index, updatedTask);
+    _loadTasks();
+    SfxService().buttonClick();
   }
 
   Future<void> _deleteTask(int index) async {
@@ -155,30 +163,30 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     // Lấy profile từ provider
     final profile = context.read<ScoreProvider>().profile;
     final tasks = DataManager().scheduleTasks;
-    
+
     // Check đã claim hôm nay chưa
-    if (!SchedulePointsService.canClaimToday(profile.lastPointsClaimDate)) {
+    if (!ScheduleTaskService.canClaimToday(profile.lastPointsClaimDate)) {
       SfxService().error();
       return;
     }
-    
+
     // Tính điểm từ completed tasks
-    final points = SchedulePointsService.calculatePoints(tasks);
+    final points = ScheduleTaskService.calculatePoints(tasks);
     if (points == 0) {
       SfxService().error();
       return;
     }
-    
+
     // Cộng điểm qua provider ← KEY!
     await context.read<ScoreProvider>().addPoints(points);
-    
+
     // Update last claim date
     await context.read<ScoreProvider>().updateLastClaimDate(DateTime.now());
-    
-    // Xóa completed tasks
-    final remainingTasks = tasks.where((task) => !task.isCompleted).toList();
-    await DataManager().saveScheduleTasks(remainingTasks);
-    
+
+    // Xử lý tasks: xóa completed non-daily, reset completed daily
+    final processedTasks = ScheduleTaskService.processTasksAfterClaim(tasks);
+    await DataManager().saveScheduleTasks(processedTasks);
+
     SfxService().reward();
     _loadTasks();
   }
@@ -201,15 +209,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     }
   }
 
-  String _formatTime(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  int _completedCount() {
-    return _tasks.where((task) => task.isCompleted).length;
-  }
+  String _formatTime(TimeOfDay time) => ScheduleTaskService.formatTime(time);
+  int _completedCount() => ScheduleTaskService.countCompletedTasks(_tasks);
 
   @override
   Widget build(BuildContext context) {
@@ -446,6 +447,15 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
               ),
               const SizedBox(width: 8),
               IconButton(
+                icon: Icon(
+                  Icons.repeat_outlined,
+                  color: task.isDaily ? theme.primary : theme.border,
+                ),
+                onPressed: () => _toggleIsDaily(index),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
                 icon: Icon(Icons.close, color: theme.primary),
                 onPressed: () => _deleteTask(index),
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -524,8 +534,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
 
   Widget _buildFooter(AppLocalizations l10n, AppTheme theme) {
     final profile = context.watch<ScoreProvider>().profile;
-    final pendingPoints = SchedulePointsService.getPendingPoints(_tasks);
-    final canClaim = SchedulePointsService.canClaimToday(profile.lastPointsClaimDate) && pendingPoints > 0;
+    final pendingPoints = ScheduleTaskService.getPendingPoints(_tasks);
+    final canClaim = ScheduleTaskService.canClaimToday(profile.lastPointsClaimDate) && pendingPoints > 0;
 
     return Column(
       children: [

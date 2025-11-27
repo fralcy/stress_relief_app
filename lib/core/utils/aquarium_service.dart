@@ -2,6 +2,19 @@ import 'dart:math';
 import '../constants/fish_config.dart';
 import '../../models/aquarium_progress.dart';
 
+/// Data class for food particle animation
+class FoodParticleData {
+  final double targetX;
+  final double targetY;
+  final double delay;
+
+  FoodParticleData({
+    required this.targetX,
+    required this.targetY,
+    required this.delay,
+  });
+}
+
 class AquariumService {
   // Tính trạng thái của bể cá dựa trên lastFed
   // Status: 'growing' (đang trong cycle < 20h), 'ready' (đã đủ 20h, có thể feed lại)
@@ -75,5 +88,32 @@ class AquariumService {
   static double getRandomScale() {
     final random = Random();
     return 0.95 + random.nextDouble() * 0.1;
+  }
+
+  // Generate food particles for feeding animation
+  static List<FoodParticleData> generateFoodParticles({
+    required double containerSize,
+    int particleCount = 8,
+    double spreadRatio = 0.6,
+    double maxDelay = 0.4,
+  }) {
+    final particles = <FoodParticleData>[];
+    final centerX = containerSize / 2;
+    final centerY = containerSize / 2;
+    final random = Random();
+
+    for (int i = 0; i < particleCount; i++) {
+      final offsetX = centerX + (random.nextDouble() - 0.5) * containerSize * spreadRatio;
+      final offsetY = centerY + (random.nextDouble() - 0.5) * containerSize * spreadRatio;
+      final delay = random.nextDouble() * maxDelay;
+
+      particles.add(FoodParticleData(
+        targetX: offsetX,
+        targetY: offsetY,
+        delay: delay,
+      ));
+    }
+
+    return particles;
   }
 }

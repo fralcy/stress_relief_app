@@ -29,10 +29,13 @@ class GardenService {
   // Check xem có cần nước không
   static bool needsWater(PlantCell cell) {
     if (cell.plantType == null) return false;
-    
+
+    // Nếu cây đã phát triển đủ (100%), không cần nước nữa
+    if (cell.growthStage >= 100) return false;
+
     final now = DateTime.now();
     final timeSinceWatered = now.difference(cell.lastWatered);
-    
+
     return timeSinceWatered.inHours >= 20;
   }
   
@@ -50,7 +53,7 @@ class GardenService {
     return plots.map((row) {
       return row.map((cell) {
         if (cell.plantType == null) return cell;
-        
+
         return cell.copyWith(
           growthStage: calculateGrowthStage(cell),
           needsWater: needsWater(cell),
@@ -58,5 +61,207 @@ class GardenService {
         );
       }).toList();
     }).toList();
+  }
+
+  // ===== GARDEN STATUS CHECKS =====
+
+  /// Kiểm tra có ô trống để trồng cây
+  static bool hasEmptyPlot(List<List<PlantCell>> plots) {
+    for (var row in plots) {
+      for (var cell in row) {
+        if (cell.plantType == null) return true;
+      }
+    }
+    return false;
+  }
+
+  /// Kiểm tra có cây cần tưới nước
+  static bool hasPlantNeedingWater(List<List<PlantCell>> plots) {
+    for (var row in plots) {
+      for (var cell in row) {
+        if (cell.plantType != null && cell.needsWater) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Kiểm tra có cây bị sâu bệnh
+  static bool hasPlantWithPest(List<List<PlantCell>> plots) {
+    for (var row in plots) {
+      for (var cell in row) {
+        if (cell.plantType != null && cell.hasPest) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Kiểm tra có cây sẵn sàng thu hoạch
+  static bool hasPlantReadyToHarvest(List<List<PlantCell>> plots) {
+    for (var row in plots) {
+      for (var cell in row) {
+        if (cell.plantType != null && cell.growthStage >= 100) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Kiểm tra có thể trồng cây (cần cả seed và ô trống)
+  static bool canPlant({
+    required String? selectedPlantType,
+    required Map<String, int> inventory,
+    required List<List<PlantCell>> plots,
+  }) {
+    if (selectedPlantType == null) return false;
+    final count = inventory[selectedPlantType] ?? 0;
+    return count > 0 && hasEmptyPlot(plots);
+  }
+
+  /// Lấy icon của cây theo loại
+  static String getPlantIcon(String plantType) {
+    switch (plantType) {
+      case 'carrot': return '🥕';
+      case 'tomato': return '🍅';
+      case 'corn': return '🌽';
+      case 'sunflower': return '🌻';
+      case 'rose': return '🌹';
+      case 'tulip': return '🌷';
+      case 'wheat': return '🌾';
+      case 'pumpkin': return '🎃';
+      case 'strawberry': return '🍓';
+      case 'lettuce': return '🥬';
+      default: return '🌿';
+    }
+  }
+
+  // ===== GARDEN ACTIONS =====
+
+  /// Trồng cây vào ô (row, col)
+  /// Returns: {plots, inventory} updated
+  static Map<String, dynamic>? plantSeed({
+    required List<List<PlantCell>> plots,
+    required Map<String, int> inventory,
+    required int row,
+    required int col,
+    required String plantType,
+  }) {
+    final cell = plots[row][col];
+    if (cell.plantType != null) return null; // Ô đã có cây
+
+    final seedCount = inventory[plantType] ?? 0;
+    if (seedCount <= 0) return null; // Không đủ seed
+
+    final now = DateTime.now();
+    final newPlots = List<List<PlantCell>>.from(
+      plots.map((row) => List<PlantCell>.from(row))
+    );
+
+    newPlots[row][col] = PlantCell(
+      plantType: plantType,
+      growthStage: 0,
+      lastWatered: now,
+      needsWater: false,
+      hasPest: false,
+      plantedAt: now,
+    );
+
+    final newInventory = Map<String, int>.from(inventory);
+    newInventory[plantType] = seedCount - 1;
+
+    return {
+      'plots': newPlots,
+      'inventory': newInventory,
+    };
+  }
+
+  /// Tưới nước cho cây
+  /// Returns: plots updated hoặc null nếu không thể tưới
+  static List<List<PlantCell>>? waterPlant({
+    required List<List<PlantCell>> plots,
+    required int row,
+    required int col,
+  }) {
+    final cell = plots[row][col];
+    if (cell.plantType == null || !cell.needsWater) return null;
+
+    final newPlots = List<List<PlantCell>>.from(
+      plots.map((row) => List<PlantCell>.from(row))
+    );
+
+    newPlots[row][col] = cell.copyWith(
+      needsWater: false,
+      lastWatered: DateTime.now(),
+    );
+
+    return newPlots;
+  }
+
+  /// Diệt sâu bệnh
+  /// Returns: plots updated hoặc null nếu không thể diệt
+  static List<List<PlantCell>>? removePest({
+    required List<List<PlantCell>> plots,
+    required int row,
+    required int col,
+  }) {
+    final cell = plots[row][col];
+    if (cell.plantType == null || !cell.hasPest) return null;
+
+    final newPlots = List<List<PlantCell>>.from(
+      plots.map((row) => List<PlantCell>.from(row))
+    );
+
+    newPlots[row][col] = cell.copyWith(hasPest: false);
+
+    return newPlots;
+  }
+
+  /// Thu hoạch cây
+  /// Returns: {plots, inventory, earnings, pointsGained} hoặc null nếu không thể thu hoạch
+  static Map<String, dynamic>? harvestPlant({
+    required List<List<PlantCell>> plots,
+    required Map<String, int> inventory,
+    required int earnings,
+    required int row,
+    required int col,
+  }) {
+    final cell = plots[row][col];
+    if (cell.plantType == null || cell.growthStage < 100) return null;
+
+    final config = PlantConfigs.getConfig(cell.plantType!);
+    if (config == null) return null;
+
+    final newPlots = List<List<PlantCell>>.from(
+      plots.map((row) => List<PlantCell>.from(row))
+    );
+
+    // Reset ô về trống
+    newPlots[row][col] = PlantCell(
+      plantType: null,
+      growthStage: 0,
+      lastWatered: DateTime.now(),
+      needsWater: false,
+      hasPest: false,
+      plantedAt: null,
+    );
+
+    // Lấy seeds và points
+    final seedsGained = config.seedsFromHarvest;
+    final pointsGained = config.harvestReward;
+
+    // Update inventory
+    final newInventory = Map<String, int>.from(inventory);
+    newInventory[cell.plantType!] = (newInventory[cell.plantType!] ?? 0) + seedsGained;
+
+    return {
+      'plots': newPlots,
+      'inventory': newInventory,
+      'earnings': earnings + pointsGained,
+      'pointsGained': pointsGained,
+    };
   }
 }

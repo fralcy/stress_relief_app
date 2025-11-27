@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -39,15 +38,18 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   late AquariumProgress _progress;
   final List<_FishAnimationData> _fishAnimations = [];
   Timer? _animationTimer;
-  
+
   // Animation controllers cho effects
   AnimationController? _feedAnimationController;
   AnimationController? _claimAnimationController;
   AnimationController? _borderPulseController;
-  
+
   bool _showFeedParticles = false;
   bool _showClaimCoins = false;
   int _claimedPoints = 0;
+
+  // Lưu trữ thông tin particles để tránh tính toán lại mỗi frame
+  final List<FoodParticleData> _foodParticles = [];
 
   @override
   void initState() {
@@ -164,7 +166,10 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
   void _onFeed() {
     if (!AquariumService.canFeed(_progress.lastFed)) return;
-    
+
+    // Khởi tạo particles một lần duy nhất
+    _initializeFoodParticles();
+
     setState(() {
       _progress = _progress.copyWith(
         lastFed: DateTime.now(),
@@ -172,7 +177,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       );
       _showFeedParticles = true;
     });
-    
+
     _feedAnimationController?.forward(from: 0).then((_) {
       if (mounted) {
         setState(() {
@@ -180,9 +185,19 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
         });
       }
     });
-    
+
     _saveProgress();
     SfxService().taskComplete();
+  }
+
+  void _initializeFoodParticles() {
+    _foodParticles.clear();
+    final containerSize = MediaQuery.of(context).size.width;
+
+    // Sử dụng service để generate particles
+    _foodParticles.addAll(
+      AquariumService.generateFoodParticles(containerSize: containerSize),
+    );
   }
 
   void _onClaim() async {
@@ -548,38 +563,31 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   }
   
   List<Widget> _buildFeedParticles() {
-    // Tạo 8 food particles rơi từ trên xuống với timing và vị trí ngẫu nhiên
-    final containerSize = MediaQuery.of(context).size.width;
-    final centerX = containerSize / 2;
-    final centerY = containerSize / 2;
-    final random = Random();
-    
-    return List.generate(8, (index) {
-      // Vị trí ngẫu nhiên trong vùng gần trung tâm (±30% từ center)
-      final offsetX = centerX + (random.nextDouble() - 0.5) * containerSize * 0.6;
-      final offsetY = centerY + (random.nextDouble() - 0.5) * containerSize * 0.6;
-      
-      // Delay ngẫu nhiên cho mỗi hạt (0 - 400ms)
-      final delay = random.nextDouble() * 0.4;
-      
+    // Sử dụng particles đã được khởi tạo sẵn để tránh tính toán lại mỗi frame
+    if (_foodParticles.isEmpty) return [];
+
+    return _foodParticles.map((particle) {
       return AnimatedBuilder(
         animation: _feedAnimationController!,
         builder: (context, child) {
           // Tính progress với delay
-          final adjustedProgress = ((_feedAnimationController!.value - delay) / (1.0 - delay)).clamp(0.0, 1.0);
-          
+          final rawProgress = _feedAnimationController!.value - particle.delay;
+          final adjustedProgress = particle.delay < 1.0
+              ? (rawProgress / (1.0 - particle.delay)).clamp(0.0, 1.0)
+              : rawProgress.clamp(0.0, 1.0);
+
           // Vị trí Y: rơi từ -20 xuống vị trí đích
           final startY = -20.0;
-          final endY = offsetY;
+          final endY = particle.targetY;
           final currentY = startY + (endY - startY) * adjustedProgress;
-          
+
           // Chỉ hiển thị khi đã đến lượt (sau delay)
-          if (_feedAnimationController!.value < delay) {
+          if (_feedAnimationController!.value < particle.delay) {
             return const SizedBox.shrink();
           }
-          
+
           return Positioned(
-            left: offsetX,
+            left: particle.targetX,
             top: currentY,
             child: Opacity(
               opacity: (1.0 - adjustedProgress * 0.3).clamp(0.0, 1.0),
@@ -601,7 +609,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           );
         },
       );
-    });
+    }).toList();
   }
   
   Widget _buildClaimCoinsEffect() {

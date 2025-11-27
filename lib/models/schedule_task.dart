@@ -18,11 +18,15 @@ class ScheduleTask {
   @HiveField(3)
   final bool isCompleted;        // Đã hoàn thành chưa
 
+  @HiveField(4)
+  final bool isDaily;            // Task hàng ngày (không xóa khi kết thúc ngày)
+
   ScheduleTask({
     required this.title,
     required this.startTimeMinutes,
     required this.endTimeMinutes,
     required this.isCompleted,
+    this.isDaily = false,
   });
 
   // Helper getters để convert sang TimeOfDay
@@ -43,12 +47,14 @@ class ScheduleTask {
     required String title,
     required TimeOfDay startTime,
     required TimeOfDay endTime,
+    bool isDaily = false,
   }) {
     return ScheduleTask(
       title: title,
       startTimeMinutes: startTime.hour * 60 + startTime.minute,
       endTimeMinutes: endTime.hour * 60 + endTime.minute,
       isCompleted: false,
+      isDaily: isDaily,
     );
   }
 
@@ -60,6 +66,7 @@ class ScheduleTask {
     TimeOfDay? startTime, // Cho phép truyền TimeOfDay
     TimeOfDay? endTime,   // Cho phép truyền TimeOfDay
     bool? isCompleted,
+    bool? isDaily,
   }) {
     // Convert TimeOfDay sang minutes nếu được truyền
     int? finalStartMinutes = startTimeMinutes;
@@ -77,6 +84,7 @@ class ScheduleTask {
       startTimeMinutes: finalStartMinutes ?? this.startTimeMinutes,
       endTimeMinutes: finalEndMinutes ?? this.endTimeMinutes,
       isCompleted: isCompleted ?? this.isCompleted,
+      isDaily: isDaily ?? this.isDaily,
     );
   }
 

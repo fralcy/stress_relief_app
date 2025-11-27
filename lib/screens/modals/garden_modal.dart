@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
-import '../../core/constants/plant_config.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/garden_service.dart';
 import '../../core/widgets/app_modal.dart';
@@ -150,60 +149,17 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
     });
   }
 
-  // Kiểm tra có ô trống không
-  bool get _hasEmptyPlot {
-    for (var row in _progress.plots) {
-      for (var cell in row) {
-        if (cell.plantType == null) return true;
-      }
-    }
-    return false;
-  }
-
-  bool get _hasPlantNeedingWater {
-    for (var row in _progress.plots) {
-      for (var cell in row) {
-        if (cell.plantType != null && cell.needsWater) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  bool get _hasPlantWithPest {
-    for (var row in _progress.plots) {
-      for (var cell in row) {
-        if (cell.plantType != null && cell.hasPest) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  bool get _hasPlantReadyToHarvest {
-    for (var row in _progress.plots) {
-      for (var cell in row) {
-        if (cell.plantType != null && cell.growthStage >= 100) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  // Kiểm tra điều kiện để enable nút Plant
-  bool get _canEnablePlantButton {
-    return _hasEmptyPlot;
-  }
-
-  // Kiểm tra có thể thực hiện hành động Plant không (cần cả seed và ô trống)
-  bool get _canPlant {
-    if (_selectedPlantType == null) return false;
-    final count = _progress.inventory[_selectedPlantType] ?? 0;
-    return count > 0 && _hasEmptyPlot;
-  }
+  // Các getter sử dụng service methods
+  bool get _hasEmptyPlot => GardenService.hasEmptyPlot(_progress.plots);
+  bool get _hasPlantNeedingWater => GardenService.hasPlantNeedingWater(_progress.plots);
+  bool get _hasPlantWithPest => GardenService.hasPlantWithPest(_progress.plots);
+  bool get _hasPlantReadyToHarvest => GardenService.hasPlantReadyToHarvest(_progress.plots);
+  bool get _canEnablePlantButton => _hasEmptyPlot;
+  bool get _canPlant => GardenService.canPlant(
+    selectedPlantType: _selectedPlantType,
+    inventory: _progress.inventory,
+    plots: _progress.plots,
+  );
 
   void _toggleAction(String action) {
     setState(() {
@@ -213,123 +169,90 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
 
   void _onCellTap(int row, int col) async {
     if (_selectedAction == null) return;
-    
-    final cell = _progress.plots[row][col];
-    
+
     switch (_selectedAction!) {
       case 'plant':
-        if (cell.plantType != null) return;
-        if (!_canPlant) return;
-        
-        final now = DateTime.now();
-        final plots = List<List<PlantCell>>.from(
-          _progress.plots.map((row) => List<PlantCell>.from(row))
-        );
-        
-        plots[row][col] = PlantCell(
-          plantType: _selectedPlantType,
-          growthStage: 0,
-          lastWatered: now,
-          needsWater: false,
-          hasPest: false,
-          plantedAt: now,
-        );
-        
-        final newInventory = Map<String, int>.from(_progress.inventory);
-        newInventory[_selectedPlantType!] = (newInventory[_selectedPlantType] ?? 0) - 1;
-        
-        setState(() {
-          _progress = _progress.copyWith(
-            plots: plots,
-            inventory: newInventory,
-          );
-        });
-        _saveProgress();
-        _playCellAnimation(row, col, 'plant');
-        break;
-        
-      case 'water':
-        if (cell.plantType == null || !cell.needsWater) return;
-        
-        final plots = List<List<PlantCell>>.from(
-          _progress.plots.map((row) => List<PlantCell>.from(row))
-        );
-        
-        plots[row][col] = cell.copyWith(
-          needsWater: false,
-          lastWatered: DateTime.now(),
-        );
-        
-        setState(() {
-          _progress = _progress.copyWith(plots: plots);
-        });
-        _saveProgress();
-        _playCellAnimation(row, col, 'water');
-        break;
-        
-      case 'pestControl':
-        if (cell.plantType == null || !cell.hasPest) return;
-        
-        final plots = List<List<PlantCell>>.from(
-          _progress.plots.map((row) => List<PlantCell>.from(row))
-        );
-        
-        plots[row][col] = cell.copyWith(hasPest: false);
-        
-        setState(() {
-          _progress = _progress.copyWith(plots: plots);
-        });
-        _saveProgress();
-        _playCellAnimation(row, col, 'pest');
-        break;
-        
-      case 'harvest':
-        if (cell.plantType == null || cell.growthStage < 100) return;
-        
-        // Lấy config của cây
-        final config = PlantConfigs.getConfig(cell.plantType!);
-        if (config == null) return;
-        
-        final plots = List<List<PlantCell>>.from(
-          _progress.plots.map((row) => List<PlantCell>.from(row))
-        );
-        
-        // Reset ô về trống
-        plots[row][col] = PlantCell(
-          plantType: null,
-          growthStage: 0,
-          lastWatered: DateTime.now(),
-          needsWater: false,
-          hasPest: false,
-          plantedAt: null,
-        );
-        
-        // Lấy seeds và points từ config
-        final seedsGained = config.seedsFromHarvest;
-        final pointsGained = config.harvestReward;
-        
-        // Update inventory
-        final newInventory = Map<String, int>.from(_progress.inventory);
-        newInventory[cell.plantType!] = (newInventory[cell.plantType!] ?? 0) + seedsGained;
-        
-        // Update garden progress
-        setState(() {
-          _progress = _progress.copyWith(
-            plots: plots,
-            inventory: newInventory,
-            earnings: _progress.earnings + pointsGained,
-          );
-        });
-        _saveProgress();
-        
-        // Cộng điểm vào UserProfile
-        await context.read<ScoreProvider>().addPoints(pointsGained);
-        
-        // Lưu points để hiển thị animation
-        final key = '$row-$col';
-        _cellHarvestPoints[key] = pointsGained;
-        _playCellAnimation(row, col, 'harvest');
+        if (!_canPlant || _selectedPlantType == null) return;
 
+        final result = GardenService.plantSeed(
+          plots: _progress.plots,
+          inventory: _progress.inventory,
+          row: row,
+          col: col,
+          plantType: _selectedPlantType!,
+        );
+
+        if (result != null) {
+          setState(() {
+            _progress = _progress.copyWith(
+              plots: result['plots'],
+              inventory: result['inventory'],
+            );
+          });
+          _saveProgress();
+          _playCellAnimation(row, col, 'plant');
+        }
+        break;
+
+      case 'water':
+        final result = GardenService.waterPlant(
+          plots: _progress.plots,
+          row: row,
+          col: col,
+        );
+
+        if (result != null) {
+          setState(() {
+            _progress = _progress.copyWith(plots: result);
+          });
+          _saveProgress();
+          _playCellAnimation(row, col, 'water');
+        }
+        break;
+
+      case 'pestControl':
+        final result = GardenService.removePest(
+          plots: _progress.plots,
+          row: row,
+          col: col,
+        );
+
+        if (result != null) {
+          setState(() {
+            _progress = _progress.copyWith(plots: result);
+          });
+          _saveProgress();
+          _playCellAnimation(row, col, 'pest');
+        }
+        break;
+
+      case 'harvest':
+        final result = GardenService.harvestPlant(
+          plots: _progress.plots,
+          inventory: _progress.inventory,
+          earnings: _progress.earnings,
+          row: row,
+          col: col,
+        );
+
+        if (result != null) {
+          setState(() {
+            _progress = _progress.copyWith(
+              plots: result['plots'],
+              inventory: result['inventory'],
+              earnings: result['earnings'],
+            );
+          });
+          _saveProgress();
+
+          // Cộng điểm vào UserProfile
+          await context.read<ScoreProvider>().addPoints(result['pointsGained']);
+
+          // Lưu points để hiển thị animation
+          final key = '$row-$col';
+          _cellHarvestPoints[key] = result['pointsGained'];
+          _playCellAnimation(row, col, 'harvest');
+        }
         break;
     }
   }
@@ -619,21 +542,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
     );
   }
 
-  String _getPlantIcon(String plantType) {
-    switch (plantType) {
-      case 'carrot': return '🥕';
-      case 'tomato': return '🍅';
-      case 'corn': return '🌽';
-      case 'sunflower': return '🌻';
-      case 'rose': return '🌹';
-      case 'tulip': return '🌷';
-      case 'wheat': return '🌾';
-      case 'pumpkin': return '🎃';
-      case 'strawberry': return '🍓';
-      case 'lettuce': return '🥬';
-      default: return '🌿';
-    }
-  }
+  String _getPlantIcon(String plantType) => GardenService.getPlantIcon(plantType);
 
   Widget _buildInventorySection(AppTheme theme) {
     final l10n = AppLocalizations.of(context);

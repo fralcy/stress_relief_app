@@ -21,13 +21,14 @@ class ScheduleTaskAdapter extends TypeAdapter<ScheduleTask> {
       startTimeMinutes: fields[1] as int,
       endTimeMinutes: fields[2] as int,
       isCompleted: fields[3] as bool,
+      isDaily: fields[4] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, ScheduleTask obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class ScheduleTaskAdapter extends TypeAdapter<ScheduleTask> {
       ..writeByte(2)
       ..write(obj.endTimeMinutes)
       ..writeByte(3)
-      ..write(obj.isCompleted);
+      ..write(obj.isCompleted)
+      ..writeByte(4)
+      ..write(obj.isDaily);
   }
 
   @override
