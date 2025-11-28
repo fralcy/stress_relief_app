@@ -40,85 +40,33 @@ class MobilePortraitScreen extends StatefulWidget {
 class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   SceneType _currentScene = SceneType.livingRoom;
   MascotExpression _currentExpression = MascotExpression.idle;
+  bool _isDebugMode = false;
 
-  // Debug functionality
-  void _showDebugDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Navigation Debug'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Expected Flow:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const Text('🔄 First Launch:\nSplash → Welcome → Tutorial → Login → Main'),
-            const Text('👤 Guest Mode: Splash → Main'),
-            const Text('🔐 Logged In: Splash → Main'),
-            const SizedBox(height: 16),
-            const Text('Test Actions:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => _resetToFirstLaunch(context),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: const Text('Reset to First Launch'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => _setGuestMode(context),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              child: const Text('Set Guest Mode'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _checkDebugMode();
   }
 
-  Future<void> _resetToFirstLaunch(BuildContext context) async {
+  Future<void> _checkDebugMode() async {
     final authService = AuthService();
-    await authService.clearAuthFlags();
-    
-    if (context.mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reset to first launch. Restart app to test flow.'),
-          backgroundColor: Colors.green,
-        ),
-      );
+    final isDebug = await authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
     }
   }
 
-  Future<void> _setGuestMode(BuildContext context) async {
-    final authService = AuthService();
-    await authService.setGuestMode();
-    
-    if (context.mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Set to guest mode. Restart app to test flow.'),
-          backgroundColor: Colors.blue,
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Debug FAB (only in debug mode)
-      floatingActionButton: kDebugMode ? FloatingActionButton(
+      // Debug FAB (visual indicator only - shown in debug mode OR Flutter debug build)
+      floatingActionButton: (_isDebugMode || kDebugMode) ? FloatingActionButton(
         mini: true,
-        onPressed: () => _showDebugDialog(context),
-        backgroundColor: Colors.deepPurple,
+        onPressed: () {}, // Empty callback - just a visual indicator
+        backgroundColor: _isDebugMode ? Colors.deepPurple : Colors.grey,
         child: const Icon(Icons.bug_report, color: Colors.white),
       ) : null,
       body: Container(

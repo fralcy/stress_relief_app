@@ -6,6 +6,7 @@ class AuthService {
   
   // Keys for SharedPreferences
   static const String _isGuestKey = 'is_guest_mode';
+  static const String _isDebugKey = 'is_debug_mode';
   static const String _isFirstLaunchKey = 'is_first_launch';
 
   // Get current user
@@ -26,20 +27,28 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isGuestKey) ?? false;
   }
-  
+
+  // Check if in debug mode
+  Future<bool> get isDebugMode async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_isDebugKey) ?? false;
+  }
+
   // Check if first launch
   Future<bool> get isFirstLaunch async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isFirstLaunchKey) ?? true;
   }
   
-  // Get current user mode: 'first_launch', 'guest', 'logged_in'
+  // Get current user mode: 'first_launch', 'guest', 'logged_in', 'debug'
   Future<String> get userMode async {
-    // Priority 1: Firebase authenticated user (highest priority)
+    // Priority 1: Debug mode (highest priority - overrides all)
+    if (await isDebugMode) return 'debug';
+    // Priority 2: Firebase authenticated user
     if (isLoggedIn) return 'logged_in';
-    // Priority 2: Guest mode
+    // Priority 3: Guest mode
     if (await isGuestMode) return 'guest';
-    // Priority 3: First launch
+    // Priority 4: First launch
     if (await isFirstLaunch) return 'first_launch';
     return 'first_launch'; // fallback
   }
@@ -53,10 +62,12 @@ class AuthService {
     }
   }
   
-  // Get current user ID (Firebase UID or guest identifier)
+  // Get current user ID (Firebase UID, debug, guest, or initial identifier)
   Future<String> get userId async {
     if (isLoggedIn) {
       return currentUser!.uid;
+    } else if (await isDebugMode) {
+      return 'debug_user';
     } else if (await isGuestMode) {
       return 'guest_user';
     }
@@ -68,6 +79,14 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isGuestKey, true);
     await prefs.setBool(_isFirstLaunchKey, false);
+  }
+
+  // Set debug mode
+  Future<void> setDebugMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isDebugKey, true);
+    await prefs.setBool(_isFirstLaunchKey, false);
+    await prefs.setBool(_isGuestKey, false); // Clear conflicts
   }
   
   // Mark first launch as completed
@@ -171,6 +190,7 @@ class AuthService {
       'userEmail': userEmail ?? 'null',
       'isLoggedIn': isLoggedIn,
       'isGuestMode': await isGuestMode,
+      'isDebugMode': await isDebugMode,
       'isFirstLaunch': await isFirstLaunch,
       'userMode': await userMode,
       'userId': await userId,
@@ -181,6 +201,7 @@ class AuthService {
   Future<void> clearAuthFlags() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isGuestKey, false);
+    await prefs.setBool(_isDebugKey, false);
     await prefs.setBool(_isFirstLaunchKey, false);
   }
 }

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
-import '../../core/providers/locale_provider.dart'; // ← THÊM IMPORT
+import '../../core/providers/locale_provider.dart';
+import '../../core/providers/score_provider.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_slider.dart';
@@ -12,10 +13,12 @@ import '../../core/utils/bgm_service.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/auth_service.dart';
+import '../../core/utils/navigation_service.dart';
 import '../../core/utils/notifier.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/user_settings.dart';
 import '../mobile_portrait_login_screen.dart';
+import '../mobile_portrait_welcome_screen.dart';
 
 /// Modal cài đặt app
 class SettingsModal extends StatefulWidget {
@@ -39,6 +42,7 @@ class SettingsModal extends StatefulWidget {
 class _SettingsModalState extends State<SettingsModal> {
   late UserSettings _settings;
   final AuthService _authService = AuthService();
+  bool _isDebugMode = false;
 
   // Available BGM options
   final List<String> _bgmList = [
@@ -58,6 +62,16 @@ class _SettingsModalState extends State<SettingsModal> {
   void initState() {
     super.initState();
     _settings = DataManager().userSettings;
+    _checkDebugMode();
+  }
+
+  Future<void> _checkDebugMode() async {
+    final isDebug = await _authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
+    }
   }
 
   void _saveSettings() {
@@ -187,10 +201,19 @@ class _SettingsModalState extends State<SettingsModal> {
       // Perform logout with sync and clear data
       final syncService = SyncService();
       await syncService.logoutAndSync();
-      
+
+      // Refresh ScoreProvider to load default profile
       if (!mounted) return;
+      context.read<ScoreProvider>().refresh();
       Navigator.pop(context); // Close loading dialog
       Navigator.pop(context); // Close settings modal
+
+      // Navigate to login screen after successful logout
+      NavigationService.navigateAndClearStack(
+        context,
+        const MobilePortraitLoginScreen(),
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đăng xuất thành công'),
@@ -220,6 +243,87 @@ class _SettingsModalState extends State<SettingsModal> {
         builder: (context) => const MobilePortraitLoginScreen(),
       ),
     );
+  }
+
+  Future<void> _handleDebugExit() async {
+    SfxService().buttonClick();
+    final l10n = AppLocalizations.of(context);
+
+    // Confirm exit
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit Debug Mode'),
+        content: const Text('Bạn có chắc chắn muốn thoát? Dữ liệu sẽ được xóa và trở về màn hình chào mừng.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Exit'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Đang xóa dữ liệu và thoát...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      // Clear auth flags and data
+      await _authService.clearAuthFlags();
+      await DataManager().clearAll();
+      await DataManager().initialize(); // Re-initialize data manager
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context); // Close settings modal
+
+      // Navigate to welcome screen
+      NavigationService.navigateAndClearStack(
+        context,
+        const MobilePortraitWelcomeScreen(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã thoát debug mode'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Exit failed: $e'),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _resetToDefault() {
@@ -508,7 +612,29 @@ class _SettingsModalState extends State<SettingsModal> {
 
         // ========== ACCOUNT ==========
         _buildSection(l10n.cloudSync, theme, [
-          if (_isLoggedIn) ...[
+          if (_isDebugMode) ...[
+            // Debug mode: Show exit button only
+            Center(
+              child: ElevatedButton(
+                onPressed: _handleDebugExit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: const Text(
+                  'Exit Debug Mode',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ] else if (_isLoggedIn) ...[
             // Logged in: Show sync and logout buttons
             Center(
               child: AppButton(

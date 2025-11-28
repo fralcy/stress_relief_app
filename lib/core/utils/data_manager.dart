@@ -124,6 +124,14 @@ class DataManager {
             name: 'Guest User',
           );
           break;
+        case 'debug':
+          defaultProfile = UserProfile.initial(
+            id: 'debug_user',
+            username: 'debug',
+            email: 'debug@example.com',
+            name: 'Debug User',
+          );
+          break;
         case 'logged_in':
           defaultProfile = UserProfile.initial(
             id: userId,
@@ -161,6 +169,19 @@ class DataManager {
       lastUpdatedAt: DateTime.now(),
     );
     await _userProfileHive.put('current', guestProfile);
+  }
+
+  /// Switch to debug mode - preserve current data
+  Future<void> switchToDebugMode() async {
+    final currentProfile = userProfile;
+    final debugProfile = currentProfile.copyWith(
+      id: 'debug_user',
+      username: 'debug',
+      email: 'debug@example.com',
+      name: 'Debug User',
+      lastUpdatedAt: DateTime.now(),
+    );
+    await _userProfileHive.put('current', debugProfile);
   }
   
   /// Switch to logged in user - merge or replace data based on cloud data existence
@@ -213,6 +234,9 @@ class DataManager {
   
   /// Check if current user can sync (Firebase authenticated)
   Future<bool> get canSync async {
+    final userMode = await _authService.userMode;
+    // Debug mode and guest mode cannot sync
+    if (userMode == 'debug' || userMode == 'guest') return false;
     // Direct check Firebase auth state for more reliability
     return _authService.isLoggedIn;
   }

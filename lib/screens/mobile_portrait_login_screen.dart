@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/navigation_service.dart';
+import '../../core/providers/score_provider.dart';
 import 'mobile_portrait_register_screen.dart';
 import 'mobile_portrait_screen.dart';
 import 'mobile_portrait_forgot_password_screen.dart';
@@ -46,10 +48,19 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Check for debug credentials FIRST
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      if (email == 'hidden.sequence@testmail.com' && password == 'UUDDLRLRBA') {
+        await _activateDebugMode();
+        return;
+      }
+
       // Login with Firebase Auth
       final userCredential = await _authService.login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        email: email,
+        password: password,
       );
 
       if (mounted && userCredential != null) {
@@ -75,12 +86,15 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         try {
           final syncService = SyncService();
           final syncResult = await syncService.smartSync();
-          
+
           if (mounted) {
+            // Refresh ScoreProvider to load synced data
+            context.read<ScoreProvider>().refresh();
+
             setState(() => _isLoading = false);
-            
+
             // Show success message with sync info
-            String message = wasGuest 
+            String message = wasGuest
                 ? '${AppLocalizations.of(context).upgradedFromGuestMode} $syncResult'
                 : '${AppLocalizations.of(context).loginSuccessful} $syncResult';
             ScaffoldMessenger.of(context).showSnackBar(
@@ -134,10 +148,10 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
     try {
       // Set guest mode
       await _authService.setGuestMode();
-      
+
       // Switch DataManager to guest mode
       await DataManager().switchToGuestMode();
-      
+
       if (mounted) {
         // Show guest mode message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -147,7 +161,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
             duration: const Duration(seconds: 3),
           ),
         );
-        
+
         // Navigate to main app screen
         NavigationService.navigateAndClearStack(
           context,
@@ -160,6 +174,46 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${AppLocalizations.of(context).failedToStartGuestMode}: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _activateDebugMode() async {
+    try {
+      // Set debug mode
+      await _authService.setDebugMode();
+
+      // Switch DataManager to debug mode
+      await DataManager().switchToDebugMode();
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        // Show subtle success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debug mode activated'),
+            backgroundColor: Colors.deepPurple,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Navigate to main screen
+        await Future.delayed(const Duration(milliseconds: 500));
+        NavigationService.navigateAndClearStack(
+          context,
+          const MobilePortraitScreen(),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Debug activation failed: $e'),
             backgroundColor: Colors.red,
           ),
         );

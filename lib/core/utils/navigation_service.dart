@@ -23,12 +23,13 @@ class NavigationService {
       case 'first_launch':
         // Lần đầu mở app -> welcome screen để setup
         return '/welcome';
-      
+
+      case 'debug':
       case 'guest':
       case 'logged_in':
-        // Đã có data hoặc đã đăng nhập -> main screen
+        // Debug, guest, hoặc đã đăng nhập -> main screen
         return '/main';
-      
+
       default:
         // Fallback -> welcome screen
         return '/welcome';
