@@ -168,4 +168,39 @@ class Notifier {
   static Future<bool> isNotificationAllowed() async {
     return await AwesomeNotifications().isNotificationAllowed();
   }
+
+  // ==================== DEBUG METHODS ====================
+
+  /// [DEBUG] Trigger immediate notification cho task cụ thể
+  /// Pattern copied from NotifierTestScreen - proven to work
+  static Future<void> debugScheduleTaskNotification({
+    required ScheduleTask task,
+    required int taskIndex,
+  }) async {
+    // Instant notification - NO schedule parameter (same as test screen)
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 9999,
+        channelKey: 'task_channel',
+        title: '⚡ [DEBUG] Task Notification',
+        body: '${task.title} - Test notification',
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
+  }
+
+  /// [DEBUG] Trigger immediate notification mặc định
+  /// Pattern copied from NotifierTestScreen - proven to work
+  static Future<void> debugScheduleDefaultNotification() async {
+    // Instant notification - NO schedule parameter (same as test screen)
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 9998,
+        channelKey: 'task_channel',
+        title: '⚡ [DEBUG] Test Notification',
+        body: 'This is an instant test notification!',
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
+  }
 }

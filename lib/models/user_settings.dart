@@ -87,7 +87,7 @@ class UserSettings {
       // Notification Settings
       sleepReminderEnabled: false,
       sleepReminderTimeMinutes: 1320, // 22:00 = 22*60 + 0 = 1320
-      taskReminderEnabled: true,
+      taskReminderEnabled: false,
       taskReminderTime: 15, // 15 phút trước
     );
   }

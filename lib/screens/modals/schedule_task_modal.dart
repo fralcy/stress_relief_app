@@ -9,6 +9,7 @@ import '../../core/utils/notifier.dart';
 import '../../core/utils/schedule_task_service.dart';
 import '../../core/utils/overlap_detector.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/utils/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/score_provider.dart';
 import '../../models/schedule_task.dart';
@@ -50,11 +51,25 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   final Map<int, TimeOfDay> _editStartTimes = {};
   final Map<int, TimeOfDay> _editEndTimes = {};
 
+  // Debug mode state
+  bool _isDebugMode = false;
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
     _loadTasks();
     _updateNotifications();
+    _checkDebugMode();
+  }
+
+  Future<void> _checkDebugMode() async {
+    final isDebug = await _authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
+    }
   }
 
   @override
@@ -164,8 +179,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final profile = context.read<ScoreProvider>().profile;
     final tasks = DataManager().scheduleTasks;
 
-    // Check đã claim hôm nay chưa
-    if (!ScheduleTaskService.canClaimToday(profile.lastPointsClaimDate)) {
+    // Check đã claim hôm nay chưa (bypass in debug mode)
+    if (!_isDebugMode && !ScheduleTaskService.canClaimToday(profile.lastPointsClaimDate)) {
       SfxService().error();
       return;
     }
@@ -180,8 +195,10 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     // Cộng điểm qua provider ← KEY!
     await context.read<ScoreProvider>().addPoints(points);
 
-    // Update last claim date
-    await context.read<ScoreProvider>().updateLastClaimDate(DateTime.now());
+    // Update last claim date (skip in debug mode to allow multiple claims)
+    if (!_isDebugMode) {
+      await context.read<ScoreProvider>().updateLastClaimDate(DateTime.now());
+    }
 
     // Xử lý tasks: xóa completed non-daily, reset completed daily
     final processedTasks = ScheduleTaskService.processTasksAfterClaim(tasks);
@@ -191,7 +208,50 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     _loadTasks();
   }
 
+  Future<void> _debugTriggerTaskNotification(int index) async {
+    if (!_isDebugMode) return; // Safety guard
 
+    final task = _tasks[index];
+
+    // Use Notifier utility method
+    await Notifier.debugScheduleTaskNotification(
+      task: task,
+      taskIndex: index,
+    );
+
+    SfxService().buttonClick();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('[DEBUG] Task notification sent immediately!'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+    }
+  }
+
+  Future<void> _debugTriggerDefaultNotification() async {
+    if (!_isDebugMode) return; // Safety guard
+
+    // Use Notifier utility method for default test
+    await Notifier.debugScheduleDefaultNotification();
+
+    SfxService().buttonClick();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('[DEBUG] Test notification sent immediately!'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+    }
+  }
 
   Future<void> _pickTime({
     required TimeOfDay initialTime,
@@ -301,12 +361,37 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           ],
         ),
         const SizedBox(height: 16),
-        Center(
-          child: AppButton(
-            label: l10n.addTask,
-            onPressed: _addTask,
+        if (_isDebugMode)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppButton(
+                label: l10n.addTask,
+                onPressed: _addTask,
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: _debugTriggerDefaultNotification,
+                icon: const Icon(Icons.bug_report, size: 18),
+                label: const Text('Test Noti'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
+          )
+        else
+          Center(
+            child: AppButton(
+              label: l10n.addTask,
+              onPressed: _addTask,
+            ),
           ),
-        ),
       ],
     );
   }
@@ -524,6 +609,14 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   icon: Icon(Icons.edit, color: theme.primary),
                   constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                   padding: EdgeInsets.zero,
+                ),
+              if (_isDebugMode)
+                IconButton(
+                  onPressed: () => _debugTriggerTaskNotification(index),
+                  icon: const Icon(Icons.bug_report, color: Colors.deepPurple),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
+                  tooltip: '[DEBUG] Trigger notification in 10s',
                 ),
             ],
           ),

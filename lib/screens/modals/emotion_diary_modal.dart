@@ -8,6 +8,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/utils/auth_service.dart';
 import '../../core/providers/score_provider.dart';
 import '../../models/index.dart';
 
@@ -41,16 +42,30 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   final TextEditingController _diaryController = TextEditingController();
   final int _maxDiaryLength = 400;
 
+  // Debug mode state
+  bool _isDebugMode = false;
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
     _selectedDayIndex = 14; // Default to today
     _loadDiaryForSelectedDay();
+    _checkDebugMode();
 
     // Listen to text changes for character counter
     _diaryController.addListener(() {
     setState(() {});
   });
+  }
+
+  Future<void> _checkDebugMode() async {
+    final isDebug = await _authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
+    }
   }
 
   @override
@@ -86,8 +101,14 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   }
 
   bool _isToday(int index) => index == 14;
-  
-  bool _canEdit(int index) => _isToday(index);
+
+  bool _canEdit(int index) {
+    // Debug mode: cho phép edit mọi ngày trong 15-day history
+    if (_isDebugMode) return true;
+
+    // Production: chỉ cho phép edit today
+    return _isToday(index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +246,11 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       children: [
         // ========== TITLE ==========
         Text(
-          isReadOnly ? l10n.dailyJournal : l10n.todaysJournal,
+          isReadOnly
+            ? (_isDebugMode
+                ? '${l10n.dailyJournal} [DEBUG: Edit Enabled]'
+                : l10n.dailyJournal)
+            : l10n.todaysJournal,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -460,46 +485,49 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     _diaryController.text = _diaryController.text.substring(0, _maxDiaryLength);
   }
 
+    // Get the selected date (not always today!)
+    final selectedDate = _getDateForIndex(_selectedDayIndex ?? 14);
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    
+    final isSavingToday = _isSameDay(selectedDate, todayDate);
+
     final diaries = DataManager().emotionDiaries;
-    final existingIndex = diaries.indexWhere((d) => _isSameDay(d.date, todayDate));
-    final isFirstTimeToday = existingIndex == -1;
-    
+    final existingIndex = diaries.indexWhere((d) => _isSameDay(d.date, selectedDate));
+    final isFirstTimeForDate = existingIndex == -1;
+
     final newDiary = EmotionDiary(
-      date: todayDate,
+      date: selectedDate, // Save to selected date, not always today
       q1: _overallFeeling!,
       q2: _stressLevel!,
       q3: _productivity!,
       notes: _diaryController.text,
     );
-    
+
     // Update or add diary
     if (existingIndex != -1) {
       diaries[existingIndex] = newDiary;
     } else {
       diaries.add(newDiary);
     }
-    
+
     // Sort by date (newest first) and keep only last 15 days
     diaries.sort((a, b) => b.date.compareTo(a.date));
     if (diaries.length > 15) {
       diaries.removeRange(15, diaries.length);
     }
-    
+
     // Save to data manager
     await DataManager().saveEmotionDiaries(diaries);
-    
-    // Award points if first time today
-    if (isFirstTimeToday) {
+
+    // Award points ONLY if first time saving to TODAY (not past dates)
+    if (isSavingToday && isFirstTimeForDate) {
       SfxService().reward(); // Play reward sound for first time
       const diaryPoints = 20;
       await context.read<ScoreProvider>().addPoints(diaryPoints);
     } else {
       SfxService().buttonClick(); // Regular save sound
     }
-    
+
     if (mounted) {
       setState(() {}); // Force rebuild to update save button state
 
