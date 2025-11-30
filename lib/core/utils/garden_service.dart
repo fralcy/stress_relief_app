@@ -264,4 +264,47 @@ class GardenService {
       'pointsGained': pointsGained,
     };
   }
+
+  // ==================== DEBUG METHODS ====================
+
+  /// [DEBUG] Advance all plants' timestamps by specified hours
+  static List<List<PlantCell>> debugAdvanceAllPlants({
+    required List<List<PlantCell>> plots,
+    required int hours,
+  }) {
+    final advanceAmount = Duration(hours: hours);
+
+    return plots.map((row) {
+      return row.map((cell) {
+        if (cell.plantType == null) return cell;
+
+        return cell.copyWith(
+          plantedAt: cell.plantedAt?.subtract(advanceAmount),
+          lastWatered: cell.lastWatered.subtract(advanceAmount),
+        );
+      }).toList();
+    }).toList();
+  }
+
+  /// [DEBUG] Make all plants instantly ready to harvest
+  static List<List<PlantCell>> debugInstantGrowAll({
+    required List<List<PlantCell>> plots,
+  }) {
+    return plots.map((row) {
+      return row.map((cell) {
+        if (cell.plantType == null) return cell;
+
+        final config = PlantConfigs.getConfig(cell.plantType!);
+        if (config == null) return cell;
+
+        final now = DateTime.now();
+        final plantedTime = now.subtract(Duration(hours: config.growthTimeHours));
+
+        return cell.copyWith(
+          plantedAt: plantedTime,
+          lastWatered: now,
+        );
+      }).toList();
+    }).toList();
+  }
 }

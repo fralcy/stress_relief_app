@@ -116,4 +116,20 @@ class AquariumService {
 
     return particles;
   }
+
+  // ==================== DEBUG METHODS ====================
+
+  /// [DEBUG] Skip the 20-hour feed cycle by moving lastFed backwards
+  static DateTime debugSkipFeedCycle(DateTime currentLastFed) {
+    return currentLastFed.subtract(const Duration(hours: FishConfigs.cycleHours));
+  }
+
+  /// [DEBUG] Maximize claimable points by moving lastClaimed backwards
+  static DateTime? debugMaximizeClaimablePoints(
+    DateTime lastFed,
+    DateTime? currentLastClaimed,
+  ) {
+    final baseTime = currentLastClaimed ?? lastFed;
+    return baseTime.subtract(const Duration(hours: FishConfigs.cycleHours));
+  }
 }

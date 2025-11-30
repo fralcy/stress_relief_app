@@ -6,6 +6,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/garden_service.dart';
+import '../../core/utils/auth_service.dart';
+import '../../core/utils/sfx_service.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
@@ -43,11 +45,16 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
   final Map<String, String> _cellEffects = {}; // Lưu effect type cho mỗi cell
   final Map<String, int> _cellHarvestPoints = {}; // Lưu points khi harvest
 
+  // Debug mode state
+  bool _isDebugMode = false;
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
     _loadProgress();
     _startGrowthTimer();
+    _checkDebugMode();
   }
   
   @override
@@ -123,7 +130,55 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
   void _saveProgress() {
     DataManager().saveGardenProgress(_progress);
   }
-  
+
+  Future<void> _checkDebugMode() async {
+    final isDebug = await _authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
+    }
+  }
+
+  Future<void> _debugAdvanceGrowth() async {
+    if (!_isDebugMode) return;
+
+    // Update timestamps
+    var newPlots = GardenService.debugAdvanceAllPlants(
+      plots: _progress.plots,
+      hours: 20,
+    );
+
+    // Recalculate immediately instead of waiting for timer
+    newPlots = GardenService.updateAllCells(newPlots);
+
+    setState(() {
+      _progress = _progress.copyWith(plots: newPlots);
+    });
+    _saveProgress();
+
+    SfxService().buttonClick();
+  }
+
+  Future<void> _debugInstantGrowth() async {
+    if (!_isDebugMode) return;
+
+    // Update timestamps
+    var newPlots = GardenService.debugInstantGrowAll(
+      plots: _progress.plots,
+    );
+
+    // Recalculate immediately instead of waiting for timer
+    newPlots = GardenService.updateAllCells(newPlots);
+
+    setState(() {
+      _progress = _progress.copyWith(plots: newPlots);
+    });
+    _saveProgress();
+
+    SfxService().buttonClick();
+  }
+
   AnimationController _getCellAnimationController(int row, int col) {
     final key = '$row-$col';
     if (!_cellAnimations.containsKey(key)) {
@@ -282,6 +337,57 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
                 Divider(color: theme.border, height: 1, thickness: 1.5),
                 const SizedBox(height: 16),
                 _buildActionsSection(theme),
+
+                // Debug buttons section
+                if (_isDebugMode) ...[
+                  const SizedBox(height: 16),
+                  Divider(color: theme.border, height: 1, thickness: 1.5),
+                  const SizedBox(height: 16),
+                  Text(
+                    'DEBUG MODE',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _debugAdvanceGrowth,
+                          icon: const Icon(Icons.bug_report, size: 18),
+                          label: const Text('+20 Hours'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _debugInstantGrowth,
+                          icon: const Icon(Icons.bug_report, size: 18),
+                          label: const Text('Instant Grow'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

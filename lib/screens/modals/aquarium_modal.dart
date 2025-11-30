@@ -6,6 +6,7 @@ import '../../core/constants/app_theme.dart';
 import '../../core/constants/fish_config.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/aquarium_service.dart';
+import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/providers/score_provider.dart';
@@ -51,11 +52,16 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   // Lưu trữ thông tin particles để tránh tính toán lại mỗi frame
   final List<FoodParticleData> _foodParticles = [];
 
+  // Debug mode state
+  bool _isDebugMode = false;
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
     _loadProgress();
     _startAnimationTimer();
+    _checkDebugMode();
     
     // Initialize animation controllers
     _feedAnimationController = AnimationController(
@@ -162,6 +168,44 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
   void _saveProgress() {
     DataManager().saveAquariumProgress(_progress);
+  }
+
+  Future<void> _checkDebugMode() async {
+    final isDebug = await _authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
+    }
+  }
+
+  Future<void> _debugSkipFeedCycle() async {
+    if (!_isDebugMode) return;
+
+    final newLastFed = AquariumService.debugSkipFeedCycle(_progress.lastFed);
+
+    setState(() {
+      _progress = _progress.copyWith(lastFed: newLastFed);
+    });
+    _saveProgress();
+
+    SfxService().buttonClick();
+  }
+
+  Future<void> _debugMaxPoints() async {
+    if (!_isDebugMode) return;
+
+    final newLastClaimed = AquariumService.debugMaximizeClaimablePoints(
+      _progress.lastFed,
+      _progress.lastClaimed,
+    );
+
+    setState(() {
+      _progress = _progress.copyWith(lastClaimed: newLastClaimed);
+    });
+    _saveProgress();
+
+    SfxService().buttonClick();
   }
 
   void _onFeed() {
@@ -703,7 +747,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           final fishType = entry.key;
           final config = entry.value;
           final owned = fishCounts[fishType] ?? 0;
-          
+
           // Get localized name
           String localizedName = config.name;
           switch (fishType) {
@@ -714,7 +758,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             case 'cory': localizedName = l10n.cory; break;
             case 'platy': localizedName = l10n.platy; break;
           }
-          
+
           return _buildFishCard(
             fishType,
             localizedName,
@@ -727,6 +771,57 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             isTankFull,
           );
         }).toList(),
+
+        // Debug section
+        if (_isDebugMode) ...[
+          const SizedBox(height: 16),
+          Divider(color: theme.border, height: 1, thickness: 1.5),
+          const SizedBox(height: 16),
+          Text(
+            'DEBUG MODE',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _debugSkipFeedCycle,
+                  icon: const Icon(Icons.bug_report, size: 18),
+                  label: const Text('Skip Cycle'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _debugMaxPoints,
+                  icon: const Icon(Icons.bug_report, size: 18),
+                  label: const Text('Max Points'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
