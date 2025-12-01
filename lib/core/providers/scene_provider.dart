@@ -207,17 +207,20 @@ class SceneProvider extends ChangeNotifier {
       return false; // Đã mua rồi
     }
 
+    // Refresh profile từ DataManager để lấy currentPoints mới nhất
+    _profile = DataManager().userProfile;
+
     // Mở khóa tất cả scenes trong set
     Map<SceneKey, bool> updatedUnlocked = Map.from(_profile.unlockedScenes);
     for (SceneType sceneType in SceneType.values) {
       SceneKey key = SceneKey(sceneSet, sceneType);
       updatedUnlocked[key] = true;
     }
-    
+
     _profile = _profile.copyWith(unlockedScenes: updatedUnlocked);
     await DataManager().saveUserProfile(_profile);
     notifyListeners();
-    
+
     return true;
   }
 }

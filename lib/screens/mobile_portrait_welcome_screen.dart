@@ -314,7 +314,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      themeOption.name,
+                      _getLocalizedThemeName(themeOption.id, AppLocalizations.of(context)),
                       style: TextStyle(
                         color: themeOption.text,
                         fontSize: 11,
@@ -769,5 +769,28 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
         ),
       ),
     );
+  }
+
+  String _getLocalizedThemeName(String themeId, AppLocalizations l10n) {
+    switch (themeId) {
+      case 'pastel_blue_breeze':
+        return l10n.themePastelBlueBreeze;
+      case 'calm_lavender':
+        return l10n.themeCalmLavender;
+      case 'sunny_pastel_yellow':
+        return l10n.themeSunnyPastelYellow;
+      case 'minty_fresh':
+        return l10n.themeMintyFresh;
+      case 'midnight_blue':
+        return l10n.themeMidnightBlue;
+      case 'soft_purple_night':
+        return l10n.themeSoftPurpleNight;
+      case 'warm_sunset':
+        return l10n.themeWarmSunset;
+      case 'serene_green_night':
+        return l10n.themeSereneGreenNight;
+      default:
+        return themeId; // fallback to ID
+    }
   }
 }

@@ -160,6 +160,10 @@ class AppAssets {
   // ==================== AQUARIUM ====================
   // Tank backgrounds
   static const String tankDefault = 'assets/images/aquarium/tank_default.png';
+  static const String tankForest = 'assets/images/aquarium/tank_forest.png';
+  static const String tankBeach = 'assets/images/aquarium/tank_beach.png';
+  static const String tankJapanese = 'assets/images/aquarium/tank_japanese.png';
+  static const String tankWinter = 'assets/images/aquarium/tank_winter.png';
 
   // Fish types
   static const String fishBetta = 'assets/images/aquarium/fish_betta.png';
@@ -172,6 +176,10 @@ class AppAssets {
   // Maps
   static const Map<SceneSet, String> tankAssets = {
     SceneSet.defaultSet: tankDefault,
+    SceneSet.forest: tankForest,
+    SceneSet.beach: tankBeach,
+    SceneSet.japanese: tankJapanese,
+    SceneSet.winter: tankWinter,
   };
 
   static const Map<String, String> fishAssets = {

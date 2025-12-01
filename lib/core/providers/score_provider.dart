@@ -17,26 +17,34 @@ class ScoreProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Update points và notify listeners
-  Future<void> updatePoints(int newPoints) async {
+  /// Update current points only (for spending)
+  Future<void> updateCurrentPoints(int newPoints) async {
     _profile = _profile.copyWith(
       currentPoints: newPoints,
-      totalPoints: _profile.totalPoints + (newPoints - _profile.currentPoints),
     );
     await DataManager().saveUserProfile(_profile);
-    notifyListeners(); // ← KEY: Trigger rebuild!
+    notifyListeners();
   }
 
-  /// Add points (helper method)
+  /// Add points (increases both current and total)
   Future<void> addPoints(int points) async {
-    final newTotal = _profile.currentPoints + points;
-    await updatePoints(newTotal);
+    _profile = _profile.copyWith(
+      currentPoints: _profile.currentPoints + points,
+      totalPoints: _profile.totalPoints + points,
+    );
+    await DataManager().saveUserProfile(_profile);
+    notifyListeners();
   }
 
-  /// Subtract points (helper method)
+  /// Subtract points (decreases only current, not total)
   Future<void> subtractPoints(int points) async {
-    final newTotal = (_profile.currentPoints - points).clamp(0, double.infinity).toInt();
-    await updatePoints(newTotal);
+    final newCurrent = (_profile.currentPoints - points).clamp(0, double.infinity).toInt();
+    await updateCurrentPoints(newCurrent);
+  }
+
+  /// Legacy method for backward compatibility
+  Future<void> updatePoints(int newPoints) async {
+    await updateCurrentPoints(newPoints);
   }
 
   /// Reload từ DataManager (khi cần sync)

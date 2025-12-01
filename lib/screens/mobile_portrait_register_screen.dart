@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
+import '../../core/utils/sync_service.dart';
 import '../../core/utils/navigation_service.dart';
+import '../../core/providers/score_provider.dart';
 import 'mobile_portrait_screen.dart';
 
 /// Mobile Portrait Register Screen
@@ -55,13 +58,13 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
 
       // Check if upgrading from guest mode
       final wasGuest = await _authService.isGuestMode;
-      
+
       // Create user profile after successful Firebase registration
       if (userCredential?.user != null) {
         if (wasGuest) {
           await _authService.upgradeFromGuest();
         }
-        
+
         // Switch to logged in user mode
         await DataManager().switchToLoggedInUser(
           userId: userCredential!.user!.uid,
@@ -69,27 +72,55 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
           displayName: _emailController.text.trim().split('@')[0],
           hasCloudData: false, // New account
         );
-      }
 
-      if (mounted) {
-        setState(() => _isLoading = false);
-        
-        // Show success message
-        String message = wasGuest 
-            ? AppLocalizations.of(context).welcomeUpgradedFromGuest
-            : AppLocalizations.of(context).registrationSuccessful;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: context.theme.primary,
-          ),
-        );
-        
+        // Auto sync after successful registration
+        try {
+          final syncService = SyncService();
+          final syncResult = await syncService.smartSync();
+
+          if (mounted) {
+            // Refresh ScoreProvider to load synced data
+            context.read<ScoreProvider>().refresh();
+
+            setState(() => _isLoading = false);
+
+            // Show success message with sync info
+            String message = wasGuest
+                ? '${AppLocalizations.of(context).welcomeUpgradedFromGuest} $syncResult'
+                : '${AppLocalizations.of(context).registrationSuccessful} $syncResult';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                backgroundColor: context.theme.primary,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        } catch (syncError) {
+          if (mounted) {
+            setState(() => _isLoading = false);
+
+            // Show registration success but sync warning
+            String message = wasGuest
+                ? '${AppLocalizations.of(context).welcomeUpgradedFromGuest} ${AppLocalizations.of(context).syncWillRetryLater}'
+                : '${AppLocalizations.of(context).registrationSuccessful} ${AppLocalizations.of(context).syncWillRetryLater}';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                backgroundColor: context.theme.primary,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+
         // Navigate to main app screen (skip login since already registered)
-        NavigationService.navigateAndClearStack(
-          context,
-          const MobilePortraitScreen(),
-        );
+        if (mounted) {
+          NavigationService.navigateAndClearStack(
+            context,
+            const MobilePortraitScreen(),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

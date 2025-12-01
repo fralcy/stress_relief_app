@@ -11,7 +11,6 @@ import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/providers/score_provider.dart';
 import '../../models/aquarium_progress.dart';
-import '../../models/scene_models.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -500,10 +499,12 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
               borderRadius: BorderRadius.circular(10),
               child: Stack(
                 children: [
-                  // Background bể cá
+                  // Background bể cá - theo theme hiện tại
                   Positioned.fill(
                     child: Image.asset(
-                      AssetLoader.getTankAsset(SceneSet.defaultSet),
+                      AssetLoader.getTankAsset(
+                        DataManager().userSettings.currentScenes[2].sceneSet,
+                      ),
                       fit: BoxFit.cover,
                     ),
                   ),
