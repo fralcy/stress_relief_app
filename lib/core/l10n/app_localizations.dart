@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/scene_models.dart';
 
 /// Base class cho localization
 /// Mỗi ngôn ngữ sẽ implement class này
@@ -322,6 +323,10 @@ abstract class AppLocalizations {
   String get bgmIndieVibes;
   String get bgmSoftPop;
   String get bgmChillAcoustic;
+
+  // Mascot dialogues
+  String getMascotSceneGreeting(SceneType scene, int variant);
+  String getMascotClickDialogue(SceneType scene, int variant);
 
   // Helper method
   static AppLocalizations of(BuildContext context) {

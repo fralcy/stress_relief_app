@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
@@ -5,9 +7,11 @@ import '../core/l10n/app_localizations.dart';
 import '../models/scene_models.dart';
 import '../core/utils/asset_loader.dart';
 import '../core/utils/sfx_service.dart';
+import '../core/utils/mascot_dialogue_service.dart';
 import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
+import '../core/widgets/speech_bubble.dart';
 import '../core/providers/scene_provider.dart';
 import 'modals/scene_shop_modal.dart';
 import 'modals/schedule_task_modal.dart';
@@ -42,10 +46,21 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   MascotExpression _currentExpression = MascotExpression.idle;
   bool _isDebugMode = false;
 
+  // Mascot dialogue state
+  String? _currentDialogue;
+  Timer? _dialogueTimer;
+  final _dialogueService = MascotDialogueService();
+
   @override
   void initState() {
     super.initState();
     _checkDebugMode();
+  }
+
+  @override
+  void dispose() {
+    _dialogueTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkDebugMode() async {
@@ -56,6 +71,47 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
         _isDebugMode = isDebug;
       });
     }
+  }
+
+  // Mascot dialogue methods
+  void _showSceneGreeting(SceneType scene) {
+    final l10n = AppLocalizations.of(context);
+    final dialogue = _dialogueService.getSceneGreeting(scene, l10n);
+    final expression = _dialogueService.getRandomExpression();
+    _showDialogue(dialogue, expression);
+  }
+
+  void _showClickDialogue() {
+    final l10n = AppLocalizations.of(context);
+    final dialogue = _dialogueService.getClickDialogue(_currentScene, l10n);
+    final expression = _dialogueService.getRandomExpression();
+    _showDialogue(dialogue, expression);
+  }
+
+  void _showDialogue(String text, MascotExpression expression) {
+    _cancelDialogueTimer();
+    setState(() {
+      _currentDialogue = text;
+      _currentExpression = expression;
+    });
+    _dialogueTimer = Timer(const Duration(milliseconds: 3500), _hideDialogue);
+  }
+
+  void _hideDialogue() {
+    setState(() {
+      _currentDialogue = null;
+      _currentExpression = MascotExpression.idle;
+    });
+  }
+
+  void _cancelDialogueTimer() {
+    _dialogueTimer?.cancel();
+    _dialogueTimer = null;
+  }
+
+  void _onMascotTapped() {
+    SfxService().buttonClick();
+    _showClickDialogue();
   }
 
 
@@ -137,6 +193,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                   onSceneChanged: (scene) {
                     SfxService().pageTransition();
                     setState(() => _currentScene = scene);
+                    _showSceneGreeting(scene);
                   },
                 ),
               ),
@@ -197,30 +254,52 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                 ),
               ),
               
-              // Mascot (center-bottom)
+              // Speech bubble (above mascot)
+              if (_currentDialogue != null)
+                Positioned(
+                  bottom: 20 + (mascotSize * 0.635) + 30, // Above visible mascot part
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: min(sceneSize * 0.7, 300),
+                      ),
+                      child: SpeechBubble(
+                        text: _currentDialogue!,
+                        tailPosition: BubbleTailPosition.bottom,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Mascot (center-bottom) with tap handler
               Positioned(
                 bottom: 20,
                 left: (sceneSize - mascotSize) / 2,
-                child: Image.asset(
-                  AssetLoader.getMascotAsset(_currentExpression),
-                  width: mascotSize,
-                  height: mascotSize,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: mascotSize,
-                      height: mascotSize,
-                      decoration: BoxDecoration(
-                        color: context.theme.secondary.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '🐱',
-                        style: TextStyle(fontSize: mascotSize / 2),
-                      ),
-                    );
-                  },
+                child: GestureDetector(
+                  onTap: _onMascotTapped,
+                  child: Image.asset(
+                    AssetLoader.getMascotAsset(_currentExpression),
+                    width: mascotSize,
+                    height: mascotSize,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: mascotSize,
+                        height: mascotSize,
+                        decoration: BoxDecoration(
+                          color: context.theme.secondary.withOpacity(0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '🐱',
+                          style: TextStyle(fontSize: mascotSize / 2),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

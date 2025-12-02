@@ -1,3 +1,4 @@
+import '../../models/scene_models.dart';
 import 'app_localizations.dart';
 
 /// Tiếng Việt
@@ -815,4 +816,58 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bgmChillAcoustic => 'Acoustic thư giãn';
+
+  // Mascot dialogues - Lời chào khi chuyển scene (2 biến thể mỗi scene)
+  @override
+  String getMascotSceneGreeting(SceneType scene, int variant) {
+    switch (scene) {
+      case SceneType.livingRoom:
+        return variant == 0
+            ? "Chào mừng về nhà! Sẵn sàng cho một ngày hiệu quả chưa?"
+            : "Cùng xem chúng ta có thể hoàn thành gì hôm nay!";
+      case SceneType.garden:
+        return variant == 0
+            ? "Đến lúc chăm sóc vườn rồi! Không khí tươi mát quá!"
+            : "Nhìn cây cối lớn lên đẹp thế! Thật yên bình.";
+      case SceneType.aquarium:
+        return variant == 0
+            ? "Cá đói rồi! Hãy cho chúng ăn nào."
+            : "Những người bạn dưới nước đang bơi vui vẻ!";
+      case SceneType.paintingRoom:
+        return variant == 0
+            ? "Sẵn sàng sáng tạo nghệ thuật chưa? Cùng vẽ thôi!"
+            : "Mình thích xem tranh của bạn! Hôm nay vẽ gì nhỉ?";
+      case SceneType.musicRoom:
+        return variant == 0
+            ? "Đến lúc sáng tác nhạc! Cùng tạo giai điệu tuyệt vời!"
+            : "Âm nhạc xoa dịu tâm hồn! Bạn sẽ chơi gì?";
+    }
+  }
+
+  // Mascot dialogues - Lời thoại khi click (2 biến thể mỗi scene)
+  @override
+  String getMascotClickDialogue(SceneType scene, int variant) {
+    switch (scene) {
+      case SceneType.livingRoom:
+        return variant == 0
+            ? "Cần giúp sắp xếp công việc không? Mình ở đây!"
+            : "Đừng quên nghỉ ngơi và thư giãn nhé!";
+      case SceneType.garden:
+        return variant == 0
+            ? "Làm vườn thư giãn lắm phải không?"
+            : "Cây cối lớn tốt hơn khi được yêu thương!";
+      case SceneType.aquarium:
+        return variant == 0
+            ? "Cá là bạn đồng hành tuyệt vời! Nhìn rất thư giãn."
+            : "Nhớ cho chúng ăn đều đặn nhé!";
+      case SceneType.paintingRoom:
+        return variant == 0
+            ? "Mọi nghệ sĩ đều từng là người nghiệp dư. Cố lên!"
+            : "Màu sắc có thể thể hiện cảm xúc bên trong!";
+      case SceneType.musicRoom:
+        return variant == 0
+            ? "Âm nhạc là ngôn ngữ của cảm xúc!"
+            : "Mỗi nốt nhạc bạn chơi đều độc đáo và đặc biệt!";
+    }
+  }
 }

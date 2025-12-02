@@ -1,3 +1,4 @@
+import '../../models/scene_models.dart';
 import 'app_localizations.dart';
 
 /// English
@@ -812,4 +813,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bgmChillAcoustic => 'Chill Acoustic';
+
+  // Mascot dialogues - Scene greetings (2 variants per scene)
+  @override
+  String getMascotSceneGreeting(SceneType scene, int variant) {
+    switch (scene) {
+      case SceneType.livingRoom:
+        return variant == 0
+            ? "Welcome home! Ready for a productive day?"
+            : "Let's see what we can accomplish today!";
+      case SceneType.garden:
+        return variant == 0
+            ? "Time to tend the garden! Fresh air feels great!"
+            : "Look at our plants growing! So peaceful here.";
+      case SceneType.aquarium:
+        return variant == 0
+            ? "The fish are hungry! Let's feed them."
+            : "Our underwater friends are swimming happily!";
+      case SceneType.paintingRoom:
+        return variant == 0
+            ? "Ready to create some art? Let's get creative!"
+            : "I love seeing your drawings! What will you make today?";
+      case SceneType.musicRoom:
+        return variant == 0
+            ? "Time to compose music! Let's make beautiful melodies!"
+            : "Music soothes the soul! What will you play?";
+    }
+  }
+
+  // Mascot dialogues - Click dialogues (2 variants per scene)
+  @override
+  String getMascotClickDialogue(SceneType scene, int variant) {
+    switch (scene) {
+      case SceneType.livingRoom:
+        return variant == 0
+            ? "Need help organizing your tasks? I'm here!"
+            : "Don't forget to take breaks and relax!";
+      case SceneType.garden:
+        return variant == 0
+            ? "Gardening is so relaxing, isn't it?"
+            : "Plants grow better with love and care!";
+      case SceneType.aquarium:
+        return variant == 0
+            ? "Fish are great companions! So calming to watch."
+            : "Remember to feed them regularly!";
+      case SceneType.paintingRoom:
+        return variant == 0
+            ? "Every artist was first an amateur. Keep going!"
+            : "Colors can express how we feel inside!";
+      case SceneType.musicRoom:
+        return variant == 0
+            ? "Music is the language of emotions!"
+            : "Each note you play is unique and special!";
+    }
+  }
 }
