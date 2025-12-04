@@ -26,7 +26,7 @@
 
 - 🐾 **Linh Vật** - Nhân vật hiển thị các cảm xúc khác nhau
 - 🏠 **5 Phòng** - Phòng Khách, Vườn, Hồ Cá, Phòng Vẽ, Phòng Nhạc
-- 🎮 **Minigame** - Trồng cây, chăm sóc cá, vẽ pixel art, sáng tác nhạc
+- 🎮 **Minigame** - Trồng cây, chăm sóc cá, vẽ pixel art, tạo giai điệu
 - 📔 **Nhật Ký Cảm Xúc** - Theo dõi tâm trạng hàng ngày với câu hỏi đơn giản
 - ✅ **Quản Lý Công Việc** - Ghi lại công việc hàng ngày
 - 🎨 **Tùy Chỉnh** - 8 theme, 5 bộ cảnh (mở khóa bằng điểm), 2 ngôn ngữ
@@ -37,7 +37,7 @@
 
 ## 🐾 Gặp Gỡ Linh Vật
 
-Linh vật hiển thị các cảm xúc khác nhau tùy theo bạn đang làm gì trong app.
+Linh vật với nhiều cảm xúc đa dạng.
 
 <p align="center">
   <img src="assets/images/mascot/idle.png" width="100" alt="Bình thường"/>
@@ -80,10 +80,10 @@ Vẽ pixel art đơn giản.
 
 ### 🎵 Phòng Nhạc
 
-Tạo bản nhạc đơn giản.
+Tạo giai điệu đơn giản.
 
 - 5 nhạc cụ: Piano, Guitar, Bass, Trống, Synth
-- Giao diện sáng tác cơ bản
+- Giao diện tạo nhạc đơn giản
 - Lưu bản nhạc vào thư viện
 - Có bản nhạc mẫu
 
@@ -98,7 +98,7 @@ Theo dõi tâm trạng mỗi ngày:
 - 3 câu hỏi đơn giản đánh giá 1-5
 - Ghi chú tùy chọn
 - Xem lại các mục cũ
-- Dữ liệu được mã hóa và lưu local/cloud
+- Dữ liệu lưu local hoặc được mã hóa khi đồng bộ lên cloud
 
 ### Quản Lý Công Việc
 
@@ -221,8 +221,8 @@ flutter build apk --release
 ### Thiết Lập Lần Đầu
 
 1. Tạo tài khoản (hoặc bỏ qua để dùng offline)
-2. Đặt tên cho linh vật
-3. Chọn theme
+2. Chọn theme
+3. Chọn nhạc nền
 4. Xem hướng dẫn
 
 ### Cách Sử Dụng
@@ -230,12 +230,11 @@ flutter build apk --release
 - Dùng nhật ký cảm xúc để ghi lại tâm trạng
 - Thêm công việc để sắp xếp
 - Chơi minigame khi muốn nghỉ ngơi
-- Tưới cây vườn mỗi 20 giờ nếu đang chơi
+- Tưới cây vườn và cho cá ăn mỗi 20 giờ nếu đang chơi
 - Kiếm điểm để mở khóa cảnh mới
 
 ### Mẹo
 
-- Đặt nhắc nhở trên điện thoại nếu muốn nhớ tưới cây
 - Bật thông báo cho công việc nếu cần
 - Thử các theme khác nhau để xem cái nào hợp
 
@@ -255,9 +254,9 @@ flutter build apk --release
 
 ### Cần Giúp Đỡ?
 
-- 🐛 **Báo Lỗi** - [GitHub Issues](https://github.com/[your-username]/peacepal/issues)
-- 💡 **Đề Xuất Tính Năng** - [GitHub Issues](https://github.com/[your-username]/peacepal/issues)
-- 📧 **Email** - [your.email@example.com]
+- 🐛 **Báo Lỗi** - [GitHub Issues](https://github.com/fralcy/stress_relief_app/issues)
+- 💡 **Đề Xuất Tính Năng** - [GitHub Issues](https://github.com/fralcy/stress_relief_app/issues)
+- 📧 **Email** - [quangthinh2924@gmail.com]
 
 ### Đóng Góp
 
@@ -282,6 +281,7 @@ Xem file [LICENSE](LICENSE) để biết chi tiết đầy đủ hoặc truy c�
 
 - Được làm như một dự án học tập
 - Cảm ơn cộng đồng Flutter và Firebase về tài liệu và nguồn tài nguyên
+- Nhạc nền được tạo bởi Suno AI
 
 ---
 
