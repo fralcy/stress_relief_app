@@ -438,13 +438,13 @@ class _DrawingModalState extends State<DrawingModal> {
               // Save button
               GestureDetector(
                 onTap: _onSaveName,
-                child: const Text('✓', style: TextStyle(fontSize: 20, color: Colors.green)),
+                child: const Icon(Icons.check, color: Colors.green, size: 20),
               ),
               const SizedBox(width: 8),
               // Cancel button
               GestureDetector(
                 onTap: _onCancelEdit,
-                child: const Text('✗', style: TextStyle(fontSize: 20, color: Colors.red)),
+                child: const Icon(Icons.close, color: Colors.red, size: 20),
               ),
             ] else ...[
               // Display name
@@ -459,7 +459,7 @@ class _DrawingModalState extends State<DrawingModal> {
               // Edit button
               GestureDetector(
                 onTap: _onEditName,
-                child: const Text('✏️', style: TextStyle(fontSize: 16)),
+                child: Icon(Icons.edit, color: theme.primary, size: 16),
               ),
             ],
           ],
