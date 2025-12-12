@@ -41,18 +41,20 @@ class AppButton extends StatelessWidget {
     
     if (isDisabled) {
       if (theme.isDark) {
-        // Dark theme: use border color for better contrast
-        backgroundColor = theme.border;
-        foregroundColor = theme.text.withOpacity(0.6);
-      } else {
-        // Light theme: use opacity (works well)
-        backgroundColor = theme.secondary.withOpacity(0.5);
+        // Disabled - Dark
+        backgroundColor = theme.primary.withOpacity(0.5);
         foregroundColor = theme.background.withOpacity(0.6);
+      } else {
+        // Disabled - Light
+        backgroundColor = theme.border;
+        foregroundColor = theme.background;
       }
     } else if (isActive) {
+      // Active (Dark/Light)
       backgroundColor = theme.secondary;
       foregroundColor = theme.background;
     } else {
+      // Normal (Dark/Light)
       backgroundColor = theme.primary;
       foregroundColor = theme.background;
     }
@@ -61,10 +63,15 @@ class AppButton extends StatelessWidget {
       width: width,
       height: height ?? 48,
       child: ElevatedButton(
+        // Giữ onPressed là null khi disabled
         onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
+          // Sử dụng cả 2 thuộc tính để ghi đè màu disabled mặc định của Flutter
           backgroundColor: backgroundColor,
+          disabledBackgroundColor: backgroundColor, 
           foregroundColor: foregroundColor,
+          disabledForegroundColor: foregroundColor,
+          
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(

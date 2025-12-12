@@ -535,17 +535,19 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
               width: double.infinity,
               child: AppButton(
                 label: '🍞 ${l10n.feedNow}',
+                isDisabled: !canFeed,
                 onPressed: canFeed ? _onFeed : null,
               ),
             ),
             const SizedBox(height: 8),
-            // Claim button - full width with better text handling
+            // Claim button - full width
             SizedBox(
               width: double.infinity,
               child: AppButton(
                 label: claimablePoints > 0 
                     ? '🪙 ${l10n.claimCoins} ($claimablePoints)'
                     : '🪙 ${l10n.claimCoins}',
+                isDisabled: claimablePoints <= 0,
                 onPressed: claimablePoints > 0 ? _onClaim : null,
               ),
             ),
