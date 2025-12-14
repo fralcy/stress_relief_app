@@ -867,4 +867,42 @@ class AppLocalizationsEn extends AppLocalizations {
             : "Each note you play is unique and special!";
     }
   }
+
+  // Tutorial - Aquarium
+  @override
+  String get tutorialAquariumTankDesc => 'This is your aquarium! Fish will swim freely and generate points over time. Take good care of them!';
+
+  @override
+  String get tutorialAquariumFeedTitle => 'Feed Fish';
+
+  @override
+  String get tutorialAquariumFeedDesc => 'Feed your fish every 20 hours to keep them generating points. If you don\'t feed them on time, they will stop generating points! Watch the progress bar to know when to feed.';
+
+  @override
+  String get tutorialAquariumClaimTitle => 'Claim Points';
+
+  @override
+  String get tutorialAquariumClaimDesc => 'Tap to claim the points your fish have generated! Each fish type has a different point generation rate. The more fish you have, the more points per hour.';
+
+  @override
+  String get tutorialAquariumShopTitle => 'Fish Shop';
+
+  @override
+  String get tutorialAquariumShopDesc => 'Buy more fish with your points! More expensive fish generate more points per hour. You can have up to 10 fish. Tap + to buy and - to sell.';
+
+  // Tutorial - Garden
+  @override
+  String get tutorialGardenGridDesc => 'This is your 4x4 garden! Each plot can hold one plant. Plants will grow over time and need care.';
+
+  @override
+  String get tutorialGardenInventoryTitle => 'Seed Inventory';
+
+  @override
+  String get tutorialGardenInventoryDesc => 'Your seed inventory! Select the type of seed you want to plant. Each plant has different growth time and rewards.';
+
+  @override
+  String get tutorialGardenActionsTitle => 'Actions';
+
+  @override
+  String get tutorialGardenActionsDesc => 'Available actions: Plant new crops (need to select seed type in inventory), Water when thirsty, Remove pests when infected, Harvest when fully grown. Select an action then tap the corresponding plot!';
 }

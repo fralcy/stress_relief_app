@@ -3,9 +3,9 @@ import '../constants/app_colors.dart';
 import 'app_scroller.dart';
 
 /// Custom modal với header, title và close button
-/// 
+///
 /// Features:
-/// - Header: Title + X button
+/// - Header: Title + X button + optional ? button
 /// - Scrollable content nếu dài
 /// - Backdrop dim
 /// - Slide up animation
@@ -13,12 +13,14 @@ class AppModal extends StatelessWidget {
   final String title;
   final Widget content;
   final double maxHeight;
+  final VoidCallback? onHelpPressed;
 
   const AppModal({
     super.key,
     required this.title,
     required this.content,
     this.maxHeight = 600,
+    this.onHelpPressed,
   });
 
   /// Show modal helper
@@ -27,6 +29,7 @@ class AppModal extends StatelessWidget {
     required String title,
     required Widget content,
     double maxHeight = 600,
+    VoidCallback? onHelpPressed,
   }) {
     return showModalBottomSheet<T>(
       context: context,
@@ -36,6 +39,7 @@ class AppModal extends StatelessWidget {
         title: title,
         content: content,
         maxHeight: maxHeight,
+        onHelpPressed: onHelpPressed,
       ),
     );
   }
@@ -88,7 +92,7 @@ class AppModal extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final theme = context.theme;
-    
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
       child: Stack(
@@ -105,7 +109,28 @@ class AppModal extends StatelessWidget {
               ),
             ),
           ),
-          
+
+          // Help button (positioned left) - only if onHelpPressed is provided
+          if (onHelpPressed != null)
+            Positioned(
+              left: 0,
+              child: IconButton(
+                onPressed: onHelpPressed,
+                icon: const Icon(Icons.help_outline, size: 24),
+                color: theme.primary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
+                ),
+                style: IconButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+
           // Close button (positioned right)
           Positioned(
             right: 0,

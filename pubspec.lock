@@ -416,6 +416,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_tutorial_overlay:
+    dependency: "direct main"
+    description:
+      name: flutter_tutorial_overlay
+      sha256: ba24b1c95606395c97ddc6b9c8931a73429488245011a97d31cc03ba739d8157
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   flutter_web_plugins:
     dependency: transitive
     description: flutter

@@ -870,4 +870,42 @@ class AppLocalizationsVi extends AppLocalizations {
             : "Mỗi nốt nhạc bạn chơi đều độc đáo và đặc biệt!";
     }
   }
+
+  // Tutorial - Aquarium
+  @override
+  String get tutorialAquariumTankDesc => 'Đây là bể cá của bạn! Cá sẽ bơi lượn tự do và tạo ra điểm theo thời gian. Hãy chăm sóc chúng thật tốt!';
+
+  @override
+  String get tutorialAquariumFeedTitle => 'Cho cá ăn';
+
+  @override
+  String get tutorialAquariumFeedDesc => 'Cho cá ăn mỗi 20 giờ để chúng tiếp tục tạo điểm. Nếu không cho ăn đúng giờ, cá sẽ ngừng tạo điểm! Chú ý thanh tiến trình để biết khi nào cần cho ăn.';
+
+  @override
+  String get tutorialAquariumClaimTitle => 'Thu điểm';
+
+  @override
+  String get tutorialAquariumClaimDesc => 'Nhấn để thu điểm mà cá đã tạo ra! Mỗi loại cá có tỉ lệ tạo điểm khác nhau. Càng nuôi nhiều cá, càng có nhiều điểm mỗi giờ.';
+
+  @override
+  String get tutorialAquariumShopTitle => 'Cửa hàng cá';
+
+  @override
+  String get tutorialAquariumShopDesc => 'Mua thêm cá bằng điểm của bạn! Cá đắt tiền hơn sẽ tạo nhiều điểm hơn mỗi giờ. Bạn có thể nuôi tối đa 10 con cá. Bấm nút + để mua và - để bán.';
+
+  // Tutorial - Garden
+  @override
+  String get tutorialGardenGridDesc => 'Đây là khu vườn 4x4 của bạn! Mỗi ô có thể trồng một cây. Cây sẽ lớn dần theo thời gian và cần được chăm sóc.';
+
+  @override
+  String get tutorialGardenInventoryTitle => 'Kho hạt giống';
+
+  @override
+  String get tutorialGardenInventoryDesc => 'Kho hạt giống của bạn! Chọn loại hạt bạn muốn trồng. Mỗi loại cây có thời gian lớn và điểm thưởng khác nhau.';
+
+  @override
+  String get tutorialGardenActionsTitle => 'Hành động';
+
+  @override
+  String get tutorialGardenActionsDesc => 'Các hành động: Trồng cây mới (cần chọn loại cây trong kho hạt giống), Tưới nước khi cây khát, Trừ sâu khi bị sâu bệnh, Thu hoạch khi cây đã chín. Chọn hành động rồi chạm vào ô đất tương ứng!';
 }

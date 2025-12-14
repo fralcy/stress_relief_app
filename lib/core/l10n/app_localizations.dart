@@ -328,6 +328,22 @@ abstract class AppLocalizations {
   String getMascotSceneGreeting(SceneType scene, int variant);
   String getMascotClickDialogue(SceneType scene, int variant);
 
+  // Tutorial - Aquarium
+  String get tutorialAquariumTankDesc;
+  String get tutorialAquariumFeedTitle;
+  String get tutorialAquariumFeedDesc;
+  String get tutorialAquariumClaimTitle;
+  String get tutorialAquariumClaimDesc;
+  String get tutorialAquariumShopTitle;
+  String get tutorialAquariumShopDesc;
+
+  // Tutorial - Garden
+  String get tutorialGardenGridDesc;
+  String get tutorialGardenInventoryTitle;
+  String get tutorialGardenInventoryDesc;
+  String get tutorialGardenActionsTitle;
+  String get tutorialGardenActionsDesc;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

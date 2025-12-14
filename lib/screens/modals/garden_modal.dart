@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/utils/asset_loader.dart';
@@ -25,11 +26,13 @@ class GardenModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_GardenModalState>();
     return AppModal.show(
       context: context,
       title: l10n.garden,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const GardenModal(),
+      content: GardenModal(key: modalKey),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
     );
   }
 }
@@ -48,6 +51,11 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
   // Debug mode state
   bool _isDebugMode = false;
   final AuthService _authService = AuthService();
+
+  // Tutorial overlay keys
+  final GlobalKey _gridKey = GlobalKey();
+  final GlobalKey _inventoryKey = GlobalKey();
+  final GlobalKey _actionsKey = GlobalKey();
 
   @override
   void initState() {
@@ -177,6 +185,44 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
     _saveProgress();
 
     SfxService().buttonClick();
+  }
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+
+    final steps = [
+      TutorialStep(
+        targetKey: _gridKey,
+        title: '🌱 ${l10n.garden}',
+        description: l10n.tutorialGardenGridDesc,
+        tag: 'grid',
+      ),
+      TutorialStep(
+        targetKey: _inventoryKey,
+        title: '🎒 ${l10n.tutorialGardenInventoryTitle}',
+        description: l10n.tutorialGardenInventoryDesc,
+        tag: 'inventory',
+      ),
+      TutorialStep(
+        targetKey: _actionsKey,
+        title: '🔧 ${l10n.tutorialGardenActionsTitle}',
+        description: l10n.tutorialGardenActionsDesc,
+        tag: 'actions',
+      ),
+    ];
+
+    final tutorial = TutorialOverlay(
+      context: context,
+      steps: steps,
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt, // Note: typo in package - 'finsh' not 'finish'
+      onComplete: () {
+        SfxService().buttonClick();
+      },
+    );
+
+    tutorial.show();
   }
 
   AnimationController _getCellAnimationController(int row, int col) {
@@ -410,8 +456,9 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
           ),
         ),
         const SizedBox(height: 12),
-        
+
         AspectRatio(
+          key: _gridKey,
           aspectRatio: 1,
           child: Container(
             decoration: BoxDecoration(
@@ -653,6 +700,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
   Widget _buildInventorySection(AppTheme theme) {
     final l10n = AppLocalizations.of(context);
     return Column(
+      key: _inventoryKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -720,6 +768,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
   Widget _buildActionsSection(AppTheme theme) {
     final l10n = AppLocalizations.of(context);
     return Column(
+      key: _actionsKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(

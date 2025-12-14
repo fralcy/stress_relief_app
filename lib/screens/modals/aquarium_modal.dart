@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/constants/fish_config.dart';
@@ -25,11 +26,13 @@ class AquariumModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_AquariumModalState>();
     return AppModal.show(
       context: context,
       title: l10n.aquarium,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const AquariumModal(),
+      content: AquariumModal(key: modalKey),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
     );
   }
 }
@@ -54,6 +57,12 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   // Debug mode state
   bool _isDebugMode = false;
   final AuthService _authService = AuthService();
+
+  // Tutorial overlay keys
+  final GlobalKey _tankKey = GlobalKey();
+  final GlobalKey _feedButtonKey = GlobalKey();
+  final GlobalKey _claimButtonKey = GlobalKey();
+  final GlobalKey _fishShopKey = GlobalKey();
 
   @override
   void initState() {
@@ -207,6 +216,50 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     SfxService().buttonClick();
   }
 
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+
+    final steps = [
+      TutorialStep(
+        targetKey: _tankKey,
+        title: '🐟 ${l10n.aquarium}',
+        description: l10n.tutorialAquariumTankDesc,
+        tag: 'tank',
+      ),
+      TutorialStep(
+        targetKey: _feedButtonKey,
+        title: '🍞 ${l10n.tutorialAquariumFeedTitle}',
+        description: l10n.tutorialAquariumFeedDesc,
+        tag: 'feed',
+      ),
+      TutorialStep(
+        targetKey: _claimButtonKey,
+        title: '🪙 ${l10n.tutorialAquariumClaimTitle}',
+        description: l10n.tutorialAquariumClaimDesc,
+        tag: 'claim',
+      ),
+      TutorialStep(
+        targetKey: _fishShopKey,
+        title: '🐠 ${l10n.tutorialAquariumShopTitle}',
+        description: l10n.tutorialAquariumShopDesc,
+        tag: 'shop',
+      ),
+    ];
+
+    final tutorial = TutorialOverlay(
+      context: context,
+      steps: steps,
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt, // Note: typo in package - 'finish' not 'finsh'
+      onComplete: () {
+        SfxService().buttonClick();
+      },
+    );
+
+    tutorial.show();
+  }
+
   void _onFeed() {
     if (!AquariumService.canFeed(_progress.lastFed)) return;
 
@@ -320,9 +373,8 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     
     final config = FishConfigs.getConfig(fishType);
     if (config != null) {
-      // Hoàn lại 50% giá khi bán
-      final sellPrice = (config.price * 0.5).toInt();
-      await context.read<ScoreProvider>().addPoints(sellPrice);
+      // Hoàn lại 100% giá khi bán
+      await context.read<ScoreProvider>().addPoints(config.price);
     }
     
     setState(() {
@@ -471,6 +523,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
         
         // Bể cá với background image
         AspectRatio(
+          key: _tankKey,
           aspectRatio: 1.0,
           child: AnimatedBuilder(
             animation: _borderPulseController!,
@@ -532,6 +585,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           children: [
             // Feed button - full width
             SizedBox(
+              key: _feedButtonKey,
               width: double.infinity,
               child: AppButton(
                 label: '🍞 ${l10n.feedNow}',
@@ -542,9 +596,10 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             const SizedBox(height: 8),
             // Claim button - full width
             SizedBox(
+              key: _claimButtonKey,
               width: double.infinity,
               child: AppButton(
-                label: claimablePoints > 0 
+                label: claimablePoints > 0
                     ? '🪙 ${l10n.claimCoins} ($claimablePoints)'
                     : '🪙 ${l10n.claimCoins}',
                 isDisabled: claimablePoints <= 0,
@@ -708,10 +763,11 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     for (var fish in _progress.fishes) {
       fishCounts[fish.type] = (fishCounts[fish.type] ?? 0) + 1;
     }
-    
+
     final isTankFull = _progress.fishes.length >= 10;
 
     return Column(
+      key: _fishShopKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
