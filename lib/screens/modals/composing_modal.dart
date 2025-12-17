@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/composing_service.dart';
@@ -385,9 +386,8 @@ class _ComposingModalState extends State<ComposingModal> {
           children: [
             Text(
               '${l10n.songName}: ',
-              style: TextStyle(
+              style: AppTypography.bodyLarge(context,
                 color: theme.text,
-                fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -398,9 +398,8 @@ class _ComposingModalState extends State<ComposingModal> {
                 child: TextField(
                   controller: _nameController,
                   autofocus: true,
-                  style: TextStyle(
+                  style: AppTypography.bodyLarge(context,
                     color: theme.text,
-                    fontSize: 16,
                   ),
                   decoration: InputDecoration(
                     isDense: true,
@@ -434,9 +433,8 @@ class _ComposingModalState extends State<ComposingModal> {
               // Display name
               Text(
                 _songName,
-                style: TextStyle(
+                style: AppTypography.bodyLarge(context,
                   color: theme.text,
-                  fontSize: 16,
                 ),
               ),
               const SizedBox(width: 8),
@@ -526,10 +524,8 @@ class _ComposingModalState extends State<ComposingModal> {
                             child: hasNote
                                 ? Text(
                                     note.toString(),
-                                    style: TextStyle(
+                                    style: AppTypography.h4(context,
                                       color: theme.background,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
                                     ),
                                   )
                                 : null,
@@ -594,10 +590,9 @@ class _ComposingModalState extends State<ComposingModal> {
       children: [
         Text(
           l10n.selectInstrument,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.bodyLarge(context,
             color: theme.text,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
@@ -630,9 +625,8 @@ class _ComposingModalState extends State<ComposingModal> {
                         const SizedBox(width: 8),
                         Text(
                           _getInstrumentName(instrument, l10n),
-                          style: TextStyle(
+                          style: AppTypography.bodyMedium(context,
                             color: theme.background,
-                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -654,10 +648,9 @@ class _ComposingModalState extends State<ComposingModal> {
       children: [
         Text(
           l10n.notes,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.bodyLarge(context,
             color: theme.text,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
@@ -685,10 +678,8 @@ class _ComposingModalState extends State<ComposingModal> {
                   ),
                   child: Text(
                     note.toString(),
-                    style: TextStyle(
+                    style: AppTypography.h4(context,
                       color: theme.background,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -702,13 +693,12 @@ class _ComposingModalState extends State<ComposingModal> {
             children: [
               Text(
                 '${l10n.selected}: ',
-                style: TextStyle(color: theme.text, fontSize: 14),
+                style: AppTypography.bodyMedium(context, color: theme.text),
               ),
               Text(
                 '${_getInstrumentEmoji(_selectedInstrument)} • ${l10n.note}: $_selectedNote',
-                style: TextStyle(
+                style: AppTypography.bodyMedium(context,
                   color: theme.text,
-                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),

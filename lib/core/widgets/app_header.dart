@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 import '../providers/score_provider.dart';
 import '../utils/data_manager.dart';
 import '../../screens/modals/settings_modal.dart';
@@ -129,15 +130,16 @@ class _AppHeaderState extends State<AppHeader> {
           Icon(Icons.monetization_on, size: 20, color: theme.background),
           const SizedBox(width: 6),
           Flexible(
-            child: Text(
-              points.toString(),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: theme.background,
+            child: Builder(
+              builder: (context) => Text(
+                points.toString(),
+                style: AppTypography.labelLarge(context,
+                  color: theme.background,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
           ),
         ],

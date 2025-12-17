@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/garden_service.dart';
 import '../../core/utils/auth_service.dart';
@@ -391,8 +392,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
                   const SizedBox(height: 16),
                   Text(
                     'DEBUG MODE',
-                    style: TextStyle(
-                      fontSize: 16,
+                    style: AppTypography.bodyLarge(context,
                       fontWeight: FontWeight.bold,
                       color: Colors.deepPurple,
                     ),
@@ -449,10 +449,9 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       children: [
         Text(
           l10n.gardenTitle,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.bodyLarge(context,
             color: theme.text,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),
@@ -705,10 +704,9 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       children: [
         Text(
           l10n.inventory,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.bodyLarge(context,
             color: theme.text,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),
@@ -749,8 +747,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
                     const SizedBox(width: 8),
                     Text(
                       'x${entry.value}',
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: AppTypography.bodyLarge(context,
                         color: isSelected ? theme.background : theme.text,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -773,10 +770,9 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       children: [
         Text(
           l10n.action,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.bodyLarge(context,
             color: theme.text,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_theme.dart';
+import '../core/constants/app_typography.dart';
 import '../core/l10n/app_localizations.dart';
 import '../core/utils/sfx_service.dart';
 import '../core/utils/navigation_service.dart';
@@ -79,12 +80,10 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
-        title: Text(
-          l10n.tutorialTitle,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        title: Builder(
+          builder: (context) => Text(
+            l10n.tutorialTitle,
+            style: AppTypography.h3(context, color: Colors.white),
           ),
         ),
         backgroundColor: theme.primary,
@@ -141,11 +140,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
           // Page indicator text
           Text(
             l10n.tutorialPageOf(_currentPage + 1, _totalPages),
-            style: TextStyle(
-              color: theme.text.withOpacity(0.6),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTypography.labelMedium(context, color: theme.text.withOpacity(0.6)),
           ),
           const SizedBox(height: 8),
           
@@ -218,13 +213,10 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                   const SizedBox(width: 16),
                 ],
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: theme.text,
-                      height: 1.2,
+                  child: Builder(
+                    builder: (context) => Text(
+                      title,
+                      style: AppTypography.h2(context, color: theme.text).copyWith(height: 1.2),
                     ),
                   ),
                 ),
@@ -262,13 +254,13 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                 ),
               ],
             ),
-            child: Text(
-              content,
-              style: TextStyle(
-                fontSize: 16,
-                color: theme.text,
-                height: 1.7,
-                letterSpacing: 0.3,
+            child: Builder(
+              builder: (context) => Text(
+                content,
+                style: AppTypography.bodyLarge(context, color: theme.text).copyWith(
+                  height: 1.7,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ),
@@ -366,11 +358,10 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                       child: ElevatedButton.icon(
                         onPressed: _previousPage,
                         icon: const Icon(Icons.arrow_back_ios, size: 18),
-                        label: Text(
-                          l10n.tutorialPrevious,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                        label: Builder(
+                          builder: (context) => Text(
+                            l10n.tutorialPrevious,
+                            style: AppTypography.labelLarge(context),
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -402,11 +393,10 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                       borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-                  child: Text(
-                    l10n.tutorialSkip,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  child: Builder(
+                    builder: (context) => Text(
+                      l10n.tutorialSkip,
+                      style: AppTypography.labelLarge(context),
                     ),
                   ),
                 ),
@@ -442,13 +432,12 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                         : Icons.check_circle_outline,
                     size: 18,
                   ),
-                  label: Text(
-                    _currentPage < _totalPages - 1 
-                        ? l10n.tutorialNext 
-                        : l10n.tutorialGotIt,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  label: Builder(
+                    builder: (context) => Text(
+                      _currentPage < _totalPages - 1
+                          ? l10n.tutorialNext
+                          : l10n.tutorialGotIt,
+                      style: AppTypography.button(context),
                     ),
                   ),
                   style: ElevatedButton.styleFrom(

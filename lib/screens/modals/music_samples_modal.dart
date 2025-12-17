@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/sfx_service.dart';
@@ -162,10 +163,9 @@ class _MusicSamplesModalState extends State<MusicSamplesModal> {
         children: [
           Text(
             l10n.selectSample,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.bodyLarge(context,
               color: theme.text,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
@@ -208,10 +208,9 @@ class _MusicSamplesModalState extends State<MusicSamplesModal> {
                   Expanded(
                     child: Text(
                       sample.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.bodyLarge(context,
                         color: theme.text,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

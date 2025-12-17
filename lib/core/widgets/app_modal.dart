@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 import 'app_scroller.dart';
 
 /// Custom modal với header, title và close button
@@ -102,11 +103,7 @@ class AppModal extends StatelessWidget {
           Center(
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: theme.text,
-              ),
+              style: AppTypography.h3(context, color: theme.text),
             ),
           ),
 

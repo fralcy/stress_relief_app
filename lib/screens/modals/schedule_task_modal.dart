@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
@@ -346,7 +347,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text('-', style: TextStyle(color: theme.text, fontSize: 18)),
+              child: Builder(
+                builder: (context) => Text('-', style: AppTypography.h4(context, color: theme.text)),
+              ),
             ),
             Expanded(
               child: _buildTimePicker(
@@ -415,12 +418,13 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _formatTime(time),
-              style: TextStyle(
-                color: theme.background,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            Builder(
+              builder: (context) => Text(
+                _formatTime(time),
+                style: AppTypography.labelMedium(context,
+                  color: theme.background,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const SizedBox(width: 2),
@@ -441,9 +445,11 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Text(
-            l10n.noTasksYet,
-            style: TextStyle(color: theme.text, fontSize: 14),
+          child: Builder(
+            builder: (context) => Text(
+              l10n.noTasksYet,
+              style: AppTypography.bodyMedium(context, color: theme.text),
+            ),
           ),
         ),
       );
@@ -519,14 +525,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                       )
-                    : Text(
-                        task.title,
-                        style: TextStyle(
-                          color: context.theme.text,
-                          fontSize: 16,
-                          decoration: task.isCompleted
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+                    : Builder(
+                        builder: (ctx) => Text(
+                          task.title,
+                          style: AppTypography.bodyLarge(ctx,
+                            color: context.theme.text,
+                          ).copyWith(
+                            decoration: task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
                         ),
                       ),
               ),
@@ -570,7 +578,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text('-', style: TextStyle(color: theme.text, fontSize: 14)),
+                        child: Builder(
+                          builder: (ctx) => Text('-', style: AppTypography.bodyMedium(ctx, color: theme.text)),
+                        ),
                       ),
                       _buildTimePicker(
                         time: _editEndTimes[index] ?? task.endTime,
@@ -588,9 +598,11 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   ),
                 )
               else
-                Text(
-                  '${_formatTime(task.startTime)} - ${_formatTime(task.endTime)}',
-                  style: TextStyle(color: theme.text, fontSize: 14),
+                Builder(
+                  builder: (ctx) => Text(
+                    '${_formatTime(task.startTime)} - ${_formatTime(task.endTime)}',
+                    style: AppTypography.bodyMedium(ctx, color: theme.text),
+                  ),
                 ),
               if (isEditing)
                 IconButton(
@@ -636,20 +648,21 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.expectedPoints,
-              style: TextStyle(
-                color: theme.text,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            Builder(
+              builder: (ctx) => Text(
+                l10n.expectedPoints,
+                style: AppTypography.labelMedium(ctx,
+                  color: theme.text,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-            Text(
-              '$pendingPoints',
-              style: TextStyle(
-                color: theme.primary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Builder(
+              builder: (ctx) => Text(
+                '$pendingPoints',
+                style: AppTypography.h4(ctx,
+                  color: theme.primary,
+                ),
               ),
             ),
           ],
@@ -666,15 +679,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         const SizedBox(height: 8),
         
         // Helper text
-        Text(
-          canClaim 
-            ? '${l10n.completedTasks.replaceAll('{count}', '${_completedCount()}')}'
-            : profile.lastPointsClaimDate != null 
-              ? l10n.alreadyClaimedToday
-              : l10n.noCompletedTasks,
-          style: TextStyle(
-            color: theme.border,
-            fontSize: 12,
+        Builder(
+          builder: (ctx) => Text(
+            canClaim
+              ? '${l10n.completedTasks.replaceAll('{count}', '${_completedCount()}')}'
+              : profile.lastPointsClaimDate != null
+                ? l10n.alreadyClaimedToday
+                : l10n.noCompletedTasks,
+            style: AppTypography.bodySmall(ctx,
+              color: theme.border,
+            ),
           ),
         ),
       ],

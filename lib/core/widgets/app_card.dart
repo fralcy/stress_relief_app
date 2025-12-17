@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 
 /// Custom card với header và content
 /// 
@@ -104,11 +105,7 @@ class _AppCardState extends State<AppCard> {
                       Center(
                         child: Text(
                           widget.title,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: theme.text,
-                          ),
+                          style: AppTypography.h4(context, color: theme.text),
                         ),
                       ),
                       
@@ -126,11 +123,7 @@ class _AppCardState extends State<AppCard> {
                 : Center(
                     child: Text(
                       widget.title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: theme.text,
-                      ),
+                      style: AppTypography.h4(context, color: theme.text),
                     ),
                   ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 
 /// Custom slider cho volume control
 /// 
@@ -43,20 +44,12 @@ class AppSlider extends StatelessWidget {
                 if (label != null)
                   Text(
                     label!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: theme.text,
-                    ),
+                    style: AppTypography.labelMedium(context, color: theme.text),
                   ),
                 if (showValue)
                   Text(
                     '${value.round()}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: theme.primary,
-                    ),
+                    style: AppTypography.labelMedium(context, color: theme.primary),
                   ),
               ],
             ),

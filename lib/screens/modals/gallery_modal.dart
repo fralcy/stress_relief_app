@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -86,11 +87,7 @@ class _GalleryModalState extends State<GalleryModal> {
         children: [
           Text(
             l10n.myPaintings,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: theme.text,
-            ),
+            style: AppTypography.labelLarge(context, color: theme.text),
           ),
           const SizedBox(height: 16),
           
@@ -140,12 +137,10 @@ class _GalleryModalState extends State<GalleryModal> {
                     
                     // Tên tranh
                     Expanded(
-                      child: Text(
-                        painting.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.text,
+                      child: Builder(
+                        builder: (context) => Text(
+                          painting.name,
+                          style: AppTypography.labelLarge(context, color: theme.text),
                         ),
                       ),
                     ),

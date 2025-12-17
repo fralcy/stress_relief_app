@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 
 /// Custom button với theme pastel
 /// 
@@ -95,29 +96,27 @@ class AppButton extends StatelessWidget {
 
     // Label only
     if (icon == null && label != null) {
-      return Text(
-        label!,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
+      return Builder(
+        builder: (context) => Text(
+          label!,
+          style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
         ),
       );
     }
 
     // Icon + Label (horizontal)
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          label!,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+    return Builder(
+      builder: (context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            label!,
+            style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

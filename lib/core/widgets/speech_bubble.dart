@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 
 /// Speech bubble cho linh vật giao tiếp với người dùng
 /// 
@@ -47,14 +48,12 @@ class SpeechBubble extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(20), // Bo tròn góc oval
           ),
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 15,
-              color: theme.text,
-              height: 1.4,
+          child: Builder(
+            builder: (context) => Text(
+              text,
+              style: AppTypography.bodyMedium(context, color: theme.text).copyWith(height: 1.4),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
         ),
       ),

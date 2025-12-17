@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_typography.dart';
 import '../core/l10n/app_localizations.dart';
 import '../models/scene_models.dart';
 import '../core/utils/asset_loader.dart';
@@ -241,9 +242,8 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                             const SizedBox(height: 16),
                             Text(
                               _currentScene.toString().split('.').last,
-                              style: TextStyle(
+                              style: AppTypography.bodyLarge(context,
                                 color: context.theme.text.withOpacity(0.5),
-                                fontSize: 16,
                               ),
                             ),
                           ],

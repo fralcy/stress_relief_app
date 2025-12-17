@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/score_provider.dart';
@@ -442,7 +443,7 @@ class _SettingsModalState extends State<SettingsModal> {
             children: [
               Text(
                 l10n.enabled,
-                style: TextStyle(color: theme.text, fontSize: 14),
+                style: AppTypography.bodyMedium(context, color: theme.text),
               ),
               Switch(
                 value: _settings.sfxEnabled,
@@ -513,7 +514,7 @@ class _SettingsModalState extends State<SettingsModal> {
             children: [
               Text(
                 '${l10n.sleepReminder}:',
-                style: TextStyle(color: theme.text, fontSize: 16),
+                style: AppTypography.bodyLarge(context, color: theme.text),
               ),
               Switch(
                 value: _settings.sleepReminderEnabled,
@@ -563,7 +564,7 @@ class _SettingsModalState extends State<SettingsModal> {
             children: [
               Text(
                 '${l10n.taskReminder}:',
-                style: TextStyle(color: theme.text, fontSize: 16),
+                style: AppTypography.bodyLarge(context, color: theme.text),
               ),
               Switch(
                 value: _settings.taskReminderEnabled,
@@ -625,11 +626,10 @@ class _SettingsModalState extends State<SettingsModal> {
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
-                child: const Text(
-                  'Exit Debug Mode',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                child: Builder(
+                  builder: (context) => Text(
+                    'Exit Debug Mode',
+                    style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -654,11 +654,10 @@ class _SettingsModalState extends State<SettingsModal> {
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
-                child: Text(
-                  l10n.logout,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                child: Builder(
+                  builder: (context) => Text(
+                    l10n.logout,
+                    style: AppTypography.labelLarge(context),
                   ),
                 ),
               ),
@@ -696,12 +695,10 @@ class _SettingsModalState extends State<SettingsModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.text,
+        Builder(
+          builder: (context) => Text(
+            title,
+            style: AppTypography.h4(context, color: theme.text),
           ),
         ),
         const SizedBox(height: 16),
@@ -711,12 +708,10 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   Widget _buildLabel(String text, AppTheme theme) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: theme.text,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
+    return Builder(
+      builder: (context) => Text(
+        text,
+        style: AppTypography.labelLarge(context, color: theme.text),
       ),
     );
   }
@@ -813,7 +808,7 @@ class _SettingsModalState extends State<SettingsModal> {
       children: [
         Text(
           label,
-          style: TextStyle(color: theme.text, fontSize: 16),
+          style: AppTypography.bodyLarge(context, color: theme.text),
         ),
         InkWell(
           onTap: () async {
@@ -836,9 +831,11 @@ class _SettingsModalState extends State<SettingsModal> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  time.format(context),
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                Builder(
+                  builder: (context) => Text(
+                    time.format(context),
+                    style: AppTypography.bodyLarge(context, color: Colors.white),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
@@ -863,7 +860,7 @@ class _SettingsModalState extends State<SettingsModal> {
       children: [
         Text(
           label,
-          style: TextStyle(color: theme.text, fontSize: 16),
+          style: AppTypography.bodyLarge(context, color: theme.text),
         ),
         InkWell(
           onTap: () async {
@@ -894,9 +891,11 @@ class _SettingsModalState extends State<SettingsModal> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '${minutes ~/ 60}:${(minutes % 60).toString().padLeft(2, '0')}',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                Builder(
+                  builder: (context) => Text(
+                    '${minutes ~/ 60}:${(minutes % 60).toString().padLeft(2, '0')}',
+                    style: AppTypography.bodyLarge(context, color: Colors.white),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -89,11 +90,7 @@ class _LibraryModalState extends State<LibraryModal> {
         children: [
           Text(
             l10n.myTracks,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: theme.text,
-            ),
+            style: AppTypography.labelLarge(context, color: theme.text),
           ),
           const SizedBox(height: 16),
           
@@ -122,12 +119,10 @@ class _LibraryModalState extends State<LibraryModal> {
                   children: [
                     // Tên track
                     Expanded(
-                      child: Text(
-                        track.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.text,
+                      child: Builder(
+                        builder: (context) => Text(
+                          track.name,
+                          style: AppTypography.labelLarge(context, color: theme.text),
                         ),
                       ),
                     ),

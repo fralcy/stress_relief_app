@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 
@@ -123,25 +124,17 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                   // Header
                   Text(
                     l10n.forgotPasswordTitle,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: theme.text,
-                    ),
+                    style: AppTypography.h1(context, color: theme.text),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   Text(
-                    _emailSent 
+                    _emailSent
                         ? l10n.forgotPasswordEmailSentDescription
                         : l10n.forgotPasswordDescription,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: theme.text.withOpacity(0.6),
-                      height: 1.4,
-                    ),
+                    style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)).copyWith(height: 1.4),
                     textAlign: TextAlign.center,
                   ),
                   
@@ -190,11 +183,10 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : Text(
-                              l10n.sendResetEmail,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                          : Builder(
+                              builder: (context) => Text(
+                                l10n.sendResetEmail,
+                                style: AppTypography.button(context),
                               ),
                             ),
                     ),
@@ -219,20 +211,12 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                           const SizedBox(height: 16),
                           Text(
                             l10n.emailSent,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: theme.text,
-                            ),
+                            style: AppTypography.h3(context, color: theme.text),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.checkYourInbox,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: theme.text.withOpacity(0.7),
-                              height: 1.4,
-                            ),
+                            style: AppTypography.bodyMedium(context, color: theme.text.withOpacity(0.7)).copyWith(height: 1.4),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -253,12 +237,10 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        l10n.sendAgain,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: theme.primary,
+                      child: Builder(
+                        builder: (context) => Text(
+                          l10n.sendAgain,
+                          style: AppTypography.button(context, color: theme.primary),
                         ),
                       ),
                     ),
@@ -272,20 +254,17 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                     children: [
                       Text(
                         l10n.rememberPassword,
-                        style: TextStyle(
-                          color: theme.text.withOpacity(0.6),
-                        ),
+                        style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () {
                           Navigator.pop(context);
                         },
-                        child: Text(
-                          l10n.backToLogin,
-                          style: TextStyle(
-                            color: theme.primary,
-                            fontWeight: FontWeight.bold,
+                        child: Builder(
+                          builder: (context) => Text(
+                            l10n.backToLogin,
+                            style: AppTypography.button(context, color: theme.primary),
                           ),
                         ),
                       ),
@@ -315,11 +294,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: theme.text,
-          ),
+          style: AppTypography.labelMedium(context, color: theme.text),
         ),
         const SizedBox(height: 8),
         TextFormField(

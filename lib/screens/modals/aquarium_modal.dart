@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/fish_config.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/aquarium_service.dart';
@@ -472,10 +473,9 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           children: [
             Text(
               '🐟 $totalFish/10 • 🪙 $totalPointsPerHour/${l10n.hour}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.bodyMedium(context,
                 color: theme.text,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -492,8 +492,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                 children: [
                   Text(
                     '${l10n.lastFed} $hoursSinceFed ${l10n.hoursAgo}',
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.bodySmall(context,
                       color: theme.text.withOpacity(0.7),
                     ),
                   ),
@@ -508,8 +507,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                   const SizedBox(height: 2),
                   Text(
                     '$cycleProgress% - ${canFeed ? l10n.readyToFeed : "${20 - hoursSinceFed}${l10n.hoursLeft}"}',
-                    style: TextStyle(
-                      fontSize: 11,
+                    style: AppTypography.captionSmall(context,
                       color: canFeed ? Colors.green : theme.text.withOpacity(0.6),
                     ),
                   ),
@@ -622,8 +620,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             child: Text(
               '${l10n.noFishYet}\n${l10n.buyFishBelow}',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
+              style: AppTypography.bodyMedium(context,
                 color: Colors.white.withOpacity(0.7),
               ),
             ),
@@ -742,9 +739,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                   ),
                   child: Text(
                     '+$_claimedPoints 🪙',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                    style: AppTypography.h2(context,
                       color: Colors.white,
                     ),
                   ),
@@ -775,10 +770,9 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           children: [
             Text(
               l10n.fishShop,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.bodyLarge(context,
                 color: theme.text,
+                fontWeight: FontWeight.bold,
               ),
             ),
             if (isTankFull)
@@ -790,10 +784,9 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                 ),
                 child: Text(
                   l10n.tankFull,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.bodySmall(context,
                     color: Colors.red,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -838,8 +831,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           const SizedBox(height: 16),
           Text(
             'DEBUG MODE',
-            style: TextStyle(
-              fontSize: 16,
+            style: AppTypography.bodyLarge(context,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple,
             ),
@@ -924,16 +916,14 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
               children: [
                 Text(
                   name,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.bodyLarge(context,
                     color: theme.text,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   '🪙 $pointsPerHour/${l10n.hour}',
-                  style: TextStyle(
-                    fontSize: 14,
+                  style: AppTypography.bodyMedium(context,
                     color: theme.text.withOpacity(0.7),
                   ),
                 ),
@@ -943,12 +933,11 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                     const SizedBox(width: 4),
                     Text(
                       '$price',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                      style: AppTypography.bodySmall(context,
                         color: canBuy
                             ? Colors.amber
                             : Colors.red.withOpacity(0.7),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -970,10 +959,9 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
               
               Text(
                 '$owned ${l10n.owned}',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                style: AppTypography.bodyMedium(context,
                   color: theme.text,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               

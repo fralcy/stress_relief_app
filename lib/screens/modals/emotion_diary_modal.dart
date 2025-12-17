@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -143,11 +144,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       children: [
         Text(
           l10n.historyLast2Weeks,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: theme.text,
-          ),
+          style: AppTypography.bodyLarge(context, color: theme.text).copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         
@@ -170,8 +167,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         const SizedBox(height: 12),
         Text(
           l10n.tapDayToViewDetails,
-          style: TextStyle(
-            fontSize: 12,
+          style: AppTypography.bodySmall(context,
             color: theme.text.withOpacity(0.6),
           ),
         ),
@@ -215,10 +211,9 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           children: [
             Text(
               '${date.day}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.bodyMedium(context,
                 color: theme.text,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 2),
@@ -249,9 +244,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
                 ? '${l10n.dailyJournal} [DEBUG: Edit Enabled]'
                 : l10n.dailyJournal)
             : l10n.todaysJournal,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.h4(context,
             color: theme.text,
           ),
         ),
@@ -260,10 +253,9 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         // ========== DATE SUBTITLE ==========
         Text(
           _formatDate(date, l10n),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.bodyMedium(context,
             color: theme.text,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 12),
@@ -351,10 +343,9 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       children: [
         Text(
           question,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.bodyMedium(context,
             color: theme.text,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
@@ -376,8 +367,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
                   Text(
                     labels[index],
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
+                    style: AppTypography.captionSmall(context,
                       color: theme.text.withOpacity(0.8),
                     ),
                   ),
@@ -429,8 +419,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           alignment: Alignment.centerRight,
           child: Text(
             '${_diaryController.text.length}/$_maxDiaryLength',
-            style: TextStyle(
-              fontSize: 12,
+            style: AppTypography.bodySmall(context,
               color: theme.text.withOpacity(0.6),
             ),
           ),
@@ -463,13 +452,12 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         
         // Helper text
         Text(
-          isFirstTimeToday 
+          isFirstTimeToday
             ? l10n.saveToEarnPoints
             : l10n.alreadySavedToday,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: AppTypography.bodySmall(context,
             color: isFirstTimeToday ? theme.primary : theme.border,
-            fontSize: 12,
             fontWeight: isFirstTimeToday ? FontWeight.w500 : FontWeight.normal,
           ),
         ),

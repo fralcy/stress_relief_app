@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
@@ -261,22 +262,15 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                   // Header
                   Text(
                     l10n.welcomeBack,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: theme.text,
-                    ),
+                    style: AppTypography.display(context, color: theme.text),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   Text(
                     l10n.signIn,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: theme.text.withOpacity(0.6),
-                    ),
+                    style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
                     textAlign: TextAlign.center,
                   ),
                   
@@ -367,11 +361,10 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Text(
-                            l10n.signIn,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                        : Builder(
+                            builder: (context) => Text(
+                              l10n.signIn,
+                              style: AppTypography.button(context),
                             ),
                           ),
                   ),
@@ -388,12 +381,10 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      AppLocalizations.of(context).useAsGuest,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: theme.primary,
+                    child: Builder(
+                      builder: (context) => Text(
+                        AppLocalizations.of(context).useAsGuest,
+                        style: AppTypography.button(context, color: theme.primary),
                       ),
                     ),
                   ),
@@ -406,9 +397,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                     children: [
                       Text(
                         l10n.dontHaveAccount,
-                        style: TextStyle(
-                          color: theme.text.withOpacity(0.6),
-                        ),
+                        style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
@@ -420,11 +409,10 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                             ),
                           );
                         },
-                        child: Text(
-                          l10n.signUp,
-                          style: TextStyle(
-                            color: theme.primary,
-                            fontWeight: FontWeight.bold,
+                        child: Builder(
+                          builder: (context) => Text(
+                            l10n.signUp,
+                            style: AppTypography.button(context, color: theme.primary),
                           ),
                         ),
                       ),
@@ -456,11 +444,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: theme.text,
-          ),
+          style: AppTypography.labelMedium(context, color: theme.text),
         ),
         const SizedBox(height: 8),
         TextFormField(

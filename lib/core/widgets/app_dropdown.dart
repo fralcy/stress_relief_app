@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_typography.dart';
 
 /// Custom dropdown với theme pastel
 /// 
@@ -60,10 +61,7 @@ class AppDropdown<T> extends StatelessWidget {
           }
         },
         dropdownColor: context.theme.background,
-        style: TextStyle(
-          color: context.theme.text,
-          fontSize: 16,
-        ),
+        style: AppTypography.bodyLarge(context, color: context.theme.text),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_typography.dart';
 import '../core/utils/navigation_service.dart';
 import 'mobile_portrait_welcome_screen.dart';
 import 'mobile_portrait_screen.dart';
@@ -129,12 +130,10 @@ class _MobilePortraitSplashScreenState extends State<MobilePortraitSplashScreen>
                         color: theme.primary,
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'PeacePal',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: theme.text,
+                      Builder(
+                        builder: (context) => Text(
+                          'PeacePal',
+                          style: AppTypography.h2(context, color: theme.text),
                         ),
                       ),
                     ],

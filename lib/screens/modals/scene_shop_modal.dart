@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_button.dart';
@@ -81,10 +82,9 @@ class _SceneShopModalState extends State<SceneShopModal> {
           const SizedBox(width: 12),
           Text(
             '${l10n.yourPoints}: $currentPoints',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.bodyLarge(context,
               color: theme.text,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -168,8 +168,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
       children: [
         Text(
           description,
-          style: TextStyle(
-            fontSize: 14,
+          style: AppTypography.bodyMedium(context,
             color: theme.text.withValues(alpha: 0.7),
           ),
         ),
@@ -185,10 +184,9 @@ class _SceneShopModalState extends State<SceneShopModal> {
             ),
             child: Text(
               AppLocalizations.of(context).free,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.bodySmall(context,
                 color: Colors.green.shade700,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -198,18 +196,16 @@ class _SceneShopModalState extends State<SceneShopModal> {
               if (!collection.isUnlocked) ...[
                 Text(
                   '${collection.price} ${AppLocalizations.of(context).points}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.bodyLarge(context,
                     color: theme.primary,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (!collection.canAfford) ...[
                   const SizedBox(width: 8),
                   Text(
                     '(${AppLocalizations.of(context).notEnoughPoints})',
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.bodySmall(context,
                       color: Colors.red.shade600,
                     ),
                   ),
@@ -223,10 +219,9 @@ class _SceneShopModalState extends State<SceneShopModal> {
                   ),
                   child: Text(
                     AppLocalizations.of(context).ownedBadge,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    style: AppTypography.bodySmall(context,
                       color: Colors.green.shade700,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -259,10 +254,9 @@ class _SceneShopModalState extends State<SceneShopModal> {
             const SizedBox(width: 8),
             Text(
               AppLocalizations.of(context).currentlyUsing,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.bodyMedium(context,
                 color: Colors.green.shade700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

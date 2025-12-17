@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_theme.dart';
+import '../core/constants/app_typography.dart';
 import '../core/providers/theme_provider.dart';
 import '../core/providers/locale_provider.dart';
 import '../core/widgets/app_button.dart';
@@ -163,13 +164,14 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
   Widget _buildStepLabel(String label, int stepIndex, AppTheme theme) {
     final isActive = stepIndex == _currentStep;
     final isCompleted = stepIndex < _currentStep;
-    
-    return Text(
-      label,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.normal,
-        color: isActive || isCompleted ? theme.primary : theme.text.withOpacity(0.5),
+
+    return Builder(
+      builder: (context) => Text(
+        label,
+        style: AppTypography.bodySmall(context,
+          color: isActive || isCompleted ? theme.primary : theme.text.withOpacity(0.5),
+          fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.normal,
+        ),
       ),
     );
   }
@@ -231,23 +233,24 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             ),
           ),
           const SizedBox(height: 32),
-          Text(
-            AppLocalizations.of(context).chooseYourTheme,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: theme.text,
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).chooseYourTheme,
+              style: AppTypography.h2(context,
+                color: theme.text,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          Text(
-            AppLocalizations.of(context).pickColorScheme,
-            style: TextStyle(
-              fontSize: 16,
-              color: theme.text.withOpacity(0.7),
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).pickColorScheme,
+              style: AppTypography.bodyLarge(context,
+                color: theme.text.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
 
@@ -314,16 +317,16 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        _getLocalizedThemeName(themeOption.id, AppLocalizations.of(context)),
-                        style: TextStyle(
-                          color: themeOption.text,
-                          fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      Builder(
+                        builder: (context) => Text(
+                          _getLocalizedThemeName(themeOption.id, AppLocalizations.of(context)),
+                          style: AppTypography.captionSmall(context,
+                            color: themeOption.text).copyWith(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       if (isSelected) ...[
                         const SizedBox(height: 4),
@@ -364,23 +367,24 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             ),
           ),
           const SizedBox(height: 32),
-          Text(
-            AppLocalizations.of(context).selectLanguage,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: theme.text,
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).selectLanguage,
+              style: AppTypography.h2(context,
+                color: theme.text,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          Text(
-            AppLocalizations.of(context).choosePreferredLanguage,
-            style: TextStyle(
-              fontSize: 16,
-              color: theme.text.withOpacity(0.7),
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).choosePreferredLanguage,
+              style: AppTypography.bodyLarge(context,
+                color: theme.text.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
 
@@ -461,12 +465,13 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                language,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: theme.text,
+              child: Builder(
+                builder: (context) => Text(
+                  language,
+                  style: AppTypography.h3(context,
+                    color: theme.text).copyWith(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500
+                    ),
                 ),
               ),
             ),
@@ -509,23 +514,24 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             ),
           ),
           const SizedBox(height: 32),
-          Text(
-            AppLocalizations.of(context).audioSettings,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: theme.text,
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).audioSettings,
+              style: AppTypography.h2(context,
+                color: theme.text,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          Text(
-            AppLocalizations.of(context).customizeAudioExperience,
-            style: TextStyle(
-              fontSize: 16,
-              color: theme.text.withOpacity(0.7),
+          Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context).customizeAudioExperience,
+              style: AppTypography.bodyLarge(context,
+                color: theme.text.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
           
@@ -625,12 +631,13 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      AppLocalizations.of(context).enableSFX,
-                      style: TextStyle(
-                        color: theme.text,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    Builder(
+                      builder: (context) => Text(
+                        AppLocalizations.of(context).enableSFX,
+                        style: AppTypography.bodyLarge(context,
+                          color: theme.text,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     Switch(
@@ -721,12 +728,12 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: theme.text,
+              Builder(
+                builder: (context) => Text(
+                  title,
+                  style: AppTypography.h4(context,
+                    color: theme.text
+                  ),
                 ),
               ),
             ],
