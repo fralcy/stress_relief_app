@@ -116,23 +116,21 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     final l10n = AppLocalizations.of(context);
     final history = _getHistory();
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-        // ========== HISTORY SECTION ==========
-        _buildHistorySection(history, theme),
-        
-        const SizedBox(height: 24),
-        Divider(color: theme.border, height: 1, thickness: 1.5),
-        const SizedBox(height: 16),
-        
-        // ========== CHECK-IN SECTION ==========
-        _buildCheckInSection(l10n, theme),
-          ],
-        ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ========== HISTORY SECTION ==========
+          _buildHistorySection(history, theme),
+
+          const SizedBox(height: 24),
+          Divider(color: theme.border, height: 1, thickness: 1.5),
+          const SizedBox(height: 16),
+
+          // ========== CHECK-IN SECTION ==========
+          _buildCheckInSection(l10n, theme),
+        ],
       ),
     );
   }

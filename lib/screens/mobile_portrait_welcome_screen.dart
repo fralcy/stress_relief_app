@@ -213,188 +213,194 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
   }
 
   Widget _buildThemeStep(AppTheme theme) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: theme.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: theme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.palette_outlined,
+              size: 60,
+              color: theme.primary,
+            ),
           ),
-          child: Icon(
-            Icons.palette_outlined,
-            size: 60,
-            color: theme.primary,
+          const SizedBox(height: 32),
+          Text(
+            AppLocalizations.of(context).chooseYourTheme,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: theme.text,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: 32),
-        Text(
-          AppLocalizations.of(context).chooseYourTheme,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: theme.text,
+          const SizedBox(height: 12),
+          Text(
+            AppLocalizations.of(context).pickColorScheme,
+            style: TextStyle(
+              fontSize: 16,
+              color: theme.text.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          AppLocalizations.of(context).pickColorScheme,
-          style: TextStyle(
-            fontSize: 16,
-            color: theme.text.withOpacity(0.7),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 40),
-        
-        // Theme options
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          alignment: WrapAlignment.center,
-          children: AppThemes.all.map((themeOption) {
-            final isSelected = _settings.currentTheme == themeOption.id;
-            
-            return GestureDetector(
-              onTap: () {
-                SfxService().buttonClick();
-                setState(() {
-                  _settings = _settings.copyWith(currentTheme: themeOption.id);
-                });
-                // Preview theme immediately
-                context.read<ThemeProvider>().setTheme(themeOption.id);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 90,
-                height: 110,
-                decoration: BoxDecoration(
-                  color: themeOption.background,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected ? themeOption.primary : themeOption.border,
-                    width: isSelected ? 3 : 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(isSelected ? 0.15 : 0.08),
-                      blurRadius: isSelected ? 12 : 6,
-                      offset: const Offset(0, 2),
+          const SizedBox(height: 40),
+
+          // Theme options
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: AppThemes.all.map((themeOption) {
+              final isSelected = _settings.currentTheme == themeOption.id;
+
+              return GestureDetector(
+                onTap: () {
+                  SfxService().buttonClick();
+                  setState(() {
+                    _settings = _settings.copyWith(currentTheme: themeOption.id);
+                  });
+                  // Preview theme immediately
+                  context.read<ThemeProvider>().setTheme(themeOption.id);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 90,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    color: themeOption.background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? themeOption.primary : themeOption.border,
+                      width: isSelected ? 3 : 1.5,
                     ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Color preview circles
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: themeOption.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: themeOption.secondary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getLocalizedThemeName(themeOption.id, AppLocalizations.of(context)),
-                      style: TextStyle(
-                        color: themeOption.text,
-                        fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (isSelected) ...[
-                      const SizedBox(height: 4),
-                      Icon(
-                        Icons.check_circle,
-                        color: themeOption.primary,
-                        size: 16,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isSelected ? 0.15 : 0.08),
+                        blurRadius: isSelected ? 12 : 6,
+                        offset: const Offset(0, 2),
                       ),
                     ],
-                  ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Color preview circles
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: themeOption.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: themeOption.secondary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _getLocalizedThemeName(themeOption.id, AppLocalizations.of(context)),
+                        style: TextStyle(
+                          color: themeOption.text,
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(height: 4),
+                        Icon(
+                          Icons.check_circle,
+                          color: themeOption.primary,
+                          size: 16,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
   Widget _buildLanguageStep(AppTheme theme) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: theme.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: theme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.language_outlined,
+              size: 60,
+              color: theme.primary,
+            ),
           ),
-          child: Icon(
-            Icons.language_outlined,
-            size: 60,
-            color: theme.primary,
+          const SizedBox(height: 32),
+          Text(
+            AppLocalizations.of(context).selectLanguage,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: theme.text,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: 32),
-        Text(
-          AppLocalizations.of(context).selectLanguage,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: theme.text,
+          const SizedBox(height: 12),
+          Text(
+            AppLocalizations.of(context).choosePreferredLanguage,
+            style: TextStyle(
+              fontSize: 16,
+              color: theme.text.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          AppLocalizations.of(context).choosePreferredLanguage,
-          style: TextStyle(
-            fontSize: 16,
-            color: theme.text.withOpacity(0.7),
+          const SizedBox(height: 40),
+
+          // Language options
+          _buildLanguageOption(
+            theme: theme,
+            flag: '🇬🇧',
+            language: 'English',
+            code: 'en',
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 40),
-        
-        // Language options
-        _buildLanguageOption(
-          theme: theme,
-          flag: '🇬🇧',
-          language: 'English',
-          code: 'en',
-        ),
-        const SizedBox(height: 16),
-        _buildLanguageOption(
-          theme: theme,
-          flag: '🇻🇳',
-          language: 'Tiếng Việt',
-          code: 'vi',
-        ),
-      ],
+          const SizedBox(height: 16),
+          _buildLanguageOption(
+            theme: theme,
+            flag: '🇻🇳',
+            language: 'Tiếng Việt',
+            code: 'vi',
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
