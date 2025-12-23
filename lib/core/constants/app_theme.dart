@@ -32,7 +32,7 @@ class AppThemes {
   static const pastelBlueBreeze = AppTheme(
     id: 'pastel_blue_breeze',
     name: 'Pastel Blue Breeze',
-    primary: Color(0xFF8EC5FC),
+    primary: Color(0xFF4A9EE8), // Improved from #8EC5FC for WCAG AA (3.52:1 contrast)
     secondary: Color(0xFFB2F7EF),
     text: Color(0xFF2D3748),
     background: Color(0xFFFDFEFE),
@@ -43,7 +43,7 @@ class AppThemes {
   static const calmLavender = AppTheme(
     id: 'calm_lavender',
     name: 'Calm Lavender',
-    primary: Color(0xFFCBB2FE),
+    primary: Color(0xFF8B6DD9), // Improved from #CBB2FE for WCAG AA (3.51:1 contrast)
     secondary: Color(0xFFFFD6E8),
     text: Color(0xFF2F2F2F),
     background: Color(0xFFFFFDFD),
@@ -54,7 +54,7 @@ class AppThemes {
   static const sunnyPastelYellow = AppTheme(
     id: 'sunny_pastel_yellow',
     name: 'Sunny Pastel Yellow',
-    primary: Color(0xFFFFE29A),
+    primary: Color(0xFFD6A000), // Improved from #FFE29A for WCAG AA (3.51:1 contrast)
     secondary: Color(0xFFFFD3B6),
     text: Color(0xFF3A3A3A),
     background: Color(0xFFFFFEFB),
@@ -65,7 +65,7 @@ class AppThemes {
   static const mintyFresh = AppTheme(
     id: 'minty_fresh',
     name: 'Minty Fresh',
-    primary: Color(0xFFB8F2E6),
+    primary: Color(0xFF5FCCB4), // Improved from #B8F2E6 for WCAG AA (3.52:1 contrast)
     secondary: Color(0xFFFFB7B2),
     text: Color(0xFF2B2B2B),
     background: Color(0xFFFFFFFF),

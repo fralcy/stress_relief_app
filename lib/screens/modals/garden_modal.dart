@@ -504,16 +504,20 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
                       animation: animController,
                       builder: (context, child) {
                         // Animation dựa trên effect type
-                        Widget plantWidget = Image.asset(
-                          AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
-                          width: 40,
-                          height: 40,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Text(
-                              _getPlantIcon(cell.plantType!),
-                              style: const TextStyle(fontSize: 24),
-                            );
-                          },
+                        Widget plantWidget = Semantics(
+                          image: true,
+                          label: '${_getPlantName(cell.plantType!)} plant, growth: ${cell.growthStage}%',
+                          child: Image.asset(
+                            AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
+                            width: 40,
+                            height: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Text(
+                                _getPlantIcon(cell.plantType!),
+                                style: const TextStyle(fontSize: 24),
+                              );
+                            },
+                          ),
                         );
                         
                         if (effectType == 'plant') {
@@ -831,5 +835,30 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       onPressed: () => _toggleAction(actionKey),
       isDisabled: !canEnable,
     );
+  }
+
+  String _getPlantName(String plantType) {
+    switch (plantType.toLowerCase()) {
+      case 'carrot':
+        return 'Carrot';
+      case 'tomato':
+        return 'Tomato';
+      case 'corn':
+        return 'Corn';
+      case 'sunflower':
+        return 'Sunflower';
+      case 'rose':
+        return 'Rose';
+      case 'tulip':
+        return 'Tulip';
+      case 'wheat':
+        return 'Wheat';
+      case 'pumpkin':
+        return 'Pumpkin';
+      case 'strawberry':
+        return 'Strawberry';
+      default:
+        return plantType;
+    }
   }
 }

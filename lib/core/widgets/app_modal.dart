@@ -111,18 +111,23 @@ class AppModal extends StatelessWidget {
           if (onHelpPressed != null)
             Positioned(
               left: 0,
-              child: IconButton(
-                onPressed: onHelpPressed,
-                icon: const Icon(Icons.help_outline, size: 24),
-                color: theme.primary,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 40,
-                  minHeight: 40,
-                ),
-                style: IconButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              child: Semantics(
+                label: 'Help',
+                button: true,
+                enabled: true,
+                child: IconButton(
+                  onPressed: onHelpPressed,
+                  icon: const Icon(Icons.help_outline, size: 24),
+                  color: theme.primary,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  style: IconButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -131,18 +136,23 @@ class AppModal extends StatelessWidget {
           // Close button (positioned right)
           Positioned(
             right: 0,
-            child: IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.close, size: 24),
-              color: theme.text,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 40,
-                minHeight: 40,
-              ),
-              style: IconButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Semantics(
+              label: 'Close',
+              button: true,
+              enabled: true,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, size: 24),
+                color: theme.text,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 48,
+                  minHeight: 48,
+                ),
+                style: IconButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),

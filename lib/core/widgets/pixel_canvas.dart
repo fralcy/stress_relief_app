@@ -47,25 +47,29 @@ class PixelCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxWidth);
-        
-        return GestureDetector(
-          onTapDown: (details) => _handlePaint(details.localPosition, size),
-          onPanUpdate: (details) => _handlePaint(details.localPosition, size),
-          child: CustomPaint(
-            size: size,
-            painter: _PixelCanvasPainter(
-              pixels: pixels,
-              gridSize: gridSize,
-              zoomLevel: zoomLevel,
-              panX: panX,
-              panY: panY,
+    return Semantics(
+      label: 'Drawing canvas, zoom level $zoomLevel',
+      hint: 'Tap or drag to paint pixels',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = Size(constraints.maxWidth, constraints.maxWidth);
+
+          return GestureDetector(
+            onTapDown: (details) => _handlePaint(details.localPosition, size),
+            onPanUpdate: (details) => _handlePaint(details.localPosition, size),
+            child: CustomPaint(
+              size: size,
+              painter: _PixelCanvasPainter(
+                pixels: pixels,
+                gridSize: gridSize,
+                zoomLevel: zoomLevel,
+                panX: panX,
+                panY: panY,
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

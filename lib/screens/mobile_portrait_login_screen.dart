@@ -409,10 +409,14 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                             ),
                           );
                         },
-                        child: Builder(
-                          builder: (context) => Text(
-                            l10n.signUp,
-                            style: AppTypography.button(context, color: theme.primary),
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          alignment: Alignment.center,
+                          child: Builder(
+                            builder: (context) => Text(
+                              l10n.signUp,
+                              style: AppTypography.button(context, color: theme.primary),
+                            ),
                           ),
                         ),
                       ),

@@ -545,13 +545,13 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                   color: task.isDaily ? theme.primary : theme.border,
                 ),
                 onPressed: () => _toggleIsDaily(index),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 padding: EdgeInsets.zero,
               ),
               IconButton(
                 icon: Icon(Icons.close, color: theme.primary),
                 onPressed: () => _deleteTask(index),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 padding: EdgeInsets.zero,
               ),
             ],
@@ -608,7 +608,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                 IconButton(
                   onPressed: () => _updateTask(index),
                   icon: Icon(Icons.check, color: theme.primary),
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   padding: EdgeInsets.zero,
                 )
               else
@@ -619,14 +619,14 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                     });
                   },
                   icon: Icon(Icons.edit, color: theme.primary),
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   padding: EdgeInsets.zero,
                 ),
               if (_isDebugMode)
                 IconButton(
                   onPressed: () => _debugTriggerTaskNotification(index),
                   icon: const Icon(Icons.bug_report, color: Colors.deepPurple),
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   padding: EdgeInsets.zero,
                   tooltip: '[DEBUG] Trigger notification in 10s',
                 ),

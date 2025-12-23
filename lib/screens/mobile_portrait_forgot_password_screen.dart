@@ -261,10 +261,14 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                         onTap: () {
                           Navigator.pop(context);
                         },
-                        child: Builder(
-                          builder: (context) => Text(
-                            l10n.backToLogin,
-                            style: AppTypography.button(context, color: theme.primary),
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          alignment: Alignment.center,
+                          child: Builder(
+                            builder: (context) => Text(
+                              l10n.backToLogin,
+                              style: AppTypography.button(context, color: theme.primary),
+                            ),
                           ),
                         ),
                       ),

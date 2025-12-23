@@ -436,13 +436,23 @@ class _DrawingModalState extends State<DrawingModal> {
               // Save button
               GestureDetector(
                 onTap: _onSaveName,
-                child: const Icon(Icons.check, color: Colors.green, size: 20),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.check, color: Colors.green, size: 24),
+                ),
               ),
               const SizedBox(width: 8),
               // Cancel button
               GestureDetector(
                 onTap: _onCancelEdit,
-                child: const Icon(Icons.close, color: Colors.red, size: 20),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.close, color: Colors.red, size: 24),
+                ),
               ),
             ] else ...[
               // Display name
@@ -456,7 +466,12 @@ class _DrawingModalState extends State<DrawingModal> {
               // Edit button
               GestureDetector(
                 onTap: _onEditName,
-                child: Icon(Icons.edit, color: theme.primary, size: 16),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.edit, color: theme.primary, size: 24),
+                ),
               ),
             ],
           ],
@@ -593,22 +608,27 @@ class _DrawingModalState extends State<DrawingModal> {
             children: row.map((colorHex) {
               final currentIndex = index++;
               final isSelected = currentIndex == _selectedColorIndex;
-              return GestureDetector(
-                onTap: () => _onColorSelected(currentIndex),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: Color(DrawingPalette.hexToInt(colorHex)),
-                    border: Border.all(
-                      color: isSelected ? theme.primary : theme.border,
-                      width: isSelected ? 3 : 1.5,
+              return Semantics(
+                label: 'Color ${currentIndex + 1}${isSelected ? ", selected" : ""}',
+                button: true,
+                selected: isSelected,
+                child: GestureDetector(
+                  onTap: () => _onColorSelected(currentIndex),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: Color(DrawingPalette.hexToInt(colorHex)),
+                      border: Border.all(
+                        color: isSelected ? theme.primary : theme.border,
+                        width: isSelected ? 3 : 1.5,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: isSelected
+                          ? [BoxShadow(color: theme.primary.withOpacity(0.5), blurRadius: 8)]
+                          : null,
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: isSelected
-                        ? [BoxShadow(color: theme.primary.withOpacity(0.5), blurRadius: 8)]
-                        : null,
                   ),
                 ),
               );

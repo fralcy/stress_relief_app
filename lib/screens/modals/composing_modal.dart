@@ -421,13 +421,23 @@ class _ComposingModalState extends State<ComposingModal> {
               // Save button
               GestureDetector(
                 onTap: _onSaveName,
-                child: const Icon(Icons.check, color: Colors.green, size: 20),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.check, color: Colors.green, size: 24),
+                ),
               ),
               const SizedBox(width: 8),
               // Cancel button
               GestureDetector(
                 onTap: _onCancelEdit,
-                child: const Icon(Icons.close, color: Colors.red, size: 20),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.close, color: Colors.red, size: 24),
+                ),
               ),
             ] else ...[
               // Display name
@@ -441,7 +451,12 @@ class _ComposingModalState extends State<ComposingModal> {
               // Edit button
               GestureDetector(
                 onTap: _onEditName,
-                child: Icon(Icons.edit, color: theme.primary, size: 16),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: Icon(Icons.edit, color: theme.primary, size: 24),
+                ),
               ),
             ],
           ],
@@ -662,16 +677,20 @@ class _ComposingModalState extends State<ComposingModal> {
               final note = index + 1;
               final isSelected = _selectedNote == note;
               
-              return GestureDetector(
-                onTap: () => _onNoteSelected(note),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: isSelected ? theme.secondary : theme.primary,
-                    border: Border.all(
-                      color: isSelected ? theme.text : theme.border,
+              return Semantics(
+                label: 'Note ${note}${isSelected ? ", selected" : ""}',
+                button: true,
+                selected: isSelected,
+                child: GestureDetector(
+                  onTap: () => _onNoteSelected(note),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected ? theme.secondary : theme.primary,
+                      border: Border.all(
+                        color: isSelected ? theme.text : theme.border,
                       width: isSelected ? 2 : 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -683,6 +702,7 @@ class _ComposingModalState extends State<ComposingModal> {
                     ),
                   ),
                 ),
+              ),
               );
             }),
           ],

@@ -552,11 +552,15 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                 children: [
                   // Background bể cá - theo theme hiện tại
                   Positioned.fill(
-                    child: Image.asset(
-                      AssetLoader.getTankAsset(
-                        DataManager().userSettings.currentScenes[2].sceneSet,
+                    child: Semantics(
+                      image: true,
+                      label: 'Aquarium tank background',
+                      child: Image.asset(
+                        AssetLoader.getTankAsset(
+                          DataManager().userSettings.currentScenes[2].sceneSet,
+                        ),
+                        fit: BoxFit.cover,
                       ),
-                      fit: BoxFit.cover,
                     ),
                   ),
                   
@@ -647,10 +651,14 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             child: Transform(
               alignment: Alignment.center,
               transform: Matrix4.identity()..scale(anim.flipHorizontal ? -1.0 : 1.0, 1.0),
-              child: Image.asset(
-                AssetLoader.getFishAsset(fish.type),
-                width: 48,
-                height: 48,
+              child: Semantics(
+                image: true,
+                label: '${_getFishName(fish.type)} fish',
+                child: Image.asset(
+                  AssetLoader.getFishAsset(fish.type),
+                  width: 48,
+                  height: 48,
+                ),
               ),
             ),
           ),
@@ -901,10 +909,14 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       child: Row(
         children: [
           // Ảnh cá
-          Image.asset(
-            AssetLoader.getFishAsset(fishType),
-            width: 48,
-            height: 48,
+          Semantics(
+            image: true,
+            label: '${_getFishName(fishType)} fish',
+            child: Image.asset(
+              AssetLoader.getFishAsset(fishType),
+              width: 48,
+              height: 48,
+            ),
           ),
           
           const SizedBox(width: 12),
@@ -977,6 +989,25 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
         ],
       ),
     );
+  }
+
+  String _getFishName(String fishType) {
+    switch (fishType.toLowerCase()) {
+      case 'betta':
+        return 'Betta';
+      case 'guppy':
+        return 'Guppy';
+      case 'neon':
+        return 'Neon Tetra';
+      case 'molly':
+        return 'Molly';
+      case 'cory':
+        return 'Cory Catfish';
+      case 'platy':
+        return 'Platy';
+      default:
+        return fishType;
+    }
   }
 }
 

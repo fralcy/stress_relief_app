@@ -64,9 +64,14 @@ class _AppHeaderState extends State<AppHeader> {
             icon: Icons.landscape,
             onPressed: widget.onSceneShopPressed,
             theme: theme,
+            label: 'Scene Shop',
           ),
           const Spacer(),
-          _buildCoinDisplay(currentPoints, theme),
+          Semantics(
+            label: 'Points: $currentPoints',
+            readOnly: true,
+            child: _buildCoinDisplay(currentPoints, theme),
+          ),
           const Spacer(),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -76,6 +81,7 @@ class _AppHeaderState extends State<AppHeader> {
                   icon: Icons.help_outline,
                   onPressed: widget.onHelpPressed!,
                   theme: theme,
+                  label: 'Help',
                 ),
                 const SizedBox(width: 8),
               ],
@@ -83,6 +89,7 @@ class _AppHeaderState extends State<AppHeader> {
                 icon: Icons.settings,
                 onPressed: () => SettingsModal.show(context),
                 theme: theme,
+                label: 'Settings',
               ),
             ],
           ),
@@ -95,18 +102,24 @@ class _AppHeaderState extends State<AppHeader> {
     required IconData icon,
     required VoidCallback onPressed,
     required AppTheme theme,
+    String? label,
   }) {
-    return Material(
-      color: theme.primary,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onPressed,
+    return Semantics(
+      label: label,
+      button: true,
+      enabled: true,
+      child: Material(
+        color: theme.primary,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 48,
-          height: 48,
-          alignment: Alignment.center,
-          child: Icon(icon, size: 24, color: theme.background),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: Icon(icon, size: 24, color: theme.background),
+          ),
         ),
       ),
     );

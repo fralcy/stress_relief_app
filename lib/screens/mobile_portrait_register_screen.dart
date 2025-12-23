@@ -306,10 +306,14 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                         onTap: () {
                           Navigator.pop(context);
                         },
-                        child: Builder(
-                          builder: (context) => Text(
-                            l10n.signIn,
-                            style: AppTypography.button(context, color: theme.primary),
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          alignment: Alignment.center,
+                          child: Builder(
+                            builder: (context) => Text(
+                              l10n.signIn,
+                              style: AppTypography.button(context, color: theme.primary),
+                            ),
                           ),
                         ),
                       ),

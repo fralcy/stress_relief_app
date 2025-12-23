@@ -42,6 +42,7 @@ class NavMenuFooter extends StatelessWidget {
             isActive: isActive,
             onPressed: () => onSceneChanged(scene),
             theme: theme,
+            label: _getSceneLabel(scene),
           );
         }).toList(),
       ),
@@ -53,23 +54,30 @@ class NavMenuFooter extends StatelessWidget {
     required bool isActive,
     required VoidCallback onPressed,
     required AppTheme theme,
+    String? label,
   }) {
     final bgColor = isActive ? theme.secondary : theme.primary;
-    
-    return Material(
-      color: bgColor,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onPressed,
+
+    return Semantics(
+      label: label,
+      button: true,
+      enabled: true,
+      selected: isActive,
+      child: Material(
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 60,
-          height: 60,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 32,
-            color: theme.background,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: 60,
+            height: 60,
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 32,
+              color: theme.background,
+            ),
           ),
         ),
       ),
@@ -88,6 +96,21 @@ class NavMenuFooter extends StatelessWidget {
         return Icons.palette;
       case SceneType.musicRoom:
         return Icons.music_note;
+    }
+  }
+
+  String _getSceneLabel(SceneType scene) {
+    switch (scene) {
+      case SceneType.livingRoom:
+        return 'Living Room';
+      case SceneType.garden:
+        return 'Garden';
+      case SceneType.aquarium:
+        return 'Aquarium';
+      case SceneType.paintingRoom:
+        return 'Painting Room';
+      case SceneType.musicRoom:
+        return 'Music Room';
     }
   }
 }
