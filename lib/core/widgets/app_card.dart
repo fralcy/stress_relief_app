@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_shapes.dart';
 import '../constants/app_typography.dart';
 
 /// Custom card với header và content
@@ -45,19 +46,27 @@ class _AppCardState extends State<AppCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    
     return Container(
       width: widget.width,
       decoration: BoxDecoration(
-        color: theme.background,
-        border: Border.all(color: theme.border, width: 1.5),
-        borderRadius: BorderRadius.circular(16), // Bo tròn góc
+        // M3 surface color
+        color: context.surfaceColor,
+
+        // M3 outline color for border
+        border: Border.all(
+          color: context.outline,
+          width: 1,
+        ),
+
+        // M3 shape (large)
+        borderRadius: context.shapes.large.borderRadius as BorderRadius,
+
+        // M3 elevation level 1 (subtle shadow)
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: context.shadow.withValues(alpha: 0.15),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -70,7 +79,7 @@ class _AppCardState extends State<AppCard> {
           // Content (có thể collapse)
           if (_isExpanded) ...[
             Divider(
-              color: theme.border,
+              color: context.outlineVariant,
               height: 1,
               thickness: 1,
             ),
@@ -88,13 +97,20 @@ class _AppCardState extends State<AppCard> {
     return Builder(
       builder: (context) {
         final theme = context.theme;
-        
+        final borderRadius = context.shapes.large.borderRadius as BorderRadius;
+
         return InkWell(
           onTap: widget.isExpandable ? _toggleExpanded : null,
+
+          // M3 state layers for interactive header
+          splashColor: context.onSurface.withValues(alpha: 0.12),
+          highlightColor: context.onSurface.withValues(alpha: 0.08),
+
           borderRadius: BorderRadius.vertical(
-            top: const Radius.circular(16),
-            bottom: _isExpanded ? Radius.zero : const Radius.circular(16),
+            top: borderRadius.topLeft,
+            bottom: _isExpanded ? Radius.zero : borderRadius.bottomLeft,
           ),
+
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: widget.isExpandable
@@ -108,13 +124,13 @@ class _AppCardState extends State<AppCard> {
                           style: AppTypography.h4(context, color: theme.text),
                         ),
                       ),
-                      
-                      // Arrow (positioned right)
+
+                      // Arrow (positioned right) with M3 color
                       Positioned(
                         right: 0,
                         child: Icon(
                           _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          color: theme.text,
+                          color: context.onSurfaceVariant,
                           size: 24,
                         ),
                       ),

@@ -62,22 +62,29 @@ class AppSlider extends StatelessWidget {
             Expanded(
               child: SliderTheme(
                 data: SliderThemeData(
-                  // Track
-                  activeTrackColor: theme.primary,
-                  inactiveTrackColor: theme.border,
+                  // M3 Track colors
+                  activeTrackColor: context.primaryColor,
+                  inactiveTrackColor: context.surfaceVariant,
                   trackHeight: 8,
                   trackShape: const RoundedRectSliderTrackShape(),
 
-                  // Thumb - WCAG AA compliant (48dp diameter)
-                  thumbColor: theme.primary,
+                  // M3 Thumb - WCAG AA compliant (48dp diameter)
+                  thumbColor: context.primaryColor,
                   thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 24, // Increased from 10 to 24 (48dp diameter)
+                    enabledThumbRadius: 24, // 48dp diameter for WCAG AA
                   ),
 
-                  // Overlay (khi press)
-                  overlayColor: theme.primary.withOpacity(0.2),
+                  // M3 Overlay (touch feedback)
+                  overlayColor: context.primaryColor.withValues(alpha: 0.12),
                   overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 28, // Increased from 20 to 28
+                    overlayRadius: 28,
+                  ),
+
+                  // M3 Value indicator
+                  valueIndicatorColor: context.primaryColor,
+                  valueIndicatorTextStyle: AppTypography.labelSmall(
+                    context,
+                    color: context.onPrimary,
                   ),
 
                   // Minimum interactive dimension

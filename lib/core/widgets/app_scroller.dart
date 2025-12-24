@@ -40,7 +40,7 @@ class AppScroller extends StatelessWidget {
           data: Theme.of(context).copyWith(
             scrollbarTheme: ScrollbarThemeData(
               thumbColor: WidgetStateProperty.all(theme.primary),
-              trackColor: WidgetStateProperty.all(theme.border.withOpacity(0.3)),
+              trackColor: WidgetStateProperty.all(theme.border.withValues(alpha: 0.3)),
               trackBorderColor: WidgetStateProperty.all(Colors.transparent),
               radius: const Radius.circular(4),
               thickness: WidgetStateProperty.all(8),

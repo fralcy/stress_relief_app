@@ -41,9 +41,9 @@ class SpeechBubble extends StatelessWidget {
           margin: _getMarginForTail(),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: theme.background.withOpacity(0.75), // 75% opacity
+            color: theme.background.withValues(alpha: 0.75), // 75% opacity
             border: Border.all(
-              color: theme.primary.withOpacity(0.75), // 75% opacity
+              color: theme.primary.withValues(alpha: 0.75), // 75% opacity
               width: 2,
             ),
             borderRadius: BorderRadius.circular(20), // Bo tròn góc oval
@@ -90,11 +90,11 @@ class _BubbleTailPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = theme.background.withOpacity(0.75)
+      ..color = theme.background.withValues(alpha: 0.75)
       ..style = PaintingStyle.fill;
 
     final borderPaint = Paint()
-      ..color = theme.primary.withOpacity(0.75)
+      ..color = theme.primary.withValues(alpha: 0.75)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

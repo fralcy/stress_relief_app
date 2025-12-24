@@ -24,6 +24,30 @@ class AppTheme {
 
   /// Get preview colors for settings
   List<Color> get previewColors => [primary, secondary, text, background, border];
+
+  /// Generate Material 3 ColorScheme from theme colors
+  /// This enables full M3 support with semantic colors
+  ColorScheme toColorScheme() {
+    if (isDark) {
+      return ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.dark,
+        // Override with custom colors while letting M3 generate harmonious variants
+        primary: primary,
+        secondary: secondary,
+        surface: background,
+      );
+    } else {
+      return ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.light,
+        // Override with custom colors while letting M3 generate harmonious variants
+        primary: primary,
+        secondary: secondary,
+        surface: background,
+      );
+    }
+  }
 }
 
 /// All available themes

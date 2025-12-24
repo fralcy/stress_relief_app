@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_shapes.dart';
 import '../constants/app_typography.dart';
 
 /// Custom dropdown với theme pastel
@@ -30,23 +31,35 @@ class AppDropdown<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: context.theme.background,
-        border: Border.all(color: context.theme.border, width: 1.5),
-        borderRadius: BorderRadius.circular(8),
+        // M3 surface color
+        color: context.surfaceColor,
+
+        // M3 outline color
+        border: Border.all(
+          color: context.outline,
+          width: 1,
+        ),
+
+        // M3 shape (small)
+        borderRadius: context.shapes.small.borderRadius as BorderRadius,
       ),
       child: DropdownButton<T>(
         value: value,
         isExpanded: true,
         underline: const SizedBox(), // Remove default underline
+
+        // M3 icon colors
         icon: Icon(
           Icons.arrow_drop_down,
-          color: context.theme.text,
+          color: context.onSurfaceVariant,
           size: 24,
         ),
+        iconDisabledColor: context.onSurface.withValues(alpha: 0.38),
+
         hint: hint != null
             ? Text(
                 hint!,
-                style: TextStyle(color: context.theme.text),
+                style: TextStyle(color: context.onSurfaceVariant),
               )
             : null,
         items: items.map((item) {
@@ -60,7 +73,9 @@ class AppDropdown<T> extends StatelessWidget {
             onChanged(newValue);
           }
         },
-        dropdownColor: context.theme.background,
+
+        // M3 dropdown menu styling
+        dropdownColor: context.surfaceColor,
         style: AppTypography.bodyLarge(context, color: context.theme.text),
       ),
     );

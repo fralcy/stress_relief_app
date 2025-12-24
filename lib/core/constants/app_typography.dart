@@ -186,6 +186,39 @@ class AppTypography {
       color: color,
     );
   }
+
+  // ==================== M3 INTEGRATION ====================
+
+  /// Generate Material 3 compliant TextTheme
+  /// Maps AppTypography to M3 standard naming
+  static TextTheme toTextTheme(BuildContext context, {Color? color}) {
+    return TextTheme(
+      // Display styles (largest text)
+      displayLarge: display(context, color: color),
+      displayMedium: h1(context, color: color),
+      displaySmall: h2(context, color: color),
+
+      // Headline styles
+      headlineLarge: h2(context, color: color),
+      headlineMedium: h3(context, color: color),
+      headlineSmall: h4(context, color: color),
+
+      // Title styles
+      titleLarge: h3(context, color: color),
+      titleMedium: h4(context, color: color),
+      titleSmall: labelLarge(context, color: color, fontWeight: FontWeight.w600),
+
+      // Body styles
+      bodyLarge: bodyLarge(context, color: color),
+      bodyMedium: bodyMedium(context, color: color),
+      bodySmall: bodySmall(context, color: color),
+
+      // Label styles
+      labelLarge: labelLarge(context, color: color),
+      labelMedium: labelMedium(context, color: color),
+      labelSmall: labelSmall(context, color: color),
+    );
+  }
 }
 
 /// Extension cho BuildContext để dễ sử dụng

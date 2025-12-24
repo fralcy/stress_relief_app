@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_shapes.dart';
 import '../constants/app_typography.dart';
 import 'app_scroller.dart';
 
@@ -47,21 +48,24 @@ class AppModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    
     return Container(
       constraints: BoxConstraints(
         maxHeight: maxHeight,
       ),
       decoration: BoxDecoration(
-        color: theme.background,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24), // Bo tròn góc trên
+        // M3 surface color
+        color: context.surfaceColor,
+
+        // M3 shape (extra large for modals)
+        borderRadius: BorderRadius.vertical(
+          top: (context.shapes.extraLarge.borderRadius as BorderRadius).topLeft,
         ),
+
+        // M3 outline border
         border: Border(
-          top: BorderSide(color: theme.border, width: 2),
-          left: BorderSide(color: theme.border, width: 2),
-          right: BorderSide(color: theme.border, width: 2),
+          top: BorderSide(color: context.outline, width: 1),
+          left: BorderSide(color: context.outline, width: 1),
+          right: BorderSide(color: context.outline, width: 1),
         ),
       ),
       child: Column(
@@ -70,11 +74,11 @@ class AppModal extends StatelessWidget {
           // Header
           _buildHeader(context),
           
-          // Divider
+          // M3 Divider
           Divider(
-            color: theme.border,
+            color: context.outlineVariant,
             height: 1,
-            thickness: 1.5,
+            thickness: 1,
           ),
           
           // Scrollable content với custom scroller
@@ -118,16 +122,17 @@ class AppModal extends StatelessWidget {
                 child: IconButton(
                   onPressed: onHelpPressed,
                   icon: const Icon(Icons.help_outline, size: 24),
-                  color: theme.primary,
+                  // M3 semantic color for primary action
+                  color: context.primaryColor,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 48,
                     minHeight: 48,
                   ),
                   style: IconButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    // M3 state layers
+                    foregroundColor: context.primaryColor,
+                    shape: context.shapes.small,
                   ),
                 ),
               ),
@@ -143,16 +148,17 @@ class AppModal extends StatelessWidget {
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close, size: 24),
-                color: theme.text,
+                // M3 semantic color for neutral action
+                color: context.onSurfaceVariant,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(
                   minWidth: 48,
                   minHeight: 48,
                 ),
                 style: IconButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  // M3 state layers
+                  foregroundColor: context.onSurfaceVariant,
+                  shape: context.shapes.small,
                 ),
               ),
             ),

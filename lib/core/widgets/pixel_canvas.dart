@@ -140,7 +140,7 @@ class _PixelCanvasPainter extends CustomPainter {
 
     // Vẽ grid lines
     final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
+      ..color = Colors.grey.withValues(alpha: 0.3)
       ..strokeWidth = 0.5;
 
     for (int i = 0; i <= displayGridSize; i++) {

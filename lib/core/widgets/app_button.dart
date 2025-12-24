@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_shapes.dart';
 import '../constants/app_typography.dart';
 
 /// Custom button với theme pastel
@@ -35,29 +36,23 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    
-    // Determine colors based on state and theme type
+
+    // M3 Semantic Color Usage
     Color backgroundColor;
     Color foregroundColor;
-    
+
     if (isDisabled) {
-      if (theme.isDark) {
-        // Disabled - Dark
-        backgroundColor = theme.primary.withOpacity(0.5);
-        foregroundColor = theme.background.withOpacity(0.6);
-      } else {
-        // Disabled - Light
-        backgroundColor = theme.border;
-        foregroundColor = theme.background;
-      }
+      // M3 disabled state colors
+      backgroundColor = context.onSurface.withValues(alpha: 0.12);
+      foregroundColor = context.onSurface.withValues(alpha: 0.38);
     } else if (isActive) {
-      // Active (Dark/Light)
+      // Active state uses secondary color
       backgroundColor = theme.secondary;
-      foregroundColor = theme.background;
+      foregroundColor = context.onSecondary;
     } else {
-      // Normal (Dark/Light)
+      // Normal state uses primary color
       backgroundColor = theme.primary;
-      foregroundColor = theme.background;
+      foregroundColor = context.onPrimary;
     }
 
     return SizedBox(
@@ -67,21 +62,33 @@ class AppButton extends StatelessWidget {
         // Giữ onPressed là null khi disabled
         onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          // Sử dụng cả 2 thuộc tính để ghi đè màu disabled mặc định của Flutter
+          // M3 colors with semantic meaning
           backgroundColor: backgroundColor,
-          disabledBackgroundColor: backgroundColor, 
           foregroundColor: foregroundColor,
+
+          // Ép màu khi disabled giống màu background (custom hoàn toàn)
+          disabledBackgroundColor: backgroundColor,
           disabledForegroundColor: foregroundColor,
-          
+
+          // M3 elevation (flat design)
           elevation: 0,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+
+          // M3 shape (centralized)
+          shape: context.shapes.medium,
+
+          // WCAG AA + M3 minimum touch target
+          minimumSize: Size(
+            icon != null && label == null ? 48 : 64,
+            48,
           ),
+
           padding: EdgeInsets.symmetric(
             horizontal: label != null ? 20 : 16,
             vertical: 12,
           ),
+
+          // Flutter tự động tính toán hiệu ứng nhấn dựa trên foregroundColor
         ),
         child: _buildContent(),
       ),

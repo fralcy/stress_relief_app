@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'core/constants/app_colors.dart';
+import 'core/constants/app_shapes.dart';
+import 'core/constants/app_typography.dart';
 import 'core/utils/locale_storage.dart';
 import 'core/l10n/app_localizations_delegate.dart';
 import 'core/utils/data_manager.dart';
@@ -91,24 +92,92 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final locale = context.watch<LocaleProvider>().currentLocale;
+    final appTheme = context.watch<ThemeProvider>().currentTheme;
+
     return MaterialApp(
-      title: 'Stress Relief App',
+      title: 'PeacePal - Stress Relief App',
+
+      // Material 3 Theme with full M3 support
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.light(
-          primary: context.theme.primary,
-          secondary: context.theme.secondary,
-          surface: context.theme.background,
-          background: context.theme.background,
+
+        // M3 ColorScheme generated from AppTheme with semantic colors
+        colorScheme: appTheme.toColorScheme(),
+
+        // M3 Typography mapped from AppTypography
+        textTheme: AppTypography.toTextTheme(context, color: appTheme.text),
+
+        // Scaffold background
+        scaffoldBackgroundColor: appTheme.background,
+
+        // M3 Card theme
+        cardTheme: CardThemeData(
+          elevation: 0,
+          shape: AppShapes.large,
+          shadowColor: Colors.black.withValues(alpha: 0.05),
         ),
-        scaffoldBackgroundColor: context.theme.background,
-        textTheme: TextTheme(
-          bodyLarge: TextStyle(color: context.theme.text),
-          bodyMedium: TextStyle(color: context.theme.text),
+
+        // M3 Elevated Button theme
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            shape: AppShapes.medium,
+          ),
+        ),
+
+        // M3 Filled Button theme
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            shape: AppShapes.medium,
+          ),
+        ),
+
+        // M3 Outlined Button theme
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            shape: AppShapes.medium,
+          ),
+        ),
+
+        // M3 Text Button theme
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            shape: AppShapes.medium,
+          ),
+        ),
+
+        // M3 Input Decoration theme
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: AppShapes.small.borderRadius as BorderRadius,
+          ),
+          filled: true,
+        ),
+
+        // M3 Slider theme (maintain WCAG AA compliance)
+        sliderTheme: const SliderThemeData(
+          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 24), // 48dp diameter for WCAG AA
+          overlayShape: RoundSliderOverlayShape(overlayRadius: 28),
+        ),
+
+        // M3 Dialog theme
+        dialogTheme: DialogThemeData(
+          shape: AppShapes.extraLarge,
+          elevation: 3,
+        ),
+
+        // M3 Bottom Sheet theme
+        bottomSheetTheme: BottomSheetThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: (AppShapes.extraLarge.borderRadius as BorderRadius).topLeft,
+            ),
+          ),
         ),
       ),
+
       // Localization
-      locale: locale, // ← ĐỔI TỪ _locale THÀNH locale
+      locale: locale,
       supportedLocales: LocaleStorage.supportedLocales,
       localizationsDelegates: const [
         AppLocalizationsDelegate(),
@@ -116,7 +185,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      // Bắt đầu với splash screen
+
+      // Start with splash screen
       home: const MobilePortraitSplashScreen(),
     );
   }
