@@ -23,6 +23,8 @@ import 'modals/drawing_modal.dart';
 import 'modals/gallery_modal.dart';
 import 'modals/composing_modal.dart';
 import 'modals/library_modal.dart';
+import 'modals/breathing_exercise_modal.dart';
+import 'modals/sleep_guide_modal.dart';
 import 'mobile_portrait_tutorial_screen.dart';
 import 'package:flutter/foundation.dart';
 import '../core/utils/auth_service.dart';
@@ -336,6 +338,22 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             onPressed: () {
               SfxService().buttonClick();
               EmotionDiaryModal.show(context);
+            },
+          ),
+          FeatureButton(
+            icon: Icons.air,
+            label: l10n.breathing,
+            onPressed: () {
+              SfxService().buttonClick();
+              BreathingExerciseModal.show(context);
+            },
+          ),
+          FeatureButton(
+            icon: Icons.bedtime,
+            label: l10n.sleep,
+            onPressed: () {
+              SfxService().buttonClick();
+              SleepGuideModal.show(context);
             },
           ),
         ];
