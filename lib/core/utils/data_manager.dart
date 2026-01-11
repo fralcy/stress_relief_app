@@ -32,6 +32,9 @@ class DataManager {
   static const String _aquariumProgressBox = 'aquariumProgressBox';
   static const String _paintingProgressBox = 'paintingProgressBox';
   static const String _musicProgressBox = 'musicProgressBox';
+  static const String _breathingSessionsBox = 'breathingSessionsBox';
+  static const String _sleepSessionsBox = 'sleepSessionsBox';
+  static const String _sleepSettingsBox = 'sleepSettingsBox';
   
   // Hive boxes
   late Box<UserProfile> _userProfileHive;
@@ -42,6 +45,9 @@ class DataManager {
   late Box<AquariumProgress> _aquariumProgressHive;
   late Box<PaintingProgress> _paintingProgressHive;
   late Box<MusicProgress> _musicProgressHive;
+  late Box<BreathingSession> _breathingSessionsHive;
+  late Box<SleepSession> _sleepSessionsHive;
+  late Box<SleepSettings> _sleepSettingsHive;
   
   bool _isInitialized = false;
   
@@ -77,6 +83,10 @@ class DataManager {
     Hive.registerAdapter(InstrumentAdapter());
     Hive.registerAdapter(NoteAdapter());
     Hive.registerAdapter(MusicTrackAdapter());
+    // Breathing & Sleep models (typeId: 18-20)
+    Hive.registerAdapter(BreathingSessionAdapter());
+    Hive.registerAdapter(SleepSessionAdapter());
+    Hive.registerAdapter(SleepSettingsAdapter());
     
     // Initialize encryption
     if (!_encryption.isInitialized) {
@@ -92,7 +102,15 @@ class DataManager {
     _aquariumProgressHive = await Hive.openBox<AquariumProgress>(_aquariumProgressBox);
     _paintingProgressHive = await Hive.openBox<PaintingProgress>(_paintingProgressBox);
     _musicProgressHive = await Hive.openBox<MusicProgress>(_musicProgressBox);
-    
+    _breathingSessionsHive = await Hive.openBox<BreathingSession>(_breathingSessionsBox);
+    _sleepSessionsHive = await Hive.openBox<SleepSession>(_sleepSessionsBox);
+    _sleepSettingsHive = await Hive.openBox<SleepSettings>(_sleepSettingsBox);
+
+    // Initialize default sleep settings if empty
+    if (_sleepSettingsHive.isEmpty) {
+      await _sleepSettingsHive.put('current', SleepSettings.initial());
+    }
+
     // Tạo default data theo user mode
     await _initializeUserData();
     
@@ -364,6 +382,39 @@ class DataManager {
   
   Future<void> saveMusicProgress(MusicProgress progress) async {
     await _musicProgressHive.put('current', progress);
+    await _updateLastModifiedTime();
+  }
+
+  // ==================== BREATHING SESSIONS ====================
+
+  List<BreathingSession> get breathingSessions {
+    return _breathingSessionsHive.values.toList();
+  }
+
+  Future<void> addBreathingSession(BreathingSession session) async {
+    await _breathingSessionsHive.add(session);
+    await _updateLastModifiedTime();
+  }
+
+  // ==================== SLEEP SESSIONS ====================
+
+  List<SleepSession> get sleepSessions {
+    return _sleepSessionsHive.values.toList();
+  }
+
+  Future<void> addSleepSession(SleepSession session) async {
+    await _sleepSessionsHive.add(session);
+    await _updateLastModifiedTime();
+  }
+
+  // ==================== SLEEP SETTINGS ====================
+
+  SleepSettings get sleepSettings {
+    return _sleepSettingsHive.get('current') ?? SleepSettings.initial();
+  }
+
+  Future<void> saveSleepSettings(SleepSettings settings) async {
+    await _sleepSettingsHive.put('current', settings);
     await _updateLastModifiedTime();
   }
 
