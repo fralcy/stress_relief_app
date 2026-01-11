@@ -11,6 +11,7 @@ class BgmService {
   final AudioPlayer _bgmPlayer = AudioPlayer();
   bool _isInitialized = false;
   String? _currentBgm;
+  double _currentVolume = 0.5; // Track current volume (0.0-1.0)
 
   /// Map BGM name sang file path
   static const Map<String, String> _bgmAssets = {
@@ -58,8 +59,9 @@ class BgmService {
   /// Apply settings từ UserSettings
   Future<void> _applySettings(String bgm, int volume) async {
     _currentBgm = bgm;
-    await _bgmPlayer.setVolume(volume / 100.0);
-    
+    _currentVolume = volume / 100.0;
+    await _bgmPlayer.setVolume(_currentVolume);
+
     final assetPath = _bgmAssets[bgm];
     if (assetPath != null) {
       await _bgmPlayer.play(AssetSource(assetPath));
@@ -83,7 +85,8 @@ class BgmService {
   /// Đổi volume (0-100)
   Future<void> changeVolume(int volume) async {
     if (!_isInitialized) await initialize();
-    await _bgmPlayer.setVolume(volume / 100.0);
+    _currentVolume = volume / 100.0;
+    await _bgmPlayer.setVolume(_currentVolume);
   }
 
   /// Pause nhạc
@@ -102,6 +105,29 @@ class BgmService {
   Future<void> stop() async {
     if (!_isInitialized) return;
     await _bgmPlayer.stop();
+  }
+
+  /// Fade out BGM over duration then stop
+  /// Used by Sleep Guide timer for smooth transition
+  Future<void> fadeOutAndStop(Duration fadeDuration) async {
+    if (!_isInitialized) return;
+
+    final originalVolume = _currentVolume;
+    const steps = 20; // 20 volume steps for smooth fade
+    final stepDuration = fadeDuration.inMilliseconds ~/ steps;
+
+    // Gradually reduce volume to 0
+    for (int i = steps; i > 0; i--) {
+      await _bgmPlayer.setVolume((originalVolume * i) / steps);
+      await Future.delayed(Duration(milliseconds: stepDuration));
+    }
+
+    // Stop playback
+    await _bgmPlayer.stop();
+
+    // Restore original volume for next playback
+    _currentVolume = originalVolume;
+    await _bgmPlayer.setVolume(_currentVolume);
   }
 
   /// Dispose khi app đóng
