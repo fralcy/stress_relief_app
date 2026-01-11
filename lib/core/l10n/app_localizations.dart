@@ -344,6 +344,48 @@ abstract class AppLocalizations {
   String get tutorialGardenActionsTitle;
   String get tutorialGardenActionsDesc;
 
+  // Breathing Exercise
+  String get breathing;
+  String get breathingExercise;
+  String get selectExercise;
+  String get exercise478;
+  String get exercise478Desc;
+  String get exerciseBox;
+  String get exerciseBoxDesc;
+  String get exerciseDeepBelly;
+  String get exerciseDeepBellyDesc;
+  String get exerciseCalm;
+  String get exerciseCalmDesc;
+  String get breatheIn;
+  String get breatheOut;
+  String get hold;
+  String get pause;
+  String get cycles;
+  String get start;
+  String get stop;
+
+  // Sleep Guide
+  String get sleep;
+  String get sleepGuide;
+  String get sleepSchedule;
+  String get bedtime;
+  String get wakeTime;
+  String get sleepTimer;
+  String get timerDuration;
+  String get startTimer;
+  String get stopTimer;
+  String get musicWillFadeOut;
+  String get troubleSleeping;
+  String get tryBreathingExercise;
+  String get goToBreathing;
+
+  // Sleep tips
+  String get sleepTipSetBedtime;
+  String get sleepTipEarly;
+  String get sleepTipWindDown;
+  String get sleepTipLate;
+  String get sleepTipVeryLate;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

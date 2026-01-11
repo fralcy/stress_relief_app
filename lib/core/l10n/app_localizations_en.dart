@@ -905,4 +905,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialGardenActionsDesc => 'Available actions: Plant new crops (need to select seed type in inventory), Water when thirsty, Remove pests when infected, Harvest when fully grown. Select an action then tap the corresponding plot!';
+
+  // Breathing Exercise
+  @override
+  String get breathing => 'Breathing';
+
+  @override
+  String get breathingExercise => 'Breathing Exercise';
+
+  @override
+  String get selectExercise => 'Select Exercise';
+
+  @override
+  String get exercise478 => '4-7-8 Breathing';
+
+  @override
+  String get exercise478Desc => 'Relaxation: 4s inhale, 7s hold, 8s exhale';
+
+  @override
+  String get exerciseBox => 'Box Breathing';
+
+  @override
+  String get exerciseBoxDesc => 'Balance: 4s each phase';
+
+  @override
+  String get exerciseDeepBelly => 'Deep Belly';
+
+  @override
+  String get exerciseDeepBellyDesc => 'Calming: 5s inhale, 2s hold, 6s exhale';
+
+  @override
+  String get exerciseCalm => 'Calm Breathing';
+
+  @override
+  String get exerciseCalmDesc => 'Gentle: 4-2-6-2 pattern';
+
+  @override
+  String get breatheIn => 'Breathe in...';
+
+  @override
+  String get breatheOut => 'Breathe out...';
+
+  @override
+  String get hold => 'Hold...';
+
+  @override
+  String get pause => 'Pause...';
+
+  @override
+  String get cycles => 'Cycles';
+
+  @override
+  String get start => 'Start';
+
+  @override
+  String get stop => 'Stop';
+
+  // Sleep Guide
+  @override
+  String get sleep => 'Sleep';
+
+  @override
+  String get sleepGuide => 'Sleep Guide';
+
+  @override
+  String get sleepSchedule => 'Sleep Schedule';
+
+  @override
+  String get bedtime => 'Bedtime';
+
+  @override
+  String get wakeTime => 'Wake Time';
+
+  @override
+  String get sleepTimer => 'Sleep Timer';
+
+  @override
+  String get timerDuration => 'Duration';
+
+  @override
+  String get startTimer => 'Start Timer';
+
+  @override
+  String get stopTimer => 'Stop Timer';
+
+  @override
+  String get musicWillFadeOut => 'Music will fade out gradually';
+
+  @override
+  String get troubleSleeping => 'Having trouble sleeping?';
+
+  @override
+  String get tryBreathingExercise => 'Try a breathing exercise to relax';
+
+  @override
+  String get goToBreathing => 'Go to Breathing';
+
+  // Sleep tips
+  @override
+  String get sleepTipSetBedtime => 'Set your bedtime for personalized tips!';
+
+  @override
+  String get sleepTipEarly => 'Plenty of time before bed!';
+
+  @override
+  String get sleepTipWindDown => 'Time to wind down for sleep.';
+
+  @override
+  String get sleepTipLate => "Past bedtime! Try breathing?";
+
+  @override
+  String get sleepTipVeryLate => 'Very late! Quick session recommended.';
 }

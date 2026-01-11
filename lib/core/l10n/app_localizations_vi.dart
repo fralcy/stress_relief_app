@@ -908,4 +908,115 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tutorialGardenActionsDesc => 'Các hành động: Trồng cây mới (cần chọn loại cây trong kho hạt giống), Tưới nước khi cây khát, Trừ sâu khi bị sâu bệnh, Thu hoạch khi cây đã chín. Chọn hành động rồi chạm vào ô đất tương ứng!';
+
+  // Breathing Exercise
+  @override
+  String get breathing => 'Hít thở';
+
+  @override
+  String get breathingExercise => 'Bài tập hít thở';
+
+  @override
+  String get selectExercise => 'Chọn bài tập';
+
+  @override
+  String get exercise478 => 'Hít thở 4-7-8';
+
+  @override
+  String get exercise478Desc => 'Thư giãn: Hít 4s, giữ 7s, thở ra 8s';
+
+  @override
+  String get exerciseBox => 'Hít thở hộp';
+
+  @override
+  String get exerciseBoxDesc => 'Cân bằng: Mỗi giai đoạn 4s';
+
+  @override
+  String get exerciseDeepBelly => 'Hít sâu từ bụng';
+
+  @override
+  String get exerciseDeepBellyDesc => 'Dịu nhẹ: Hít 5s, giữ 2s, thở ra 6s';
+
+  @override
+  String get exerciseCalm => 'Hít thở bình tĩnh';
+
+  @override
+  String get exerciseCalmDesc => 'Nhẹ nhàng: Nhịp 4-2-6-2';
+
+  @override
+  String get breatheIn => 'Hít vào...';
+
+  @override
+  String get breatheOut => 'Thở ra...';
+
+  @override
+  String get hold => 'Giữ...';
+
+  @override
+  String get pause => 'Tạm dừng...';
+
+  @override
+  String get cycles => 'Chu kỳ';
+
+  @override
+  String get start => 'Bắt đầu';
+
+  @override
+  String get stop => 'Dừng';
+
+  // Sleep Guide
+  @override
+  String get sleep => 'Giấc ngủ';
+
+  @override
+  String get sleepGuide => 'Hướng dẫn giấc ngủ';
+
+  @override
+  String get sleepSchedule => 'Lịch ngủ';
+
+  @override
+  String get bedtime => 'Giờ đi ngủ';
+
+  @override
+  String get wakeTime => 'Giờ thức dậy';
+
+  @override
+  String get sleepTimer => 'Hẹn giờ ngủ';
+
+  @override
+  String get timerDuration => 'Thời lượng';
+
+  @override
+  String get startTimer => 'Bắt đầu';
+
+  @override
+  String get stopTimer => 'Dừng lại';
+
+  @override
+  String get musicWillFadeOut => 'Nhạc sẽ nhỏ dần và tắt';
+
+  @override
+  String get troubleSleeping => 'Khó ngủ?';
+
+  @override
+  String get tryBreathingExercise => 'Thử bài tập hít thở để thư giãn';
+
+  @override
+  String get goToBreathing => 'Đến Hít thở';
+
+  // Sleep tips
+  @override
+  String get sleepTipSetBedtime => 'Đặt giờ đi ngủ để nhận gợi ý!';
+
+  @override
+  String get sleepTipEarly => 'Còn nhiều thời gian trước giờ ngủ!';
+
+  @override
+  String get sleepTipWindDown => 'Đã đến lúc chuẩn bị đi ngủ.';
+
+  @override
+  String get sleepTipLate => 'Đã quá giờ ngủ! Thử hít thở nhé?';
+
+  @override
+  String get sleepTipVeryLate => 'Rất muộn rồi! Nên thư giãn ngay.';
 }
