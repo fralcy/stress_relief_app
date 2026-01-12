@@ -146,20 +146,13 @@ class SyncService {
       // Add current tasks (encrypted)
       final tasks = _dataManager.scheduleTasks;
       if (tasks.isNotEmpty) {
-        try {
-          final taskMaps = tasks.map((task) => _taskToMap(task)).toList();
-          final encryptedTasks = _encryption.encryptList(taskMaps);
-          await tasksCollection.doc('encrypted_data').set({
-            'data': encryptedTasks,
-            'count': tasks.length,
-            'lastUpdated': Timestamp.fromDate(now),
-          });
-        } catch (e) {
-          // Fallback to unencrypted if encryption fails
-          for (int i = 0; i < tasks.length; i++) {
-            await tasksCollection.doc('task_$i').set(_taskToMap(tasks[i]));
-          }
-        }
+        final taskMaps = tasks.map((task) => _taskToMap(task)).toList();
+        final encryptedTasks = _encryption.encryptList(taskMaps);
+        await tasksCollection.doc('encrypted_data').set({
+          'data': encryptedTasks,
+          'count': tasks.length,
+          'lastUpdated': Timestamp.fromDate(now),
+        });
       }
 
       // 4. Upload Emotion Diaries (encrypted)
@@ -169,21 +162,13 @@ class SyncService {
       
       final diaries = _dataManager.emotionDiaries;
       if (diaries.isNotEmpty) {
-        try {
-          final diaryMaps = diaries.map((diary) => _diaryToMap(diary)).toList();
-          final encryptedDiaries = _encryption.encryptList(diaryMaps);
-          await diariesCollection.set({
-            'data': encryptedDiaries,
-            'count': diaries.length,
-            'lastUpdated': Timestamp.fromDate(now),
-          });
-        } catch (e) {
-          // Fallback to count only if encryption fails
-          await diariesCollection.set({
-            'count': diaries.length,
-            'lastUpdated': Timestamp.fromDate(now),
-          });
-        }
+        final diaryMaps = diaries.map((diary) => _diaryToMap(diary)).toList();
+        final encryptedDiaries = _encryption.encryptList(diaryMaps);
+        await diariesCollection.set({
+          'data': encryptedDiaries,
+          'count': diaries.length,
+          'lastUpdated': Timestamp.fromDate(now),
+        });
       } else {
         await diariesCollection.set({
           'count': 0,

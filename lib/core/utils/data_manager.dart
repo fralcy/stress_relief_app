@@ -88,9 +88,10 @@ class DataManager {
     Hive.registerAdapter(SleepSessionAdapter());
     Hive.registerAdapter(SleepSettingsAdapter());
     
-    // Initialize encryption
+    // Initialize encryption with user ID for deterministic keys
     if (!_encryption.isInitialized) {
-      _encryption.initialize();
+      final userId = await _authService.userId;
+      _encryption.initialize(userId: userId);
     }
     
     // Open boxes
