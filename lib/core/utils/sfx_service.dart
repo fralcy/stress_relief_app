@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'data_manager.dart';
 
 /// Service quản lý sound effects cho toàn app
@@ -27,26 +28,28 @@ class SfxService {
     final settings = DataManager().userSettings;
     _isEnabled = settings.sfxEnabled;
     _volume = settings.sfxVolume / 100.0; // Convert 0-100 to 0.0-1.0
-    
+
     // Set release mode để SFX chơi một lần rồi stop
     await _sfxPlayer.setReleaseMode(ReleaseMode.stop);
-    
-    // Set audio context để không tranh giành audio focus với BGM
-    await _sfxPlayer.setAudioContext(AudioContext(
-      iOS: AudioContextIOS(
-        category: AVAudioSessionCategory.playback,
-        options: {
-          AVAudioSessionOptions.mixWithOthers,
-        },
-      ),
-      android: AudioContextAndroid(
-        isSpeakerphoneOn: false,
-        stayAwake: false,
-        contentType: AndroidContentType.sonification,
-        usageType: AndroidUsageType.assistanceAccessibility,
-        audioFocus: AndroidAudioFocus.gainTransientMayDuck, // Short audio focus for SFX
-      ),
-    ));
+
+    // Set audio context để không tranh giành audio focus với BGM (không hỗ trợ trên web)
+    if (!kIsWeb) {
+      await _sfxPlayer.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: {
+            AVAudioSessionOptions.mixWithOthers,
+          },
+        ),
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.sonification,
+          usageType: AndroidUsageType.assistanceAccessibility,
+          audioFocus: AndroidAudioFocus.gainTransientMayDuck, // Short audio focus for SFX
+        ),
+      ));
+    }
   }
 
   /// Chơi một sound effect

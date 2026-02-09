@@ -33,39 +33,44 @@ class BreathingExerciseService {
     final config = getExerciseConfig(exerciseType);
     int acc = 0;
 
+    final inhale = config['inhale']!;
+    final hold = config['hold']!;
+    final exhale = config['exhale']!;
+    final pause = config['pause']!;
+
     // Inhale phase
-    acc += config['inhale']!;
+    acc += inhale;
     if (elapsedInCycle < acc) {
       return {
         'phase': 'inhale',
-        'progress': elapsedInCycle / config['inhale']!
+        'progress': inhale > 0 ? elapsedInCycle / inhale : 1.0
       };
     }
 
-    // Hold phase
-    acc += config['hold']!;
-    if (elapsedInCycle < acc) {
-      return {
-        'phase': 'hold',
-        'progress': (elapsedInCycle - (acc - config['hold']!)) / config['hold']!
-      };
+    // Hold phase (skip if duration is 0)
+    if (hold > 0) {
+      acc += hold;
+      if (elapsedInCycle < acc) {
+        return {
+          'phase': 'hold',
+          'progress': (elapsedInCycle - (acc - hold)) / hold
+        };
+      }
     }
 
     // Exhale phase
-    acc += config['exhale']!;
+    acc += exhale;
     if (elapsedInCycle < acc) {
       return {
         'phase': 'exhale',
-        'progress':
-            (elapsedInCycle - (acc - config['exhale']!)) / config['exhale']!
+        'progress': exhale > 0 ? (elapsedInCycle - (acc - exhale)) / exhale : 1.0
       };
     }
 
-    // Pause phase
+    // Pause phase (skip if duration is 0)
     return {
       'phase': 'pause',
-      'progress': (elapsedInCycle - acc) /
-          (config['pause']! > 0 ? config['pause']! : 1)
+      'progress': pause > 0 ? (elapsedInCycle - acc) / pause : 1.0
     };
   }
 

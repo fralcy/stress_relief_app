@@ -22,24 +22,40 @@ import 'screens/mobile_portrait_splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase FIRST (AuthService depends on it)
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  // Init DataManager (Hive) AFTER Firebase
-  await DataManager().initialize();
 
-  // Init BGM Service
-  await BgmService().initialize();
-  // Init SFX Service
-  await SfxService().initialize();
+  try {
+    // Initialize Firebase FIRST (AuthService depends on it)
+    debugPrint('[INIT] Starting Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('[INIT] Firebase OK');
 
-  // Init Notifier
-  if (!kIsWeb) {
-    await Notifier.initialize();
+    // Init DataManager (Hive) AFTER Firebase
+    debugPrint('[INIT] Starting DataManager...');
+    await DataManager().initialize();
+    debugPrint('[INIT] DataManager OK');
+
+    // Init BGM Service
+    debugPrint('[INIT] Starting BgmService...');
+    await BgmService().initialize();
+    debugPrint('[INIT] BgmService OK');
+
+    // Init SFX Service
+    debugPrint('[INIT] Starting SfxService...');
+    await SfxService().initialize();
+    debugPrint('[INIT] SfxService OK');
+
+    // Init Notifier
+    if (!kIsWeb) {
+      await Notifier.initialize();
+    }
+    debugPrint('[INIT] All services initialized');
+  } catch (e, stackTrace) {
+    debugPrint('[INIT ERROR] $e');
+    debugPrint('[INIT STACK] $stackTrace');
   }
+
   runApp(
     MultiProvider(
       providers: [

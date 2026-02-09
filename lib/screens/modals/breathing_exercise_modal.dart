@@ -41,6 +41,10 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   int _cyclesCompleted = 0;
   Timer? _timer;
 
+  // Current phase state (updated by timer, used by build)
+  String _currentPhase = 'inhale';
+  double _currentProgress = 0.0;
+
   // Animation controllers
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
@@ -128,21 +132,6 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
 
   Widget _buildBreathingSession() {
     final l10n = AppLocalizations.of(context);
-    final cycleDuration = _service.getCycleDuration(_selectedExercise!);
-    final elapsedInCycle = _elapsedSeconds % cycleDuration;
-    final phaseData = _service.getCurrentPhase(_selectedExercise!, elapsedInCycle);
-    final phase = phaseData['phase'] as String;
-    final progress = phaseData['progress'] as double;
-
-    // Update mascot scale based on phase
-    final targetScale = _service.getMascotScale(phase, progress);
-    final normalizedTarget = (targetScale - 1.0) / 0.3; // 0.0-1.0
-    if (_isActive && _scaleController.value != normalizedTarget) {
-      _scaleController.animateTo(
-        normalizedTarget,
-        duration: const Duration(milliseconds: 500),
-      );
-    }
 
     return SingleChildScrollView(
       child: Column(
@@ -186,7 +175,7 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
                 CustomPaint(
                   size: const Size(300, 300),
                   painter: _CircularProgressPainter(
-                    progress: progress,
+                    progress: _currentProgress,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
@@ -215,7 +204,7 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        _getPhaseText(phase, l10n),
+                        _getPhaseText(_currentPhase, l10n),
                         style: AppTypography.bodyLarge(context).copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -275,6 +264,9 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
 
   void _startSession() {
     setState(() => _isActive = true);
+    // Update animation immediately on start
+    _updatePhaseAndAnimation();
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -290,8 +282,35 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
           _cyclesCompleted++;
           SfxService().buttonClick();
         }
+
+        // Update phase and animation
+        _updatePhaseAndAnimation();
       });
     });
+  }
+
+  /// Updates current phase, progress, and mascot animation
+  /// Called from timer callback instead of build() for better performance
+  void _updatePhaseAndAnimation() {
+    if (_selectedExercise == null) return;
+
+    final cycleDuration = _service.getCycleDuration(_selectedExercise!);
+    final elapsedInCycle = _elapsedSeconds % cycleDuration;
+    final phaseData = _service.getCurrentPhase(_selectedExercise!, elapsedInCycle);
+
+    _currentPhase = phaseData['phase'] as String;
+    _currentProgress = phaseData['progress'] as double;
+
+    // Update mascot scale animation
+    final targetScale = _service.getMascotScale(_currentPhase, _currentProgress);
+    final normalizedTarget = (targetScale - 1.0) / 0.3; // 0.0-1.0
+
+    if (_scaleController.value != normalizedTarget) {
+      _scaleController.animateTo(
+        normalizedTarget,
+        duration: const Duration(milliseconds: 500),
+      );
+    }
   }
 
   void _stopSession() {
@@ -316,6 +335,8 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
     setState(() {
       _elapsedSeconds = 0;
       _cyclesCompleted = 0;
+      _currentPhase = 'inhale';
+      _currentProgress = 0.0;
     });
     _scaleController.reset();
   }
