@@ -35,6 +35,7 @@ class DataManager {
   static const String _breathingSessionsBox = 'breathingSessionsBox';
   static const String _sleepSessionsBox = 'sleepSessionsBox';
   static const String _sleepSettingsBox = 'sleepSettingsBox';
+  static const String _sleepLogsBox = 'sleepLogsBox';
   
   // Hive boxes
   late Box<UserProfile> _userProfileHive;
@@ -48,6 +49,7 @@ class DataManager {
   late Box<BreathingSession> _breathingSessionsHive;
   late Box<SleepSession> _sleepSessionsHive;
   late Box<SleepSettings> _sleepSettingsHive;
+  late Box<SleepLog> _sleepLogsHive;
   
   bool _isInitialized = false;
   
@@ -83,10 +85,11 @@ class DataManager {
     Hive.registerAdapter(InstrumentAdapter());
     Hive.registerAdapter(NoteAdapter());
     Hive.registerAdapter(MusicTrackAdapter());
-    // Breathing & Sleep models (typeId: 18-20)
+    // Breathing & Sleep models (typeId: 18-21)
     Hive.registerAdapter(BreathingSessionAdapter());
     Hive.registerAdapter(SleepSessionAdapter());
     Hive.registerAdapter(SleepSettingsAdapter());
+    Hive.registerAdapter(SleepLogAdapter());
     
     // Initialize encryption with user ID for deterministic keys
     if (!_encryption.isInitialized) {
@@ -106,6 +109,7 @@ class DataManager {
     _breathingSessionsHive = await Hive.openBox<BreathingSession>(_breathingSessionsBox);
     _sleepSessionsHive = await Hive.openBox<SleepSession>(_sleepSessionsBox);
     _sleepSettingsHive = await Hive.openBox<SleepSettings>(_sleepSettingsBox);
+    _sleepLogsHive = await Hive.openBox<SleepLog>(_sleepLogsBox);
 
     // Initialize default sleep settings if empty
     if (_sleepSettingsHive.isEmpty) {
@@ -416,6 +420,22 @@ class DataManager {
 
   Future<void> saveSleepSettings(SleepSettings settings) async {
     await _sleepSettingsHive.put('current', settings);
+    await _updateLastModifiedTime();
+  }
+
+  // ==================== SLEEP LOGS ====================
+
+  List<SleepLog> get sleepLogs {
+    final logs = _sleepLogsHive.values.toList();
+    logs.sort((a, b) => b.date.compareTo(a.date));
+    return logs;
+  }
+
+  Future<void> saveSleepLogs(List<SleepLog> logs) async {
+    await _sleepLogsHive.clear();
+    for (final log in logs) {
+      await _sleepLogsHive.add(log);
+    }
     await _updateLastModifiedTime();
   }
 

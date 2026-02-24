@@ -1019,4 +1019,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sleepTipVeryLate => 'Rất muộn rồi! Nên thư giãn ngay.';
+
+  // Sleep Log (tracking)
+  @override
+  String get sleepLog => 'Nhật ký giấc ngủ';
+
+  @override
+  String get sleepHistory => 'Lịch sử (7 ngày gần nhất)';
+
+  @override
+  String get tapDayToLogSleep => 'Chạm vào ngày để ghi lại giấc ngủ';
+
+  @override
+  String get actualBedtime => 'Giờ đi ngủ thực tế';
+
+  @override
+  String get actualWakeTime => 'Giờ thức dậy thực tế';
+
+  @override
+  String get sleepQuality => 'Chất lượng giấc ngủ';
+
+  @override
+  String get sleepDuration => 'Thời lượng';
+
+  @override
+  String get sleepLogSaved => '✅ Đã lưu nhật ký giấc ngủ!';
+
+  @override
+  String get hoursUnit => 'h';
+
+  @override
+  String get noSleepData => 'Chưa có dữ liệu giấc ngủ';
 }

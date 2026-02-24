@@ -386,6 +386,18 @@ abstract class AppLocalizations {
   String get sleepTipLate;
   String get sleepTipVeryLate;
 
+  // Sleep Log (tracking)
+  String get sleepLog;
+  String get sleepHistory;
+  String get tapDayToLogSleep;
+  String get actualBedtime;
+  String get actualWakeTime;
+  String get sleepQuality;
+  String get sleepDuration;
+  String get sleepLogSaved;
+  String get hoursUnit;
+  String get noSleepData;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

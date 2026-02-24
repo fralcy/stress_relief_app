@@ -10,3 +10,4 @@ export 'scene_models.dart';
 export 'breathing_session.dart';
 export 'sleep_session.dart';
 export 'sleep_settings.dart';
+export 'sleep_log.dart';

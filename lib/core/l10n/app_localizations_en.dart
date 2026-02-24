@@ -1016,4 +1016,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sleepTipVeryLate => 'Very late! Quick session recommended.';
+
+  // Sleep Log (tracking)
+  @override
+  String get sleepLog => 'Sleep Log';
+
+  @override
+  String get sleepHistory => 'History (Last 7 days)';
+
+  @override
+  String get tapDayToLogSleep => 'Tap a day to log your sleep';
+
+  @override
+  String get actualBedtime => 'Actual Bedtime';
+
+  @override
+  String get actualWakeTime => 'Actual Wake Time';
+
+  @override
+  String get sleepQuality => 'Sleep Quality';
+
+  @override
+  String get sleepDuration => 'Duration';
+
+  @override
+  String get sleepLogSaved => '✅ Sleep log saved!';
+
+  @override
+  String get hoursUnit => 'h';
+
+  @override
+  String get noSleepData => 'No sleep data yet';
 }
