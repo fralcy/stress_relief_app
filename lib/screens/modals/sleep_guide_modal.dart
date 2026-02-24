@@ -42,6 +42,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   Timer? _countdownTimer;
   int _remainingSeconds = 0;
   bool _fadingStarted = false;
+  bool _timerCompletedNaturally = false;
 
   @override
   void initState() {
@@ -306,21 +307,20 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   }
 
   void _startSleepTimer() {
+    // Save current timer duration as default for next time
+    final settings = DataManager().sleepSettings;
+    if (settings.defaultTimerMinutes != _timerMinutes) {
+      DataManager().saveSleepSettings(
+        settings.copyWith(defaultTimerMinutes: _timerMinutes),
+      );
+    }
+
     setState(() {
       _isTimerActive = true;
       _remainingSeconds = _timerMinutes * 60;
       _fadingStarted = false;
+      _timerCompletedNaturally = false;
     });
-
-    // Save session
-    final currentBgm = DataManager().userSettings.bgm;
-    final session = SleepSession(
-      startTime: DateTime.now(),
-      bgmTrack: currentBgm,
-      timerDurationMinutes: _timerMinutes,
-      completed: false,
-    );
-    DataManager().addSleepSession(session);
 
     // Start countdown
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -329,29 +329,46 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         return;
       }
 
-      setState(() {
-        _remainingSeconds--;
+      // Start fade-out in last 2 minutes
+      if (_remainingSeconds == 120 && !_fadingStarted) {
+        _fadingStarted = true;
+        _bgmService.fadeOutAndStop(const Duration(minutes: 2));
+      }
 
-        // Start fade-out in last 2 minutes
-        if (_remainingSeconds == 120 && !_fadingStarted) {
-          _fadingStarted = true;
-          _bgmService.fadeOutAndStop(const Duration(minutes: 2));
-        }
+      if (_remainingSeconds <= 0) {
+        // Timer completed naturally — stop outside setState to avoid nesting
+        timer.cancel();
+        _timerCompletedNaturally = true;
+        _stopSleepTimer();
+        SfxService().taskComplete();
+        return;
+      }
 
-        // Timer complete
-        if (_remainingSeconds <= 0) {
-          _stopSleepTimer();
-          SfxService().taskComplete();
-        }
-      });
+      setState(() => _remainingSeconds--);
     });
   }
 
   void _stopSleepTimer() {
     _countdownTimer?.cancel();
+
+    // Cancel fade if it was started but timer stopped manually
+    if (_fadingStarted && !_timerCompletedNaturally) {
+      _bgmService.cancelFade();
+    }
+
+    // Save session record
+    final currentBgm = DataManager().userSettings.bgm;
+    DataManager().addSleepSession(SleepSession(
+      startTime: DateTime.now(),
+      bgmTrack: currentBgm,
+      timerDurationMinutes: _timerMinutes,
+      completed: _timerCompletedNaturally,
+    ));
+
     setState(() {
       _isTimerActive = false;
       _fadingStarted = false;
+      _timerCompletedNaturally = false;
     });
   }
 

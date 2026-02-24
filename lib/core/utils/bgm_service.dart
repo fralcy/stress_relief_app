@@ -12,6 +12,7 @@ class BgmService {
   final AudioPlayer _bgmPlayer = AudioPlayer();
   bool _isInitialized = false;
   bool _isPlaying = false; // Track playback state for web compatibility
+  bool _isFadeCancelling = false; // Flag to cancel an in-progress fade
   String? _currentBgm;
   double _currentVolume = 0.5; // Track current volume (0.0-1.0)
 
@@ -140,22 +141,35 @@ class BgmService {
   Future<void> fadeOutAndStop(Duration fadeDuration) async {
     if (!_isInitialized) return;
 
+    _isFadeCancelling = false;
     final originalVolume = _currentVolume;
     const steps = 20; // 20 volume steps for smooth fade
     final stepDuration = fadeDuration.inMilliseconds ~/ steps;
 
     // Gradually reduce volume to 0
     for (int i = steps; i > 0; i--) {
+      if (_isFadeCancelling) {
+        // Restore volume and exit without stopping
+        await _bgmPlayer.setVolume(originalVolume);
+        _isFadeCancelling = false;
+        return;
+      }
       await _bgmPlayer.setVolume((originalVolume * i) / steps);
       await Future.delayed(Duration(milliseconds: stepDuration));
     }
 
     // Stop playback
     await _bgmPlayer.stop();
+    _isPlaying = false;
 
     // Restore original volume for next playback
     _currentVolume = originalVolume;
     await _bgmPlayer.setVolume(_currentVolume);
+  }
+
+  /// Cancel an in-progress fade, restoring normal playback
+  void cancelFade() {
+    _isFadeCancelling = true;
   }
 
   /// Dispose khi app đóng
