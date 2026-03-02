@@ -14,6 +14,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/score_provider.dart';
 import 'core/providers/scene_provider.dart';
+import 'core/providers/achievement_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -63,6 +64,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => ScoreProvider()),
         ChangeNotifierProvider(create: (_) => SceneProvider()),
+        ChangeNotifierProvider(create: (_) => AchievementProvider()),
       ],
       child: const MyApp(),
     ),
