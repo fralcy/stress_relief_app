@@ -11,3 +11,4 @@ export 'breathing_session.dart';
 export 'sleep_session.dart';
 export 'sleep_settings.dart';
 export 'sleep_log.dart';
+export 'achievement_progress.dart';

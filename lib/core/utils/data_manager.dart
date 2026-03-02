@@ -36,6 +36,7 @@ class DataManager {
   static const String _sleepSessionsBox = 'sleepSessionsBox';
   static const String _sleepSettingsBox = 'sleepSettingsBox';
   static const String _sleepLogsBox = 'sleepLogsBox';
+  static const String _achievementProgressBox = 'achievementProgressBox';
   
   // Hive boxes
   late Box<UserProfile> _userProfileHive;
@@ -50,6 +51,7 @@ class DataManager {
   late Box<SleepSession> _sleepSessionsHive;
   late Box<SleepSettings> _sleepSettingsHive;
   late Box<SleepLog> _sleepLogsHive;
+  late Box<AchievementProgress> _achievementProgressHive;
   
   bool _isInitialized = false;
   
@@ -90,6 +92,8 @@ class DataManager {
     Hive.registerAdapter(SleepSessionAdapter());
     Hive.registerAdapter(SleepSettingsAdapter());
     Hive.registerAdapter(SleepLogAdapter());
+    // Achievement model (typeId: 22)
+    Hive.registerAdapter(AchievementProgressAdapter());
     
     // Initialize encryption with user ID for deterministic keys
     if (!_encryption.isInitialized) {
@@ -110,10 +114,16 @@ class DataManager {
     _sleepSessionsHive = await Hive.openBox<SleepSession>(_sleepSessionsBox);
     _sleepSettingsHive = await Hive.openBox<SleepSettings>(_sleepSettingsBox);
     _sleepLogsHive = await Hive.openBox<SleepLog>(_sleepLogsBox);
+    _achievementProgressHive = await Hive.openBox<AchievementProgress>(_achievementProgressBox);
 
     // Initialize default sleep settings if empty
     if (_sleepSettingsHive.isEmpty) {
       await _sleepSettingsHive.put('current', SleepSettings.initial());
+    }
+
+    // Initialize default achievement progress if empty
+    if (_achievementProgressHive.isEmpty) {
+      await _achievementProgressHive.put('current', AchievementProgress.initial());
     }
 
     // Tạo default data theo user mode
@@ -437,6 +447,16 @@ class DataManager {
       await _sleepLogsHive.add(log);
     }
     await _updateLastModifiedTime();
+  }
+
+  // ==================== ACHIEVEMENT PROGRESS ====================
+
+  AchievementProgress get achievementProgress {
+    return _achievementProgressHive.get('current') ?? AchievementProgress.initial();
+  }
+
+  Future<void> saveAchievementProgress(AchievementProgress progress) async {
+    await _achievementProgressHive.put('current', progress);
   }
 
   // Helper method to update lastUpdatedAt timestamp when any data changes
