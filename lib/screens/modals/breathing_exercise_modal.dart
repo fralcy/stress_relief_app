@@ -11,6 +11,10 @@ import '../../core/utils/asset_loader.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/breathing_session.dart';
 import '../../models/scene_models.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 
 /// Modal for breathing exercises
 class BreathingExerciseModal extends StatefulWidget {
@@ -313,7 +317,7 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
     }
   }
 
-  void _stopSession() {
+  Future<void> _stopSession() async {
     _timer?.cancel();
     setState(() => _isActive = false);
 
@@ -327,6 +331,17 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
       );
       DataManager().addBreathingSession(session);
       SfxService().taskComplete();
+
+      // Achievement trigger
+      if (mounted) {
+        final score = context.read<ScoreProvider>();
+        final newly = await context
+            .read<AchievementProvider>()
+            .onBreathingSessionCompleted(_selectedExercise!, score);
+        if (newly.isNotEmpty && mounted) {
+          AchievementPopup.show(context, newly);
+        }
+      }
     }
   }
 

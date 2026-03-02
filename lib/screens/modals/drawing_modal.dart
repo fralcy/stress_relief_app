@@ -11,6 +11,10 @@ import '../../core/utils/painting_service.dart';
 import 'gallery_modal.dart';
 import 'templates_modal.dart';
 import '../../models/painting_progress.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 
 /// Modal vẽ tranh
 class DrawingModal extends StatefulWidget {
@@ -213,6 +217,15 @@ class _DrawingModalState extends State<DrawingModal> {
     
     // Re-save painting with new name
     await _paintingService.savePainting(_pixels, name: newName);
+
+    // Achievement trigger
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context.read<AchievementProvider>().onPaintingSaved(score);
+      if (newly.isNotEmpty && mounted) {
+        AchievementPopup.show(context, newly);
+      }
+    }
   }
 
   void _onCancelEdit() {

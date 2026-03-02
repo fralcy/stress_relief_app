@@ -11,6 +11,8 @@ import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 import '../../models/index.dart';
 
 /// Modal quản lý nhật ký cảm xúc
@@ -514,10 +516,17 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       SfxService().buttonClick(); // Regular save sound
     }
 
+    // Achievement trigger — fire for every genuinely new diary entry
+    if (mounted && isFirstTimeForDate) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context.read<AchievementProvider>().onDiaryAdded(score);
+      if (newly.isNotEmpty && mounted) {
+        AchievementPopup.show(context, newly);
+      }
+    }
+
     if (mounted) {
       setState(() {}); // Force rebuild to update save button state
-
-
     }
   }
 

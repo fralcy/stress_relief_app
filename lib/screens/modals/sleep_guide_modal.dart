@@ -14,6 +14,10 @@ import '../../models/sleep_session.dart';
 import '../../models/sleep_log.dart';
 import '../../models/scene_models.dart';
 import 'breathing_exercise_modal.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 
 /// Modal for sleep guide
 class SleepGuideModal extends StatefulWidget {
@@ -147,6 +151,9 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     DataManager().saveSleepLogs(logs);
     SfxService().taskComplete();
 
+    // Achievement trigger (fire-and-forget to keep _saveLog void)
+    _triggerSleepAchievement(_logQuality ?? 3);
+
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -155,6 +162,15 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       ),
     );
     setState(() {});
+  }
+
+  Future<void> _triggerSleepAchievement(int quality) async {
+    if (!mounted) return;
+    final score = context.read<ScoreProvider>();
+    final newly = await context.read<AchievementProvider>().onSleepLogAdded(quality, score);
+    if (newly.isNotEmpty && mounted) {
+      AchievementPopup.show(context, newly);
+    }
   }
 
   // ==================== BUILD ====================

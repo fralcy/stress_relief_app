@@ -15,6 +15,8 @@ import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 import '../../models/garden_progress.dart';
 
 /// Modal mini-game làm vườn/trồng trọt
@@ -349,6 +351,15 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
 
           // Cộng điểm vào UserProfile
           await context.read<ScoreProvider>().addPoints(result['pointsGained']);
+
+          // Achievement trigger
+          if (mounted) {
+            final score = context.read<ScoreProvider>();
+            final newly = await context.read<AchievementProvider>().onHarvest(score);
+            if (newly.isNotEmpty && mounted) {
+              AchievementPopup.show(context, newly);
+            }
+          }
 
           // Lưu points để hiển thị animation
           final key = '$row-$col';

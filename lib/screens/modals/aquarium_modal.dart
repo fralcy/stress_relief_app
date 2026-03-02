@@ -12,6 +12,8 @@ import '../../core/utils/auth_service.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 import '../../models/aquarium_progress.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
@@ -366,6 +368,17 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     
     _saveProgress();
     SfxService().reward();
+
+    // Achievement trigger
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context
+          .read<AchievementProvider>()
+          .onFishCountChanged(_progress.fishes.length, score);
+      if (newly.isNotEmpty && mounted) {
+        AchievementPopup.show(context, newly);
+      }
+    }
   }
 
   void _onSellFish(String fishType) async {

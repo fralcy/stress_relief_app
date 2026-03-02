@@ -10,6 +10,10 @@ import '../../core/utils/bgm_service.dart';
 import 'library_modal.dart';
 import 'music_samples_modal.dart';
 import '../../models/music_progress.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 
 /// Modal sáng tác nhạc
 class ComposingModal extends StatefulWidget {
@@ -288,7 +292,16 @@ class _ComposingModalState extends State<ComposingModal> {
     await _composingService.updateCurrentTrackName(newName);
     
     // Re-save track with new name
-    _saveTrack();
+    await _saveTrack();
+
+    // Achievement trigger
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context.read<AchievementProvider>().onMusicTrackSaved(score);
+      if (newly.isNotEmpty && mounted) {
+        AchievementPopup.show(context, newly);
+      }
+    }
   }
 
   void _onCancelEdit() {
