@@ -25,6 +25,7 @@ import 'modals/composing_modal.dart';
 import 'modals/library_modal.dart';
 import 'modals/breathing_exercise_modal.dart';
 import 'modals/sleep_guide_modal.dart';
+import 'modals/achievements_modal.dart';
 import 'mobile_portrait_tutorial_screen.dart';
 import 'package:flutter/foundation.dart';
 import '../core/utils/auth_service.dart';
@@ -354,6 +355,14 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             onPressed: () {
               SfxService().buttonClick();
               SleepGuideModal.show(context);
+            },
+          ),
+          FeatureButton(
+            icon: Icons.emoji_events_outlined,
+            label: l10n.achievements,
+            onPressed: () {
+              SfxService().buttonClick();
+              AchievementsModal.show(context);
             },
           ),
         ];
