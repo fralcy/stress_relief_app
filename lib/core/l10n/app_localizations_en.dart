@@ -1047,4 +1047,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSleepData => 'No sleep data yet';
+
+  // ==================== ACHIEVEMENTS ====================
+
+  @override
+  String get achievements => 'Achievements';
+
+  @override
+  String get achievementsTitle => 'Your Achievements';
+
+  @override
+  String get achievementUnlocked => 'Achievement Unlocked!';
+
+  @override
+  String get locked => 'Locked';
+
+  @override
+  String achievementCategoryName(String category) {
+    switch (category) {
+      case 'onboarding': return 'Getting Started';
+      case 'diary': return 'Emotion Diary';
+      case 'breathing': return 'Breathing';
+      case 'sleep': return 'Sleep';
+      case 'minigames': return 'Activities';
+      case 'score': return 'Points';
+      default: return category;
+    }
+  }
+
+  @override
+  String achievementTitle(String id) {
+    switch (id) {
+      case 'first_steps': return 'First Steps';
+      case 'app_explorer': return 'App Explorer';
+      case 'first_diary': return 'First Entry';
+      case 'diary_5': return 'Getting Started';
+      case 'diary_20': return 'Consistent Writer';
+      case 'diary_streak_7': return 'Week of Reflection';
+      case 'first_breath': return 'First Breath';
+      case 'breathing_10': return 'Mindful Breather';
+      case 'breathing_478_master': return '4-7-8 Master';
+      case 'breathing_box_master': return 'Box Breathing Pro';
+      case 'first_sleep_log': return 'Sleep Tracker';
+      case 'sleep_log_7': return 'Sleep Habit';
+      case 'sleep_streak_5': return 'Sleep Streak';
+      case 'sleep_quality_high': return 'Sweet Dreams';
+      case 'first_harvest': return 'Green Thumb';
+      case 'harvest_10': return 'Master Gardener';
+      case 'aquarium_5_fish': return 'Fish Collector';
+      case 'first_painting': return 'Artist';
+      case 'score_100': return 'Century';
+      case 'score_500': return 'High Achiever';
+      default: return id;
+    }
+  }
+
+  @override
+  String achievementDescription(String id) {
+    switch (id) {
+      case 'first_steps': return 'Open the app for the first time';
+      case 'app_explorer': return 'Try 3 different features';
+      case 'first_diary': return 'Write your first emotion diary entry';
+      case 'diary_5': return 'Write 5 diary entries';
+      case 'diary_20': return 'Write 20 diary entries';
+      case 'diary_streak_7': return 'Write diary entries 7 days in a row';
+      case 'first_breath': return 'Complete your first breathing session';
+      case 'breathing_10': return 'Complete 10 breathing sessions';
+      case 'breathing_478_master': return 'Complete 10 sessions of 4-7-8 breathing';
+      case 'breathing_box_master': return 'Complete 10 sessions of box breathing';
+      case 'first_sleep_log': return 'Log your sleep for the first time';
+      case 'sleep_log_7': return 'Log your sleep 7 times';
+      case 'sleep_streak_5': return 'Log sleep 5 days in a row';
+      case 'sleep_quality_high': return 'Log 5 nights with quality 4 or above';
+      case 'first_harvest': return 'Harvest a plant for the first time';
+      case 'harvest_10': return 'Harvest plants 10 times';
+      case 'aquarium_5_fish': return 'Own 5 fish in your aquarium';
+      case 'first_painting': return 'Save your first painting';
+      case 'score_100': return 'Earn a total of 100 points';
+      case 'score_500': return 'Earn a total of 500 points';
+      default: return '';
+    }
+  }
 }

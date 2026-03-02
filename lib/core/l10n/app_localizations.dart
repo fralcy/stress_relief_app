@@ -398,6 +398,24 @@ abstract class AppLocalizations {
   String get hoursUnit;
   String get noSleepData;
 
+  // ==================== ACHIEVEMENTS ====================
+
+  // UI labels
+  String get achievements;
+  String get achievementsTitle;
+  String get achievementUnlocked;
+  String get locked;
+
+  /// Returns the localized category name.
+  /// [category] matches AchievementCategory enum name (e.g. 'onboarding').
+  String achievementCategoryName(String category);
+
+  /// Returns the localized title for the given achievement [id].
+  String achievementTitle(String id);
+
+  /// Returns the localized description for the given achievement [id].
+  String achievementDescription(String id);
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

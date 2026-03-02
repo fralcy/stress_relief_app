@@ -1050,4 +1050,85 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noSleepData => 'Chưa có dữ liệu giấc ngủ';
+
+  // ==================== ACHIEVEMENTS ====================
+
+  @override
+  String get achievements => 'Thành tựu';
+
+  @override
+  String get achievementsTitle => 'Thành tựu của bạn';
+
+  @override
+  String get achievementUnlocked => 'Mở khóa thành tựu!';
+
+  @override
+  String get locked => 'Chưa mở khóa';
+
+  @override
+  String achievementCategoryName(String category) {
+    switch (category) {
+      case 'onboarding': return 'Bắt đầu';
+      case 'diary': return 'Nhật ký cảm xúc';
+      case 'breathing': return 'Hít thở';
+      case 'sleep': return 'Giấc ngủ';
+      case 'minigames': return 'Hoạt động';
+      case 'score': return 'Điểm thưởng';
+      default: return category;
+    }
+  }
+
+  @override
+  String achievementTitle(String id) {
+    switch (id) {
+      case 'first_steps': return 'Bước đầu tiên';
+      case 'app_explorer': return 'Khám phá ứng dụng';
+      case 'first_diary': return 'Lần đầu viết nhật ký';
+      case 'diary_5': return 'Đang hình thành thói quen';
+      case 'diary_20': return 'Nhà văn nhật ký';
+      case 'diary_streak_7': return 'Tuần tự kiểm';
+      case 'first_breath': return 'Hơi thở đầu tiên';
+      case 'breathing_10': return 'Người thở chánh niệm';
+      case 'breathing_478_master': return 'Cao thủ 4-7-8';
+      case 'breathing_box_master': return 'Thở hộp chuyên nghiệp';
+      case 'first_sleep_log': return 'Theo dõi giấc ngủ';
+      case 'sleep_log_7': return 'Thói quen giấc ngủ';
+      case 'sleep_streak_5': return 'Chuỗi ngủ đúng giờ';
+      case 'sleep_quality_high': return 'Giấc ngủ ngon';
+      case 'first_harvest': return 'Bàn tay xanh';
+      case 'harvest_10': return 'Người làm vườn';
+      case 'aquarium_5_fish': return 'Nhà sưu tầm cá';
+      case 'first_painting': return 'Nghệ sĩ';
+      case 'score_100': return 'Trăm điểm';
+      case 'score_500': return 'Người thành công';
+      default: return id;
+    }
+  }
+
+  @override
+  String achievementDescription(String id) {
+    switch (id) {
+      case 'first_steps': return 'Mở ứng dụng lần đầu tiên';
+      case 'app_explorer': return 'Thử 3 tính năng khác nhau';
+      case 'first_diary': return 'Viết mục nhật ký cảm xúc đầu tiên';
+      case 'diary_5': return 'Viết 5 mục nhật ký';
+      case 'diary_20': return 'Viết 20 mục nhật ký';
+      case 'diary_streak_7': return 'Viết nhật ký 7 ngày liên tiếp';
+      case 'first_breath': return 'Hoàn thành buổi hít thở đầu tiên';
+      case 'breathing_10': return 'Hoàn thành 10 buổi hít thở';
+      case 'breathing_478_master': return 'Hoàn thành 10 buổi hít thở 4-7-8';
+      case 'breathing_box_master': return 'Hoàn thành 10 buổi thở hộp';
+      case 'first_sleep_log': return 'Ghi lại giấc ngủ lần đầu tiên';
+      case 'sleep_log_7': return 'Ghi lại giấc ngủ 7 lần';
+      case 'sleep_streak_5': return 'Ghi lại giấc ngủ 5 ngày liên tiếp';
+      case 'sleep_quality_high': return 'Ghi 5 đêm có chất lượng từ 4 trở lên';
+      case 'first_harvest': return 'Thu hoạch cây lần đầu tiên';
+      case 'harvest_10': return 'Thu hoạch cây 10 lần';
+      case 'aquarium_5_fish': return 'Sở hữu 5 con cá trong bể';
+      case 'first_painting': return 'Lưu bức tranh đầu tiên';
+      case 'score_100': return 'Kiếm tổng cộng 100 điểm';
+      case 'score_500': return 'Kiếm tổng cộng 500 điểm';
+      default: return '';
+    }
+  }
 }
