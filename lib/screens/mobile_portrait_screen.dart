@@ -14,6 +14,8 @@ import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
 import '../core/widgets/speech_bubble.dart';
 import '../core/providers/scene_provider.dart';
+import '../core/providers/score_provider.dart';
+import '../core/providers/achievement_provider.dart';
 import 'modals/scene_shop_modal.dart';
 import 'modals/schedule_task_modal.dart';
 import 'modals/emotion_diary_modal.dart';
@@ -59,12 +61,21 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   void initState() {
     super.initState();
     _checkDebugMode();
+    // Run retroactive achievement check once after the first frame
+    // so Provider is accessible via context
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runRetroactiveCheck());
   }
 
   @override
   void dispose() {
     _dialogueTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _runRetroactiveCheck() async {
+    if (!mounted) return;
+    final score = context.read<ScoreProvider>();
+    await context.read<AchievementProvider>().retroactiveCheck(score);
   }
 
   Future<void> _checkDebugMode() async {

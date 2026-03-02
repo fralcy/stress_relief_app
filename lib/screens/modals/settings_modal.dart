@@ -5,6 +5,7 @@ import '../../core/constants/app_typography.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_slider.dart';
@@ -129,10 +130,15 @@ class _SettingsModalState extends State<SettingsModal> {
     try {
       // Perform smart sync
       final result = await syncService.smartSync();
-      
+
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
-      
+
+      // Retroactive check: cloud download may have changed data counts
+      final score = context.read<ScoreProvider>();
+      await context.read<AchievementProvider>().retroactiveCheck(score);
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result),
