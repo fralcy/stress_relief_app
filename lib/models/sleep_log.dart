@@ -16,15 +16,11 @@ class SleepLog extends HiveObject {
   @HiveField(3)
   final int? quality; // Chất lượng giấc ngủ (1-5)
 
-  @HiveField(4)
-  final String notes;
-
   SleepLog({
     required this.date,
     this.bedtimeMinutes,
     this.wakeTimeMinutes,
     this.quality,
-    this.notes = '',
   });
 
   /// Thời lượng ngủ tính bằng phút (xử lý qua nửa đêm)
@@ -46,14 +42,12 @@ class SleepLog extends HiveObject {
     int? bedtimeMinutes,
     int? wakeTimeMinutes,
     int? quality,
-    String? notes,
   }) {
     return SleepLog(
       date: date ?? this.date,
       bedtimeMinutes: bedtimeMinutes ?? this.bedtimeMinutes,
       wakeTimeMinutes: wakeTimeMinutes ?? this.wakeTimeMinutes,
       quality: quality ?? this.quality,
-      notes: notes ?? this.notes,
     );
   }
 }

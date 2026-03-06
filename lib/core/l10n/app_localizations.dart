@@ -327,6 +327,7 @@ abstract class AppLocalizations {
   // Mascot dialogues
   String getMascotSceneGreeting(SceneType scene, int variant);
   String getMascotClickDialogue(SceneType scene, int variant);
+  String getMascotSleepDialogue(int variant);
 
   // Tutorial - Aquarium
   String get tutorialAquariumTankDesc;

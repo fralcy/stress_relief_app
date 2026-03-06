@@ -19,20 +19,17 @@ class SleepSettingsAdapter extends TypeAdapter<SleepSettings> {
     return SleepSettings(
       bedtimeMinutes: fields[0] as int?,
       wakeTimeMinutes: fields[1] as int?,
-      defaultTimerMinutes: fields[2] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, SleepSettings obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(2)
       ..writeByte(0)
       ..write(obj.bedtimeMinutes)
       ..writeByte(1)
-      ..write(obj.wakeTimeMinutes)
-      ..writeByte(2)
-      ..write(obj.defaultTimerMinutes);
+      ..write(obj.wakeTimeMinutes);
   }
 
   @override

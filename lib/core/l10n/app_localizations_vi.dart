@@ -844,6 +844,14 @@ class AppLocalizationsVi extends AppLocalizations {
     }
   }
 
+  // Mascot dialogues - Lời thoại khi đến giờ ngủ (2 biến thể)
+  @override
+  String getMascotSleepDialogue(int variant) {
+    return variant == 0
+        ? 'Đến giờ ngủ rồi! Nghỉ ngơi sớm nhé~'
+        : 'Tắt màn hình và ngủ ngon nhé 😴';
+  }
+
   // Mascot dialogues - Lời thoại khi click (2 biến thể mỗi scene)
   @override
   String getMascotClickDialogue(SceneType scene, int variant) {

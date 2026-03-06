@@ -31,6 +31,8 @@ import 'modals/achievements_modal.dart';
 import 'mobile_portrait_tutorial_screen.dart';
 import 'package:flutter/foundation.dart';
 import '../core/utils/auth_service.dart';
+import '../core/utils/data_manager.dart';
+import '../core/utils/sleep_guide_service.dart';
 /// Mobile Portrait Layout Screen
 /// 
 /// Structure:
@@ -52,6 +54,13 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   MascotExpression _currentExpression = MascotExpression.idle;
   bool _isDebugMode = false;
 
+  MascotExpression get _defaultExpression {
+    final settings = DataManager().sleepSettings;
+    return SleepGuideService().isSleepTime(settings)
+        ? MascotExpression.sleepy
+        : MascotExpression.idle;
+  }
+
   // Mascot dialogue state
   String? _currentDialogue;
   Timer? _dialogueTimer;
@@ -63,7 +72,10 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
     _checkDebugMode();
     // Run retroactive achievement check once after the first frame
     // so Provider is accessible via context
-    WidgetsBinding.instance.addPostFrameCallback((_) => _runRetroactiveCheck());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runRetroactiveCheck();
+      if (mounted) setState(() => _currentExpression = _defaultExpression);
+    });
   }
 
   @override
@@ -98,6 +110,12 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
 
   void _showClickDialogue() {
     final l10n = AppLocalizations.of(context);
+    final settings = DataManager().sleepSettings;
+    if (SleepGuideService().isSleepTime(settings)) {
+      final dialogue = _dialogueService.getSleepDialogue(l10n);
+      _showDialogue(dialogue, MascotExpression.sleepy);
+      return;
+    }
     final dialogue = _dialogueService.getClickDialogue(_currentScene, l10n);
     final expression = _dialogueService.getRandomExpression();
     _showDialogue(dialogue, expression);
@@ -115,7 +133,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   void _hideDialogue() {
     setState(() {
       _currentDialogue = null;
-      _currentExpression = MascotExpression.idle;
+      _currentExpression = _defaultExpression;
     });
   }
 

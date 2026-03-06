@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
@@ -6,14 +5,12 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/line_graph.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sleep_guide_service.dart';
-import '../../core/utils/bgm_service.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/utils/asset_loader.dart';
+import '../../core/utils/notifier.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../../models/sleep_session.dart';
 import '../../models/sleep_log.dart';
 import '../../models/scene_models.dart';
-import 'breathing_exercise_modal.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
@@ -26,7 +23,6 @@ class SleepGuideModal extends StatefulWidget {
   @override
   State<SleepGuideModal> createState() => _SleepGuideModalState();
 
-  /// Helper to show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return AppModal.show(
@@ -40,63 +36,34 @@ class SleepGuideModal extends StatefulWidget {
 
 class _SleepGuideModalState extends State<SleepGuideModal> {
   final SleepGuideService _sleepService = SleepGuideService();
-  final BgmService _bgmService = BgmService();
 
-  // Sleep log state
-  int _selectedDayIndex = 0; // 0 = today, 1 = yesterday, …, 6 = 6 days ago
+  // 0 = today … 6 = 6 days ago (data index)
+  int _selectedDayIndex = 0;
   int? _logBedtimeMinutes;
   int? _logWakeTimeMinutes;
   int? _logQuality;
-  final TextEditingController _logNotesController = TextEditingController();
 
-  // Timer state
-  int _timerMinutes = 30;
-  bool _isTimerActive = false;
-  Timer? _countdownTimer;
-  int _remainingSeconds = 0;
-  bool _fadingStarted = false;
-  bool _timerCompletedNaturally = false;
+  static const _qualityEmojis = ['😴', '😕', '😐', '🙂', '😊'];
 
   @override
   void initState() {
     super.initState();
-    final settings = DataManager().sleepSettings;
-    _timerMinutes = settings.defaultTimerMinutes;
     _loadLogForSelectedDay();
   }
 
-  @override
-  void dispose() {
-    _countdownTimer?.cancel();
-    // Cancel any in-progress fade and save session if timer was active
-    if (_isTimerActive) {
-      if (_fadingStarted && !_timerCompletedNaturally) {
-        _bgmService.cancelFade();
-      }
-      final currentBgm = DataManager().userSettings.bgm;
-      DataManager().addSleepSession(SleepSession(
-        startTime: DateTime.now(),
-        bgmTrack: currentBgm,
-        timerDurationMinutes: _timerMinutes,
-        completed: false,
-      ));
-    }
-    _logNotesController.dispose();
-    super.dispose();
-  }
+  // ==================== HELPERS ====================
 
-  // ==================== SLEEP LOG HELPERS ====================
-
-  /// Date for a given day index (0 = today, 1 = yesterday …)
   DateTime _dateFor(int index) {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day)
         .subtract(Duration(days: index));
   }
 
-  /// Find existing log for the selected day
-  SleepLog? get _currentLog {
-    final target = _dateFor(_selectedDayIndex);
+  /// Only today (0) and yesterday (1) are editable
+  bool _canEdit(int dataIdx) => dataIdx <= 1;
+
+  SleepLog? _logFor(int dataIdx) {
+    final target = _dateFor(dataIdx);
     final logs = DataManager().sleepLogs;
     try {
       return logs.firstWhere((l) =>
@@ -108,12 +75,13 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     }
   }
 
+  SleepLog? get _currentLog => _logFor(_selectedDayIndex);
+
   void _loadLogForSelectedDay() {
     final log = _currentLog;
     _logBedtimeMinutes = log?.bedtimeMinutes;
     _logWakeTimeMinutes = log?.wakeTimeMinutes;
     _logQuality = log?.quality;
-    _logNotesController.text = log?.notes ?? '';
   }
 
   int? get _logDurationMinutes {
@@ -122,14 +90,20 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     return diff < 0 ? diff + 1440 : diff;
   }
 
-  void _saveLog() {
+  String _qualityEmoji(int? quality) {
+    if (quality == null) return '';
+    return _qualityEmojis[(quality - 1).clamp(0, 4)];
+  }
+
+  // ==================== SAVE ====================
+
+  void _saveLog() async {
     final date = _dateFor(_selectedDayIndex);
     final newLog = SleepLog(
       date: date,
       bedtimeMinutes: _logBedtimeMinutes,
       wakeTimeMinutes: _logWakeTimeMinutes,
       quality: _logQuality,
-      notes: _logNotesController.text.trim(),
     );
 
     final logs = DataManager().sleepLogs.toList();
@@ -144,14 +118,12 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       logs.add(newLog);
     }
 
-    // Keep only last 30 days
     logs.sort((a, b) => b.date.compareTo(a.date));
     if (logs.length > 30) logs.removeRange(30, logs.length);
 
-    DataManager().saveSleepLogs(logs);
+    await DataManager().saveSleepLogs(logs);
+    if (!mounted) return;
     SfxService().taskComplete();
-
-    // Achievement trigger (fire-and-forget to keep _saveLog void)
     _triggerSleepAchievement(_logQuality ?? 3);
 
     final l10n = AppLocalizations.of(context);
@@ -167,7 +139,8 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   Future<void> _triggerSleepAchievement(int quality) async {
     if (!mounted) return;
     final score = context.read<ScoreProvider>();
-    final newly = await context.read<AchievementProvider>().onSleepLogAdded(quality, score);
+    final newly =
+        await context.read<AchievementProvider>().onSleepLogAdded(quality, score);
     if (newly.isNotEmpty && mounted) {
       AchievementPopup.show(context, newly);
     }
@@ -178,7 +151,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final settings = DataManager().sleepSettings;
+    final sleepSettings = DataManager().sleepSettings;
 
     return SingleChildScrollView(
       child: Column(
@@ -201,7 +174,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _sleepService.getSleepTip(l10n, settings),
+                    _sleepService.getSleepTip(l10n, sleepSettings),
                     style: AppTypography.bodyMedium(context),
                   ),
                 ),
@@ -211,7 +184,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
 
           const SizedBox(height: 24),
 
-          // ── Sleep Log Section ──
+          // ── Sleep Log ──
           Text(l10n.sleepLog, style: AppTypography.h4(context)),
           const SizedBox(height: 4),
           Text(
@@ -222,7 +195,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           ),
           const SizedBox(height: 12),
 
-          _buildDayGrid(l10n),
+          _buildDayGrid(),
           const SizedBox(height: 16),
           _buildSleepGraph(l10n),
           const SizedBox(height: 16),
@@ -232,7 +205,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           const Divider(),
           const SizedBox(height: 16),
 
-          // ── Sleep Schedule ──
+          // ── Sleep Schedule & Reminder ──
           Text(l10n.sleepSchedule, style: AppTypography.h4(context)),
           const SizedBox(height: 12),
 
@@ -241,12 +214,14 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
               Expanded(
                 child: _buildTimePickerTile(
                   label: l10n.bedtime,
-                  time: settings.bedtimeMinutes != null
-                      ? _sleepService.minutesToTimeOfDay(settings.bedtimeMinutes!)
+                  time: sleepSettings.bedtimeMinutes != null
+                      ? _sleepService
+                          .minutesToTimeOfDay(sleepSettings.bedtimeMinutes!)
                       : const TimeOfDay(hour: 22, minute: 0),
                   onChanged: (time) {
-                    final updated = settings.copyWith(
-                        bedtimeMinutes: _sleepService.timeOfDayToMinutes(time));
+                    final updated = sleepSettings.copyWith(
+                        bedtimeMinutes:
+                            _sleepService.timeOfDayToMinutes(time));
                     DataManager().saveSleepSettings(updated);
                     setState(() {});
                   },
@@ -256,12 +231,14 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
               Expanded(
                 child: _buildTimePickerTile(
                   label: l10n.wakeTime,
-                  time: settings.wakeTimeMinutes != null
-                      ? _sleepService.minutesToTimeOfDay(settings.wakeTimeMinutes!)
+                  time: sleepSettings.wakeTimeMinutes != null
+                      ? _sleepService
+                          .minutesToTimeOfDay(sleepSettings.wakeTimeMinutes!)
                       : const TimeOfDay(hour: 7, minute: 0),
                   onChanged: (time) {
-                    final updated = settings.copyWith(
-                        wakeTimeMinutes: _sleepService.timeOfDayToMinutes(time));
+                    final updated = sleepSettings.copyWith(
+                        wakeTimeMinutes:
+                            _sleepService.timeOfDayToMinutes(time));
                     DataManager().saveSleepSettings(updated);
                     setState(() {});
                   },
@@ -270,124 +247,27 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             ],
           ),
 
-          const SizedBox(height: 24),
-          const Divider(),
           const SizedBox(height: 16),
-
-          // ── Sleep Timer ──
-          Text(l10n.sleepTimer, style: AppTypography.h4(context)),
-          const SizedBox(height: 12),
-
-          if (!_isTimerActive) ...[
-            Text(l10n.timerDuration, style: AppTypography.bodyMedium(context)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove),
-                  onPressed: _timerMinutes > 5
-                      ? () => setState(() => _timerMinutes -= 5)
-                      : null,
-                ),
-                Text('$_timerMinutes min', style: AppTypography.h3(context)),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _timerMinutes < 120
-                      ? () => setState(() => _timerMinutes += 5)
-                      : null,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: AppButton(
-                label: l10n.startTimer,
-                onPressed: _startSleepTimer,
-              ),
-            ),
-          ] else ...[
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    _formatTimeRemaining(_remainingSeconds),
-                    style: AppTypography.h1(context),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.musicWillFadeOut,
-                    style: AppTypography.bodySmall(context),
-                  ),
-                  const SizedBox(height: 16),
-                  AppButton(
-                    label: l10n.stopTimer,
-                    onPressed: _stopSleepTimer,
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // ── Breathing CTA ──
-          if (_sleepService.shouldSuggestBreathing(settings)) ...[
-            const Divider(),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.troubleSleeping,
-                    style: AppTypography.bodyLarge(context)
-                        .copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.tryBreathingExercise,
-                    style: AppTypography.bodyMedium(context),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    label: l10n.goToBreathing,
-                    onPressed: () {
-                      Navigator.pop(context);
-                      BreathingExerciseModal.show(context);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
+          _buildReminderRow(l10n),
         ],
       ),
     );
   }
 
-  // ==================== SLEEP LOG WIDGETS ====================
+  // ==================== DAY GRID ====================
 
-  Widget _buildDayGrid(AppLocalizations l10n) {
+  Widget _buildDayGrid() {
     final theme = Theme.of(context);
-    final logs = DataManager().sleepLogs;
 
     return Row(
-      children: List.generate(7, (i) {
-        final date = _dateFor(i);
-        final hasLog = logs.any((l) =>
-            l.date.year == date.year &&
-            l.date.month == date.month &&
-            l.date.day == date.day);
-        final isSelected = i == _selectedDayIndex;
+      children: List.generate(7, (displayIdx) {
+        // Ascending: leftmost = oldest (6d ago), rightmost = today
+        final dataIdx = 6 - displayIdx;
+        final date = _dateFor(dataIdx);
+        final log = _logFor(dataIdx);
+        final hasLog = log != null;
+        final isSelected = dataIdx == _selectedDayIndex;
+        final canEdit = _canEdit(dataIdx);
 
         Color borderColor;
         Color bgColor;
@@ -405,43 +285,43 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedDayIndex = i;
-                  _loadLogForSelectedDay();
-                });
-                SfxService().buttonClick();
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  border: Border.all(color: borderColor),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Opacity(
+                opacity: canEdit ? 1.0 : 0.65,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedDayIndex = dataIdx;
+                      _loadLogForSelectedDay();
+                    });
+                    SfxService().buttonClick();
+                  },
                   borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      _dayLabel(date, l10n),
-                      style: AppTypography.bodySmall(context).copyWith(
-                        fontSize: 9,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      border: Border.all(
+                          color: borderColor, width: isSelected ? 2 : 1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${date.day}',
-                      style: AppTypography.bodyMedium(context).copyWith(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${date.day}',
+                          style: AppTypography.bodyMedium(context).copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          hasLog ? _qualityEmoji(log.quality) : '',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
                     ),
-                    if (hasLog)
-                      Icon(Icons.bedtime,
-                          size: 10, color: theme.colorScheme.primary),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -451,12 +331,14 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     );
   }
 
+  // ==================== GRAPH ====================
+
   Widget _buildSleepGraph(AppLocalizations l10n) {
     final logs = DataManager().sleepLogs;
     final values = <double?>[];
     final labels = <String>[];
 
-    // Build 7-day series (oldest → newest = left → right)
+    // Oldest → newest (left to right)
     for (int i = 6; i >= 0; i--) {
       final date = _dateFor(i);
       final log = logs.cast<SleepLog?>().firstWhere(
@@ -513,13 +395,16 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     );
   }
 
+  // ==================== CHECK-IN FORM ====================
+
   Widget _buildCheckInForm(AppLocalizations l10n) {
     final theme = Theme.of(context);
     final selectedDate = _dateFor(_selectedDayIndex);
     final isToday = _selectedDayIndex == 0;
-    final dateStr = '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+    final dateStr =
+        '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+    final canEdit = _canEdit(_selectedDayIndex);
 
-    // Computed duration string
     String durationStr = '--';
     final dur = _logDurationMinutes;
     if (dur != null) {
@@ -528,13 +413,15 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       durationStr = m > 0 ? '${h}h ${m}m' : '${h}h';
     }
 
-    final canSave =
-        _logBedtimeMinutes != null || _logWakeTimeMinutes != null || _logQuality != null;
+    final canSave = canEdit &&
+        (_logBedtimeMinutes != null ||
+            _logWakeTimeMinutes != null ||
+            _logQuality != null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header row: date + duration badge
+        // Header: date + duration badge + lock icon for read-only
         Row(
           children: [
             Text(
@@ -542,6 +429,12 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
               style: AppTypography.bodyLarge(context)
                   .copyWith(fontWeight: FontWeight.bold),
             ),
+            if (!canEdit) ...[
+              const SizedBox(width: 6),
+              Icon(Icons.lock_outline,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ],
             const Spacer(),
             if (dur != null)
               Container(
@@ -563,33 +456,42 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         ),
         const SizedBox(height: 12),
 
-        // Bedtime + Wake time pickers
-        Row(
-          children: [
-            Expanded(
-              child: _buildTimePickerTile(
-                label: l10n.actualBedtime,
-                time: _logBedtimeMinutes != null
-                    ? _sleepService.minutesToTimeOfDay(_logBedtimeMinutes!)
-                    : const TimeOfDay(hour: 22, minute: 0),
-                onChanged: (t) => setState(() {
-                  _logBedtimeMinutes = _sleepService.timeOfDayToMinutes(t);
-                }),
+        // Bedtime + Wake time
+        Opacity(
+          opacity: canEdit ? 1.0 : 0.5,
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildTimePickerTile(
+                  label: l10n.actualBedtime,
+                  time: _logBedtimeMinutes != null
+                      ? _sleepService.minutesToTimeOfDay(_logBedtimeMinutes!)
+                      : const TimeOfDay(hour: 22, minute: 0),
+                  onChanged: canEdit
+                      ? (t) => setState(() {
+                            _logBedtimeMinutes =
+                                _sleepService.timeOfDayToMinutes(t);
+                          })
+                      : null,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildTimePickerTile(
-                label: l10n.actualWakeTime,
-                time: _logWakeTimeMinutes != null
-                    ? _sleepService.minutesToTimeOfDay(_logWakeTimeMinutes!)
-                    : const TimeOfDay(hour: 7, minute: 0),
-                onChanged: (t) => setState(() {
-                  _logWakeTimeMinutes = _sleepService.timeOfDayToMinutes(t);
-                }),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildTimePickerTile(
+                  label: l10n.actualWakeTime,
+                  time: _logWakeTimeMinutes != null
+                      ? _sleepService.minutesToTimeOfDay(_logWakeTimeMinutes!)
+                      : const TimeOfDay(hour: 7, minute: 0),
+                  onChanged: canEdit
+                      ? (t) => setState(() {
+                            _logWakeTimeMinutes =
+                                _sleepService.timeOfDayToMinutes(t);
+                          })
+                      : null,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         const SizedBox(height: 16),
@@ -597,75 +499,120 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         // Sleep quality
         Text(l10n.sleepQuality, style: AppTypography.bodyMedium(context)),
         const SizedBox(height: 8),
-        _buildQualityRow(theme),
+        _buildQualityRow(theme, isReadOnly: !canEdit),
 
-        const SizedBox(height: 16),
-
-        // Notes
-        TextField(
-          controller: _logNotesController,
-          maxLines: 2,
-          maxLength: 200,
-          decoration: InputDecoration(
-            hintText: l10n.writeYourThoughts,
-            counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+        if (canEdit) ...[
+          const SizedBox(height: 16),
+          Center(
+            child: AppButton(
+              label: l10n.save,
+              onPressed: canSave ? _saveLog : null,
             ),
-            contentPadding: const EdgeInsets.all(12),
           ),
-          style: AppTypography.bodyMedium(context),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Save button
-        Center(
-          child: AppButton(
-            label: l10n.save,
-            onPressed: canSave ? _saveLog : null,
-          ),
-        ),
+        ],
       ],
     );
   }
 
-  Widget _buildQualityRow(ThemeData theme) {
-    const qualities = ['😴', '😕', '😐', '🙂', '😊'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: List.generate(5, (i) {
-        final score = i + 1;
-        final isSelected = _logQuality == score;
-        return GestureDetector(
-          onTap: () {
-            setState(() => _logQuality = score);
-            SfxService().buttonClick();
-          },
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
+  Widget _buildQualityRow(ThemeData theme, {required bool isReadOnly}) {
+    return Opacity(
+      opacity: isReadOnly ? 0.5 : 1.0,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(5, (i) {
+          final score = i + 1;
+          final isSelected = _logQuality == score;
+          return GestureDetector(
+            onTap: isReadOnly
+                ? null
+                : () {
+                    setState(() => _logQuality = score);
+                    SfxService().buttonClick();
+                  },
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant,
+                  width: isSelected ? 2 : 1,
+                ),
                 color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outlineVariant,
-                width: isSelected ? 2 : 1,
+                    ? theme.colorScheme.primaryContainer
+                    : Colors.transparent,
               ),
-              color: isSelected
-                  ? theme.colorScheme.primaryContainer
-                  : Colors.transparent,
-            ),
-            child: Center(
-              child: Text(
-                qualities[i],
-                style: const TextStyle(fontSize: 20),
+              child: Center(
+                child: Text(
+                  _qualityEmojis[i],
+                  style: const TextStyle(fontSize: 20),
+                ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
+    );
+  }
+
+  // ==================== SCHEDULE & REMINDER ====================
+
+  Widget _buildReminderRow(AppLocalizations l10n) {
+    final userSettings = DataManager().userSettings;
+    final sleepSettings = DataManager().sleepSettings;
+    final bedtimeMinutes = sleepSettings.bedtimeMinutes ?? 1320;
+    final bh = bedtimeMinutes ~/ 60;
+    final bm = bedtimeMinutes % 60;
+    final bedtimeStr =
+        '${bh.toString().padLeft(2, '0')}:${bm.toString().padLeft(2, '0')}';
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.sleepReminder,
+                style: AppTypography.bodyMedium(context)),
+            if (userSettings.sleepReminderEnabled)
+              Text(
+                bedtimeStr,
+                style: AppTypography.bodySmall(context).copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+          ],
+        ),
+        Switch(
+          value: userSettings.sleepReminderEnabled,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+          onChanged: (val) async {
+            if (val) {
+              final permitted = await Notifier.requestPermissions();
+              if (!mounted) return;
+              if (!permitted) {
+                SfxService().error();
+                return;
+              }
+            }
+            // Sync reminder time to bedtime from sleep schedule
+            final updated = userSettings.copyWith(
+              sleepReminderEnabled: val,
+              sleepReminderTimeMinutes: bedtimeMinutes,
+            );
+            await DataManager().saveUserSettings(updated);
+            if (!mounted) return;
+            if (val) {
+              await Notifier.scheduleSleepReminder(updated);
+            } else {
+              await Notifier.cancelSleepReminder();
+            }
+            setState(() {});
+          },
+        ),
+      ],
     );
   }
 
@@ -674,24 +621,27 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   Widget _buildTimePickerTile({
     required String label,
     required TimeOfDay time,
-    required Function(TimeOfDay) onChanged,
+    required Function(TimeOfDay)? onChanged,
   }) {
+    final isEnabled = onChanged != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: AppTypography.bodySmall(context)),
         const SizedBox(height: 4),
         InkWell(
-          onTap: () async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: time,
-            );
-            if (picked != null) {
-              onChanged(picked);
-              SfxService().buttonClick();
-            }
-          },
+          onTap: isEnabled
+              ? () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: time,
+                  );
+                  if (picked != null) {
+                    onChanged(picked);
+                    SfxService().buttonClick();
+                  }
+                }
+              : null,
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -722,87 +672,5 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         ),
       ],
     );
-  }
-
-  // ==================== SLEEP TIMER LOGIC ====================
-
-  void _startSleepTimer() {
-    final settings = DataManager().sleepSettings;
-    if (settings.defaultTimerMinutes != _timerMinutes) {
-      DataManager().saveSleepSettings(
-        settings.copyWith(defaultTimerMinutes: _timerMinutes),
-      );
-    }
-
-    setState(() {
-      _isTimerActive = true;
-      _remainingSeconds = _timerMinutes * 60;
-      _fadingStarted = false;
-      _timerCompletedNaturally = false;
-    });
-
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      if (_remainingSeconds == 120 && !_fadingStarted) {
-        _fadingStarted = true;
-        _bgmService.fadeOutAndStop(const Duration(minutes: 2));
-      }
-
-      if (_remainingSeconds <= 0) {
-        timer.cancel();
-        _timerCompletedNaturally = true;
-        _stopSleepTimer();
-        SfxService().taskComplete();
-        return;
-      }
-
-      setState(() => _remainingSeconds--);
-    });
-  }
-
-  void _stopSleepTimer() {
-    _countdownTimer?.cancel();
-
-    if (_fadingStarted && !_timerCompletedNaturally) {
-      _bgmService.cancelFade();
-    }
-
-    final currentBgm = DataManager().userSettings.bgm;
-    DataManager().addSleepSession(SleepSession(
-      startTime: DateTime.now(),
-      bgmTrack: currentBgm,
-      timerDurationMinutes: _timerMinutes,
-      completed: _timerCompletedNaturally,
-    ));
-
-    setState(() {
-      _isTimerActive = false;
-      _fadingStarted = false;
-      _timerCompletedNaturally = false;
-    });
-  }
-
-  // ==================== HELPERS ====================
-
-  String _dayLabel(DateTime date, AppLocalizations l10n) {
-    final now = DateTime.now();
-    final diff = DateTime(now.year, now.month, now.day)
-        .difference(DateTime(date.year, date.month, date.day))
-        .inDays;
-    if (diff == 0) return l10n.todaysJournal.substring(0, 2).toUpperCase();
-    const days = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-    return days[date.weekday - 1];
-  }
-
-  String _formatTimeRemaining(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-    if (hours > 0) return '${hours}h ${minutes}m ${secs}s';
-    return '${minutes}m ${secs}s';
   }
 }

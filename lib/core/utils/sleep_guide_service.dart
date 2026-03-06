@@ -41,6 +41,25 @@ class SleepGuideService {
     }
   }
 
+  /// Returns true if current time is within the sleep window
+  /// (bedtime → wakeTime, handles midnight crossing)
+  bool isSleepTime(SleepSettings settings) {
+    if (settings.bedtimeMinutes == null || settings.wakeTimeMinutes == null) {
+      return false;
+    }
+    final now = DateTime.now();
+    final current = now.hour * 60 + now.minute;
+    final bedtime = settings.bedtimeMinutes!;
+    final wake = settings.wakeTimeMinutes!;
+
+    // Sleep window crosses midnight (e.g., 22:00 → 07:00)
+    if (bedtime > wake) {
+      return current >= bedtime || current < wake;
+    }
+    // Same-day window (unusual, e.g., nap 14:00 → 15:00)
+    return current >= bedtime && current < wake;
+  }
+
   /// Determine whether to suggest breathing exercise
   /// Returns true if within 60 min of bedtime or up to 2 hours past
   bool shouldSuggestBreathing(SleepSettings settings) {

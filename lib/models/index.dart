@@ -8,7 +8,6 @@ export 'painting_progress.dart';
 export 'music_progress.dart';
 export 'scene_models.dart';
 export 'breathing_session.dart';
-export 'sleep_session.dart';
 export 'sleep_settings.dart';
 export 'sleep_log.dart';
 export 'achievement_progress.dart';

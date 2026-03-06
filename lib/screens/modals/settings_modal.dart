@@ -515,55 +515,6 @@ class _SettingsModalState extends State<SettingsModal> {
 
         // ========== NOTIFICATION ==========
         _buildSection(l10n.notification, theme, [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${l10n.sleepReminder}:',
-                style: AppTypography.bodyLarge(context, color: theme.text),
-              ),
-              Switch(
-                value: _settings.sleepReminderEnabled,
-                activeThumbColor: theme.primary,
-                onChanged: (val) async {
-                  if (val) {
-                    // Request notification permission when enabling
-                    final permitted = await Notifier.requestPermissions();
-                    if (!permitted) {
-                      SfxService().error();
-                      return;
-                    }
-                  }
-                  
-                  setState(() {
-                    _settings = _settings.copyWith(sleepReminderEnabled: val);
-                    _saveSettings();
-                  });
-                  
-                  // Update notification schedule
-                  if (val) {
-                    await Notifier.scheduleSleepReminder(_settings);
-                  } else {
-                    await Notifier.cancelSleepReminder();
-                  }
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_settings.sleepReminderEnabled)
-            _buildTimeSelector(
-              '${l10n.time}:',
-              _settings.sleepReminderTime,
-              (time) {
-                final minutes = time.hour * 60 + time.minute;
-                setState(() {
-                  _settings = _settings.copyWith(sleepReminderTimeMinutes: minutes);
-                  _saveSettings();
-                });
-              },
-              theme,
-            ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -800,56 +751,6 @@ class _SettingsModalState extends State<SettingsModal> {
           );
         }).toList(),
       ),
-    );
-  }
-
-  Widget _buildTimeSelector(
-    String label,
-    TimeOfDay time,
-    Function(TimeOfDay) onChanged,
-    AppTheme theme,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: AppTypography.bodyLarge(context, color: theme.text),
-        ),
-        InkWell(
-          onTap: () async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: time,
-            );
-            if (picked != null) {
-              SfxService().buttonClick();
-              onChanged(picked);
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.primary,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: theme.border, width: 1.5),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Builder(
-                  builder: (context) => Text(
-                    time.format(context),
-                    style: AppTypography.bodyLarge(context, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 

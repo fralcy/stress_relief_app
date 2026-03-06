@@ -33,7 +33,6 @@ class DataManager {
   static const String _paintingProgressBox = 'paintingProgressBox';
   static const String _musicProgressBox = 'musicProgressBox';
   static const String _breathingSessionsBox = 'breathingSessionsBox';
-  static const String _sleepSessionsBox = 'sleepSessionsBox';
   static const String _sleepSettingsBox = 'sleepSettingsBox';
   static const String _sleepLogsBox = 'sleepLogsBox';
   static const String _achievementProgressBox = 'achievementProgressBox';
@@ -48,7 +47,6 @@ class DataManager {
   late Box<PaintingProgress> _paintingProgressHive;
   late Box<MusicProgress> _musicProgressHive;
   late Box<BreathingSession> _breathingSessionsHive;
-  late Box<SleepSession> _sleepSessionsHive;
   late Box<SleepSettings> _sleepSettingsHive;
   late Box<SleepLog> _sleepLogsHive;
   late Box<AchievementProgress> _achievementProgressHive;
@@ -89,7 +87,6 @@ class DataManager {
     Hive.registerAdapter(MusicTrackAdapter());
     // Breathing & Sleep models (typeId: 18-21)
     Hive.registerAdapter(BreathingSessionAdapter());
-    Hive.registerAdapter(SleepSessionAdapter());
     Hive.registerAdapter(SleepSettingsAdapter());
     Hive.registerAdapter(SleepLogAdapter());
     // Achievement model (typeId: 22)
@@ -111,7 +108,6 @@ class DataManager {
     _paintingProgressHive = await Hive.openBox<PaintingProgress>(_paintingProgressBox);
     _musicProgressHive = await Hive.openBox<MusicProgress>(_musicProgressBox);
     _breathingSessionsHive = await Hive.openBox<BreathingSession>(_breathingSessionsBox);
-    _sleepSessionsHive = await Hive.openBox<SleepSession>(_sleepSessionsBox);
     _sleepSettingsHive = await Hive.openBox<SleepSettings>(_sleepSettingsBox);
     _sleepLogsHive = await Hive.openBox<SleepLog>(_sleepLogsBox);
     _achievementProgressHive = await Hive.openBox<AchievementProgress>(_achievementProgressBox);
@@ -408,17 +404,6 @@ class DataManager {
 
   Future<void> addBreathingSession(BreathingSession session) async {
     await _breathingSessionsHive.add(session);
-    await _updateLastModifiedTime();
-  }
-
-  // ==================== SLEEP SESSIONS ====================
-
-  List<SleepSession> get sleepSessions {
-    return _sleepSessionsHive.values.toList();
-  }
-
-  Future<void> addSleepSession(SleepSession session) async {
-    await _sleepSessionsHive.add(session);
     await _updateLastModifiedTime();
   }
 

@@ -841,6 +841,14 @@ class AppLocalizationsEn extends AppLocalizations {
     }
   }
 
+  // Mascot dialogues - Sleep time dialogues (2 variants)
+  @override
+  String getMascotSleepDialogue(int variant) {
+    return variant == 0
+        ? "It's bedtime! Rest up for tomorrow~"
+        : 'Put down the screen and sleep well 😴';
+  }
+
   // Mascot dialogues - Click dialogues (2 variants per scene)
   @override
   String getMascotClickDialogue(SceneType scene, int variant) {

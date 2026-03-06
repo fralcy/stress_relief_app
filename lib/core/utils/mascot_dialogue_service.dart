@@ -31,6 +31,12 @@ class MascotDialogueService {
     return l10n.getMascotClickDialogue(scene, variant);
   }
 
+  /// Lấy dialogue khi đến giờ ngủ (2 biến thể, không lặp lại liên tiếp)
+  String getSleepDialogue(AppLocalizations l10n) {
+    final variant = _random.nextBool() ? 0 : 1;
+    return l10n.getMascotSleepDialogue(variant);
+  }
+
   /// Lấy biểu cảm ngẫu nhiên (idle hoặc happy)
   MascotExpression getRandomExpression() {
     return _random.nextBool() ? MascotExpression.idle : MascotExpression.happy;
