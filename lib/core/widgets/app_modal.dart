@@ -15,6 +15,7 @@ class AppModal extends StatelessWidget {
   final String title;
   final Widget content;
   final double maxHeight;
+  final double? minHeight;
   final VoidCallback? onHelpPressed;
 
   const AppModal({
@@ -22,6 +23,7 @@ class AppModal extends StatelessWidget {
     required this.title,
     required this.content,
     this.maxHeight = 600,
+    this.minHeight,
     this.onHelpPressed,
   });
 
@@ -31,6 +33,7 @@ class AppModal extends StatelessWidget {
     required String title,
     required Widget content,
     double maxHeight = 600,
+    double? minHeight,
     VoidCallback? onHelpPressed,
   }) {
     return showModalBottomSheet<T>(
@@ -41,6 +44,7 @@ class AppModal extends StatelessWidget {
         title: title,
         content: content,
         maxHeight: maxHeight,
+        minHeight: minHeight,
         onHelpPressed: onHelpPressed,
       ),
     );
@@ -51,6 +55,7 @@ class AppModal extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(
         maxHeight: maxHeight,
+        minHeight: minHeight ?? 0,
       ),
       decoration: BoxDecoration(
         // M3 surface color
@@ -69,7 +74,7 @@ class AppModal extends StatelessWidget {
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: minHeight != null ? MainAxisSize.max : MainAxisSize.min,
         children: [
           // Header
           _buildHeader(context),

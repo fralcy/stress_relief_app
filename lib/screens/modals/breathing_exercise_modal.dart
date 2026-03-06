@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
+import '../../core/widgets/speech_bubble.dart';
 
 /// Modal for breathing exercises
 class BreathingExerciseModal extends StatefulWidget {
@@ -27,10 +28,12 @@ class BreathingExerciseModal extends StatefulWidget {
   /// Helper to show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final h = MediaQuery.of(context).size.height * 0.92;
     return AppModal.show(
       context: context,
       title: l10n.breathingExercise,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: h,
+      minHeight: h,
       content: const BreathingExerciseModal(),
     );
   }
@@ -48,6 +51,11 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   // Current phase state (updated by timer, used by build)
   String _currentPhase = 'inhale';
   double _currentProgress = 0.0;
+
+  // Speech bubble
+  String? _cycleMessage;
+  Timer? _bubbleTimer;
+  final _rng = math.Random();
 
   // Animation controllers
   late AnimationController _scaleController;
@@ -72,6 +80,7 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   @override
   void dispose() {
     _timer?.cancel();
+    _bubbleTimer?.cancel();
     _scaleController.dispose();
     super.dispose();
   }
@@ -87,160 +96,212 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   Widget _buildExerciseSelection() {
     final l10n = AppLocalizations.of(context);
     final exercises = [
-      {
-        'type': '4-7-8',
-        'name': l10n.exercise478,
-        'desc': l10n.exercise478Desc,
-      },
-      {
-        'type': 'box',
-        'name': l10n.exerciseBox,
-        'desc': l10n.exerciseBoxDesc,
-      },
-      {
-        'type': 'deep_belly',
-        'name': l10n.exerciseDeepBelly,
-        'desc': l10n.exerciseDeepBellyDesc,
-      },
-      {
-        'type': 'calm',
-        'name': l10n.exerciseCalm,
-        'desc': l10n.exerciseCalmDesc,
-      },
+      {'type': '4-7-8', 'name': l10n.exercise478, 'desc': l10n.exercise478Desc},
+      {'type': 'box', 'name': l10n.exerciseBox, 'desc': l10n.exerciseBoxDesc},
+      {'type': 'deep_belly', 'name': l10n.exerciseDeepBelly, 'desc': l10n.exerciseDeepBellyDesc},
+      {'type': 'calm', 'name': l10n.exerciseCalm, 'desc': l10n.exerciseCalmDesc},
     ];
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.selectExercise,
-            style: AppTypography.h4(context),
-          ),
-          const SizedBox(height: 16),
-          ...exercises.map((ex) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ExerciseCard(
-                  name: ex['name']!,
-                  description: ex['desc']!,
-                  onTap: () {
-                    setState(() => _selectedExercise = ex['type']);
-                    SfxService().buttonClick();
-                  },
-                ),
-              )),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.selectExercise, style: AppTypography.h4(context)),
+        const SizedBox(height: 16),
+        ...exercises.map((ex) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ExerciseCard(
+                name: ex['name']!,
+                description: ex['desc']!,
+                onTap: () {
+                  setState(() => _selectedExercise = ex['type']);
+                  SfxService().buttonClick();
+                },
+              ),
+            )),
+      ],
     );
   }
 
   Widget _buildBreathingSession() {
     final l10n = AppLocalizations.of(context);
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Back button
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
+    return Column(
+      children: [
+        // Back button + centered exercise title
+        Row(
+          children: [
+            IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
-                if (_isActive) {
-                  _stopSession();
-                }
+                if (_isActive) _stopSession();
                 setState(() => _selectedExercise = null);
               },
             ),
-          ),
+            Expanded(
+              child: Text(
+                _getExerciseName(l10n),
+                textAlign: TextAlign.center,
+                style: AppTypography.h4(context),
+              ),
+            ),
+            const SizedBox(width: 48),
+          ],
+        ),
 
-          const SizedBox(height: 8),
+        const SizedBox(height: 4),
 
-          // Timer and cycles
-          Text(
-            '${_elapsedSeconds ~/ 60}:${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
-            style: AppTypography.h2(context),
-          ),
-          Text(
-            '${l10n.cycles}: $_cyclesCompleted',
-            style: AppTypography.bodyMedium(context),
-          ),
+        // Timer and cycles
+        Text(
+          '${_elapsedSeconds ~/ 60}:${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
+          style: AppTypography.h2(context),
+        ),
+        Text(
+          '${l10n.cycles}: $_cyclesCompleted',
+          style: AppTypography.bodyMedium(context),
+        ),
 
-          const SizedBox(height: 32),
+        const SizedBox(height: 16),
 
-          // Mascot with circular progress
-          SizedBox(
-            width: 300,
-            height: 300,
-            child: Stack(
-              alignment: Alignment.center,
+        // Responsive circle + mascot
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final circleSize = math.min(constraints.maxWidth * 0.75, 220.0);
+            final mascotSize = circleSize * 0.67;
+            final mascotAreaHeight = mascotSize * 1.3;
+
+            return Column(
               children: [
                 // Circular progress
-                CustomPaint(
-                  size: const Size(300, 300),
-                  painter: _CircularProgressPainter(
-                    progress: _currentProgress,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-
-                // Animated mascot
-                ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Image.asset(
-                    AssetLoader.getMascotAsset(MascotExpression.calm),
-                    width: 200,
-                    height: 200,
-                  ),
-                ),
-
-                // Phase text
-                if (_isActive)
-                  Positioned(
-                    top: 20,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _getPhaseText(_currentPhase, l10n),
-                        style: AppTypography.bodyLarge(context).copyWith(
-                          fontWeight: FontWeight.bold,
+                SizedBox(
+                  width: circleSize,
+                  height: circleSize,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: Size(circleSize, circleSize),
+                        painter: _CircularProgressPainter(
+                          progress: _currentProgress,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                    ),
+                      if (_isActive)
+                        Positioned(
+                          top: circleSize * 0.07,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _getPhaseText(_currentPhase, l10n),
+                              style: AppTypography.bodyLarge(context).copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
-          ),
+                ),
 
-          const SizedBox(height: 32),
-
-          // Control buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppButton(
-                label: _isActive ? l10n.stop : l10n.start,
-                onPressed: _toggleSession,
-              ),
-              if (_isActive) ...[
-                const SizedBox(width: 16),
-                AppButton(
-                  label: l10n.reset,
-                  onPressed: _resetSession,
+                // Mascot area with speech bubble overlay
+                SizedBox(
+                  height: mascotAreaHeight,
+                  child: Stack(
+                    children: [
+                      // Mascot — bottom-aligned, expands upward
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: ScaleTransition(
+                            scale: _scaleAnimation,
+                            alignment: Alignment.bottomCenter,
+                            child: Image.asset(
+                              AssetLoader.getMascotAsset(MascotExpression.calm),
+                              width: mascotSize,
+                              height: mascotSize,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Speech bubble — top-centered, mũi tên chỉ xuống linh vật
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: AnimatedOpacity(
+                          opacity: _cycleMessage != null ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 300),
+                          child: Center(
+                            child: SpeechBubble(
+                              text: _cycleMessage ?? '',
+                              tailPosition: BubbleTailPosition.bottom,
+                              maxWidth: 200,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
+            );
+          },
+        ),
+
+        const SizedBox(height: 8),
+
+        // Control buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AppButton(
+              label: _isActive ? l10n.stop : l10n.start,
+              onPressed: _toggleSession,
+            ),
+            if (_isActive) ...[
+              const SizedBox(width: 16),
+              AppButton(
+                label: l10n.reset,
+                onPressed: _resetSession,
+              ),
             ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
+  }
+
+  List<String> _getPraiseMessages() {
+    final l10n = AppLocalizations.of(context);
+    return [
+      l10n.breathingPraise1,
+      l10n.breathingPraise2,
+      l10n.breathingPraise3,
+      l10n.breathingPraise4,
+    ];
+  }
+
+  String _getExerciseName(AppLocalizations l10n) {
+    switch (_selectedExercise) {
+      case '4-7-8':
+        return l10n.exercise478;
+      case 'box':
+        return l10n.exerciseBox;
+      case 'deep_belly':
+        return l10n.exerciseDeepBelly;
+      case 'calm':
+        return l10n.exerciseCalm;
+      default:
+        return '';
+    }
   }
 
   String _getPhaseText(String phase, AppLocalizations l10n) {
@@ -267,8 +328,17 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   }
 
   void _startSession() {
-    setState(() => _isActive = true);
-    // Update animation immediately on start
+    // Always reset to start fresh from inhale
+    _bubbleTimer?.cancel();
+    setState(() {
+      _isActive = true;
+      _elapsedSeconds = 0;
+      _cyclesCompleted = 0;
+      _currentPhase = 'inhale';
+      _currentProgress = 0.0;
+      _cycleMessage = null;
+    });
+    _scaleController.reset();
     _updatePhaseAndAnimation();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -277,6 +347,8 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
         return;
       }
 
+      bool cycleJustCompleted = false;
+
       setState(() {
         _elapsedSeconds++;
 
@@ -284,12 +356,23 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
         final cycleDuration = _service.getCycleDuration(_selectedExercise!);
         if (_elapsedSeconds % cycleDuration == 0) {
           _cyclesCompleted++;
-          SfxService().buttonClick();
+          cycleJustCompleted = true;
+          final msgs = _getPraiseMessages();
+          _cycleMessage = msgs[_rng.nextInt(msgs.length)];
         }
 
         // Update phase and animation
         _updatePhaseAndAnimation();
       });
+
+      // Side effects outside setState
+      if (cycleJustCompleted) {
+        SfxService().buttonClick();
+        _bubbleTimer?.cancel();
+        _bubbleTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _cycleMessage = null);
+        });
+      }
     });
   }
 

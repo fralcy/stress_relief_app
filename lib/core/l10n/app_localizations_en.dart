@@ -956,6 +956,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cycles => 'Cycles';
 
   @override
+  String get breathingPraise1 => 'Well done!';
+
+  @override
+  String get breathingPraise2 => 'Keep it up!';
+
+  @override
+  String get breathingPraise3 => "You're doing great!";
+
+  @override
+  String get breathingPraise4 => 'Breathe steady!';
+
+  @override
   String get start => 'Start';
 
   @override

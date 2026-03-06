@@ -959,6 +959,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cycles => 'Chu kỳ';
 
   @override
+  String get breathingPraise1 => 'Giỏi lắm!';
+
+  @override
+  String get breathingPraise2 => 'Tiếp tục nhé!';
+
+  @override
+  String get breathingPraise3 => 'Bạn làm rất tốt!';
+
+  @override
+  String get breathingPraise4 => 'Thở đều đi!';
+
+  @override
   String get start => 'Bắt đầu';
 
   @override

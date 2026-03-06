@@ -361,6 +361,10 @@ abstract class AppLocalizations {
   String get hold;
   String get pause;
   String get cycles;
+  String get breathingPraise1;
+  String get breathingPraise2;
+  String get breathingPraise3;
+  String get breathingPraise4;
   String get start;
   String get stop;
 
