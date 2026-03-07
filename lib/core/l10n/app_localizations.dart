@@ -141,15 +141,6 @@ abstract class AppLocalizations {
   // Garden
   String get gardenTitle;
   String get inventory;
-  String get action;
-  String get plant;
-  String get water;
-  String get pestControl;
-  String get harvest;
-  String get plantedSuccessfully;
-  String get wateredSuccessfully;
-  String get pestControlSuccessfully;
-  String harvestedSuccessfully(int count, int points);
 
   // Aquarium
   String get fish;
@@ -342,8 +333,6 @@ abstract class AppLocalizations {
   String get tutorialGardenGridDesc;
   String get tutorialGardenInventoryTitle;
   String get tutorialGardenInventoryDesc;
-  String get tutorialGardenActionsTitle;
-  String get tutorialGardenActionsDesc;
 
   // Breathing Exercise
   String get breathing;

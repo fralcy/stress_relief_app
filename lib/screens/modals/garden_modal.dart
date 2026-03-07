@@ -11,7 +11,6 @@ import '../../core/utils/garden_service.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/widgets/app_modal.dart';
-import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/score_provider.dart';
@@ -26,39 +25,47 @@ class GardenModal extends StatefulWidget {
   @override
   State<GardenModal> createState() => _GardenModalState();
 
-  /// Helper để show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_GardenModalState>();
+    final fixedHeight = MediaQuery.of(context).size.height * 0.92;
     return AppModal.show(
       context: context,
       title: l10n.garden,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: fixedHeight,
+      minHeight: fixedHeight,
       content: GardenModal(key: modalKey),
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
     );
   }
 }
 
-class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin {
+class _GardenModalState extends State<GardenModal>
+    with TickerProviderStateMixin {
   late GardenProgress _progress;
   String? _selectedPlantType;
-  String? _selectedAction;
-  Timer? _growthTimer;
-  
-  // Animation controllers cho các action
-  final Map<String, AnimationController> _cellAnimations = {};
-  final Map<String, String> _cellEffects = {}; // Lưu effect type cho mỗi cell
-  final Map<String, int> _cellHarvestPoints = {}; // Lưu points khi harvest
 
-  // Debug mode state
+  /// Last successfully executed action — used to break ties when a cell
+  /// allows multiple actions simultaneously (e.g. needs water AND has pest).
+  String? _lastAction;
+
+  /// Cells already acted on during the current drag gesture.
+  final Set<String> _draggedCells = {};
+
+  Timer? _growthTimer;
+
+  // Cell animation state
+  final Map<String, AnimationController> _cellAnimations = {};
+  final Map<String, String> _cellEffects = {};
+  final Map<String, int> _cellHarvestPoints = {};
+
+  // Debug mode
   bool _isDebugMode = false;
   final AuthService _authService = AuthService();
 
   // Tutorial overlay keys
   final GlobalKey _gridKey = GlobalKey();
   final GlobalKey _inventoryKey = GlobalKey();
-  final GlobalKey _actionsKey = GlobalKey();
 
   @override
   void initState() {
@@ -67,19 +74,20 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
     _startGrowthTimer();
     _checkDebugMode();
   }
-  
+
   @override
   void dispose() {
     _growthTimer?.cancel();
-    for (var controller in _cellAnimations.values) {
-      controller.dispose();
+    for (final c in _cellAnimations.values) {
+      c.dispose();
     }
     super.dispose();
   }
-  
+
+  // ==================== INIT ====================
+
   void _startGrowthTimer() {
-    // Update growth every 8 seconds (balanced realtime update)
-    _growthTimer = Timer.periodic(const Duration(seconds: 8), (timer) {
+    _growthTimer = Timer.periodic(const Duration(seconds: 8), (_) {
       if (mounted) {
         setState(() {
           _progress = _progress.copyWith(
@@ -93,10 +101,10 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
 
   void _loadProgress() {
     var progress = DataManager().gardenProgress;
-    
+
     if (progress == null) {
-      final emptyPlots = List.generate(4, (row) {
-        return List.generate(4, (col) {
+      final emptyPlots = List.generate(4, (_) {
+        return List.generate(4, (_) {
           return PlantCell(
             plantType: null,
             growthStage: 0,
@@ -107,7 +115,6 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
           );
         });
       });
-      
       progress = GardenProgress(
         plots: emptyPlots,
         inventory: {
@@ -125,252 +132,224 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
         earnings: 0,
       );
     } else {
-      // UPDATE tất cả cells dựa trên timestamp
       progress = progress.copyWith(
         plots: GardenService.updateAllCells(progress.plots),
       );
     }
-    
+
     DataManager().saveGardenProgress(progress);
-    
-    setState(() {
-      _progress = progress!;
-    });
+    setState(() => _progress = progress!);
   }
 
-  void _saveProgress() {
-    DataManager().saveGardenProgress(_progress);
-  }
+  void _saveProgress() => DataManager().saveGardenProgress(_progress);
 
   Future<void> _checkDebugMode() async {
     final isDebug = await _authService.isDebugMode;
-    if (mounted) {
-      setState(() {
-        _isDebugMode = isDebug;
-      });
-    }
+    if (mounted) setState(() => _isDebugMode = isDebug);
   }
+
+  // ==================== DEBUG ====================
 
   Future<void> _debugAdvanceGrowth() async {
     if (!_isDebugMode) return;
-
-    // Update timestamps
-    var newPlots = GardenService.debugAdvanceAllPlants(
+    var plots = GardenService.debugAdvanceAllPlants(
       plots: _progress.plots,
       hours: 20,
     );
-
-    // Recalculate immediately instead of waiting for timer
-    newPlots = GardenService.updateAllCells(newPlots);
-
-    setState(() {
-      _progress = _progress.copyWith(plots: newPlots);
-    });
+    plots = GardenService.updateAllCells(plots);
+    setState(() => _progress = _progress.copyWith(plots: plots));
     _saveProgress();
-
     SfxService().buttonClick();
   }
 
   Future<void> _debugInstantGrowth() async {
     if (!_isDebugMode) return;
-
-    // Update timestamps
-    var newPlots = GardenService.debugInstantGrowAll(
-      plots: _progress.plots,
-    );
-
-    // Recalculate immediately instead of waiting for timer
-    newPlots = GardenService.updateAllCells(newPlots);
-
-    setState(() {
-      _progress = _progress.copyWith(plots: newPlots);
-    });
+    var plots = GardenService.debugInstantGrowAll(plots: _progress.plots);
+    plots = GardenService.updateAllCells(plots);
+    setState(() => _progress = _progress.copyWith(plots: plots));
     _saveProgress();
-
     SfxService().buttonClick();
   }
 
+  // ==================== TUTORIAL ====================
+
   void _showTutorial() {
     final l10n = AppLocalizations.of(context);
-
-    final steps = [
-      TutorialStep(
-        targetKey: _gridKey,
-        title: '🌱 ${l10n.garden}',
-        description: l10n.tutorialGardenGridDesc,
-        tag: 'grid',
-      ),
-      TutorialStep(
-        targetKey: _inventoryKey,
-        title: '🎒 ${l10n.tutorialGardenInventoryTitle}',
-        description: l10n.tutorialGardenInventoryDesc,
-        tag: 'inventory',
-      ),
-      TutorialStep(
-        targetKey: _actionsKey,
-        title: '🔧 ${l10n.tutorialGardenActionsTitle}',
-        description: l10n.tutorialGardenActionsDesc,
-        tag: 'actions',
-      ),
-    ];
-
-    final tutorial = TutorialOverlay(
+    TutorialOverlay(
       context: context,
-      steps: steps,
+      steps: [
+        TutorialStep(
+          targetKey: _gridKey,
+          title: '🌱 ${l10n.garden}',
+          description: l10n.tutorialGardenGridDesc,
+          tag: 'grid',
+        ),
+        TutorialStep(
+          targetKey: _inventoryKey,
+          title: '🎒 ${l10n.tutorialGardenInventoryTitle}',
+          description: l10n.tutorialGardenInventoryDesc,
+          tag: 'inventory',
+        ),
+      ],
       nextText: l10n.tutorialNext,
       skipText: l10n.tutorialSkip,
-      finshText: l10n.tutorialGotIt, // Note: typo in package - 'finsh' not 'finish'
-      onComplete: () {
-        SfxService().buttonClick();
-      },
-    );
-
-    tutorial.show();
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
   }
 
-  AnimationController _getCellAnimationController(int row, int col) {
+  // ==================== ANIMATIONS ====================
+
+  AnimationController _getCellAnimCtrl(int row, int col) {
     final key = '$row-$col';
-    if (!_cellAnimations.containsKey(key)) {
-      _cellAnimations[key] = AnimationController(
+    return _cellAnimations.putIfAbsent(
+      key,
+      () => AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 600),
-      );
-    }
-    return _cellAnimations[key]!;
+      ),
+    );
   }
-  
-  void _playCellAnimation(int row, int col, String effectType) {
+
+  void _playCellAnimation(int row, int col, String effect) {
     final key = '$row-$col';
-    _cellEffects[key] = effectType;
-    final controller = _getCellAnimationController(row, col);
-    controller.forward(from: 0).then((_) {
+    _cellEffects[key] = effect;
+    _getCellAnimCtrl(row, col).forward(from: 0).then((_) {
       if (mounted) {
         setState(() {
           _cellEffects.remove(key);
-          _cellHarvestPoints.remove(key); // Cleanup harvest points
+          _cellHarvestPoints.remove(key);
         });
       }
     });
   }
 
-  // Các getter sử dụng service methods
-  bool get _hasEmptyPlot => GardenService.hasEmptyPlot(_progress.plots);
-  bool get _hasPlantNeedingWater => GardenService.hasPlantNeedingWater(_progress.plots);
-  bool get _hasPlantWithPest => GardenService.hasPlantWithPest(_progress.plots);
-  bool get _hasPlantReadyToHarvest => GardenService.hasPlantReadyToHarvest(_progress.plots);
-  bool get _canEnablePlantButton => _hasEmptyPlot;
-  bool get _canPlant => GardenService.canPlant(
-    selectedPlantType: _selectedPlantType,
-    inventory: _progress.inventory,
-    plots: _progress.plots,
-  );
+  // ==================== SMART ACTION ====================
 
-  void _toggleAction(String action) {
-    setState(() {
-      _selectedAction = _selectedAction == action ? null : action;
-    });
-  }
+  /// Determines and executes the appropriate action for the tapped/dragged cell.
+  ///
+  /// Priority for occupied cells: harvest > pestControl > water.
+  /// When multiple actions are available, [_lastAction] breaks the tie so the
+  /// user can repeat the same gesture without switching modes.
+  void _smartAction(int row, int col) async {
+    final cell = _progress.plots[row][col];
 
-  void _onCellTap(int row, int col) async {
-    if (_selectedAction == null) return;
+    // Empty cell — plant if a seed is selected
+    if (cell.plantType == null) {
+      if (_selectedPlantType != null &&
+          (_progress.inventory[_selectedPlantType!] ?? 0) > 0) {
+        await _doPlant(row, col, _selectedPlantType!);
+      }
+      return;
+    }
 
-    switch (_selectedAction!) {
-      case 'plant':
-        if (!_canPlant || _selectedPlantType == null) return;
+    // Build list of currently applicable actions in priority order
+    final available = <String>[
+      if (cell.growthStage >= 100) 'harvest',
+      if (cell.hasPest) 'pestControl',
+      if (cell.needsWater) 'water',
+    ];
 
-        final result = GardenService.plantSeed(
-          plots: _progress.plots,
-          inventory: _progress.inventory,
-          row: row,
-          col: col,
-          plantType: _selectedPlantType!,
-        );
+    if (available.isEmpty) return;
 
-        if (result != null) {
-          setState(() {
-            _progress = _progress.copyWith(
-              plots: result['plots'],
-              inventory: result['inventory'],
-            );
-          });
-          _saveProgress();
-          _playCellAnimation(row, col, 'plant');
-        }
-        break;
+    // Repeat last action when it's still valid; otherwise use priority order
+    final action =
+        (available.length > 1 && available.contains(_lastAction))
+            ? _lastAction!
+            : available.first;
 
-      case 'water':
-        final result = GardenService.waterPlant(
-          plots: _progress.plots,
-          row: row,
-          col: col,
-        );
-
-        if (result != null) {
-          setState(() {
-            _progress = _progress.copyWith(plots: result);
-          });
-          _saveProgress();
-          _playCellAnimation(row, col, 'water');
-        }
-        break;
-
-      case 'pestControl':
-        final result = GardenService.removePest(
-          plots: _progress.plots,
-          row: row,
-          col: col,
-        );
-
-        if (result != null) {
-          setState(() {
-            _progress = _progress.copyWith(plots: result);
-          });
-          _saveProgress();
-          _playCellAnimation(row, col, 'pest');
-        }
-        break;
-
+    switch (action) {
       case 'harvest':
-        final result = GardenService.harvestPlant(
-          plots: _progress.plots,
-          inventory: _progress.inventory,
-          earnings: _progress.earnings,
-          row: row,
-          col: col,
-        );
-
-        if (result != null) {
-          setState(() {
-            _progress = _progress.copyWith(
-              plots: result['plots'],
-              inventory: result['inventory'],
-              earnings: result['earnings'],
-            );
-          });
-          _saveProgress();
-
-          // Cộng điểm vào UserProfile
-          await context.read<ScoreProvider>().addPoints(result['pointsGained']);
-
-          // Achievement trigger
-          if (mounted) {
-            final score = context.read<ScoreProvider>();
-            final newly = await context.read<AchievementProvider>().onHarvest(score);
-            if (newly.isNotEmpty && mounted) {
-              AchievementPopup.show(context, newly);
-            }
-          }
-
-          // Lưu points để hiển thị animation
-          final key = '$row-$col';
-          _cellHarvestPoints[key] = result['pointsGained'];
-          _playCellAnimation(row, col, 'harvest');
-        }
-        break;
+        await _doHarvest(row, col);
+      case 'pestControl':
+        await _doPest(row, col);
+      case 'water':
+        await _doWater(row, col);
     }
   }
 
+  // ==================== ACTIONS ====================
 
+  Future<void> _doPlant(int row, int col, String plantType) async {
+    final result = GardenService.plantSeed(
+      plots: _progress.plots,
+      inventory: _progress.inventory,
+      row: row,
+      col: col,
+      plantType: plantType,
+    );
+    if (result == null) return;
+    setState(() {
+      _progress = _progress.copyWith(
+        plots: result['plots'],
+        inventory: result['inventory'],
+      );
+    });
+    _saveProgress();
+    _playCellAnimation(row, col, 'plant');
+    SfxService().buttonClick();
+    _lastAction = 'plant';
+  }
+
+  Future<void> _doWater(int row, int col) async {
+    final result = GardenService.waterPlant(
+      plots: _progress.plots,
+      row: row,
+      col: col,
+    );
+    if (result == null) return;
+    setState(() => _progress = _progress.copyWith(plots: result));
+    _saveProgress();
+    _playCellAnimation(row, col, 'water');
+    SfxService().buttonClick();
+    _lastAction = 'water';
+  }
+
+  Future<void> _doPest(int row, int col) async {
+    final result = GardenService.removePest(
+      plots: _progress.plots,
+      row: row,
+      col: col,
+    );
+    if (result == null) return;
+    setState(() => _progress = _progress.copyWith(plots: result));
+    _saveProgress();
+    _playCellAnimation(row, col, 'pest');
+    SfxService().buttonClick();
+    _lastAction = 'pestControl';
+  }
+
+  Future<void> _doHarvest(int row, int col) async {
+    final result = GardenService.harvestPlant(
+      plots: _progress.plots,
+      inventory: _progress.inventory,
+      earnings: _progress.earnings,
+      row: row,
+      col: col,
+    );
+    if (result == null) return;
+    setState(() {
+      _progress = _progress.copyWith(
+        plots: result['plots'],
+        inventory: result['inventory'],
+        earnings: result['earnings'],
+      );
+    });
+    _saveProgress();
+    await context.read<ScoreProvider>().addPoints(result['pointsGained']);
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly =
+          await context.read<AchievementProvider>().onHarvest(score);
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
+    }
+    _cellHarvestPoints['$row-$col'] = result['pointsGained'];
+    _playCellAnimation(row, col, 'harvest');
+    SfxService().taskComplete();
+    _lastAction = 'harvest';
+  }
+
+  // ==================== BUILD ====================
 
   @override
   Widget build(BuildContext context) {
@@ -380,78 +359,70 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildGridSection(theme),
-        
+
         const SizedBox(height: 16),
         Divider(color: theme.border, height: 1, thickness: 1.5),
         const SizedBox(height: 16),
-        
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInventorySection(theme),
-                const SizedBox(height: 16),
-                Divider(color: theme.border, height: 1, thickness: 1.5),
-                const SizedBox(height: 16),
-                _buildActionsSection(theme),
 
-                // Debug buttons section
-                if (_isDebugMode) ...[
-                  const SizedBox(height: 16),
-                  Divider(color: theme.border, height: 1, thickness: 1.5),
-                  const SizedBox(height: 16),
-                  Text(
-                    'DEBUG MODE',
-                    style: AppTypography.bodyLarge(context,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _debugAdvanceGrowth,
-                          icon: const Icon(Icons.bug_report, size: 18),
-                          label: const Text('+20 Hours'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _debugInstantGrowth,
-                          icon: const Icon(Icons.bug_report, size: 18),
-                          label: const Text('Instant Grow'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
+        _buildInventorySection(theme),
+
+        // Debug section
+        if (_isDebugMode) ...[
+          const SizedBox(height: 16),
+          Divider(color: theme.border, height: 1, thickness: 1.5),
+          const SizedBox(height: 16),
+          Text(
+            'DEBUG MODE',
+            style: AppTypography.bodyLarge(
+              context,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
             ),
           ),
-        ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _debugAdvanceGrowth,
+                  icon: const Icon(Icons.bug_report, size: 18),
+                  label: const Text('+20 Hours'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _debugInstantGrowth,
+                  icon: const Icon(Icons.bug_report, size: 18),
+                  label: const Text('Instant Grow'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
+
+  // ==================== GRID SECTION ====================
 
   Widget _buildGridSection(AppTheme theme) {
     final l10n = AppLocalizations.of(context);
@@ -460,13 +431,13 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       children: [
         Text(
           l10n.gardenTitle,
-          style: AppTypography.bodyLarge(context,
+          style: AppTypography.bodyLarge(
+            context,
             color: theme.text,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),
-
         AspectRatio(
           key: _gridKey,
           aspectRatio: 1,
@@ -475,18 +446,53 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
               border: Border.all(color: theme.border, width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 0,
-                crossAxisSpacing: 0,
-              ),
-              itemCount: 16,
-              itemBuilder: (context, index) {
-                final row = index ~/ 4;
-                final col = index % 4;
-                return _buildPlotCell(row, col, _progress.plots[row][col], theme);
+            // LayoutBuilder gives us the rendered size so we can map
+            // pointer positions to cell indices without RenderBox lookups.
+            child: LayoutBuilder(
+              builder: (ctx, constraints) {
+                final cellSize = constraints.maxWidth / 4;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  // ── Single tap ──
+                  onTapUp: (d) {
+                    final row =
+                        (d.localPosition.dy / cellSize).floor().clamp(0, 3);
+                    final col =
+                        (d.localPosition.dx / cellSize).floor().clamp(0, 3);
+                    _smartAction(row, col);
+                  },
+                  // ── Drag → act on each new cell the finger enters ──
+                  onPanStart: (_) => _draggedCells.clear(),
+                  onPanUpdate: (d) {
+                    final dx = d.localPosition.dx;
+                    final dy = d.localPosition.dy;
+                    final size = constraints.maxWidth;
+                    if (dx < 0 || dx > size || dy < 0 || dy > size) return;
+                    final row = (dy / cellSize).floor().clamp(0, 3);
+                    final col = (dx / cellSize).floor().clamp(0, 3);
+                    final key = '$row-$col';
+                    if (_draggedCells.add(key)) {
+                      _smartAction(row, col);
+                    }
+                  },
+                  onPanEnd: (_) => _draggedCells.clear(),
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 0,
+                      crossAxisSpacing: 0,
+                    ),
+                    itemCount: 16,
+                    itemBuilder: (context, index) {
+                      final row = index ~/ 4;
+                      final col = index % 4;
+                      return _buildPlotCell(
+                          row, col, _progress.plots[row][col], theme);
+                    },
+                  ),
+                );
               },
             ),
           ),
@@ -495,221 +501,171 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
     );
   }
 
+  // ==================== PLOT CELL ====================
+
   Widget _buildPlotCell(int row, int col, PlantCell cell, AppTheme theme) {
     final key = '$row-$col';
     final effectType = _cellEffects[key];
-    final animController = _getCellAnimationController(row, col);
-    
-    return InkWell(
-      onTap: () => _onCellTap(row, col),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF8B7355),
-        ),
-        child: Stack(
-          children: [
-            // Cây ở giữa với animation
+    final animCtrl = _getCellAnimCtrl(row, col);
+
+    return Container(
+      decoration: const BoxDecoration(color: Color(0xFF8B7355)),
+      child: Stack(
+        children: [
+          // Plant sprite
+          Center(
+            child: cell.plantType != null
+                ? AnimatedBuilder(
+                    animation: animCtrl,
+                    builder: (context, _) {
+                      Widget plant = Semantics(
+                        image: true,
+                        label:
+                            '${_getPlantName(cell.plantType!)} plant, growth: ${cell.growthStage}%',
+                        child: Image.asset(
+                          AssetLoader.getPlantAsset(
+                              cell.plantType!, cell.growthStage),
+                          width: 40,
+                          height: 40,
+                          errorBuilder: (_, _, _) => Text(
+                            GardenService.getPlantIcon(cell.plantType!),
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                        ),
+                      );
+                      if (effectType == 'plant') {
+                        return Transform.scale(
+                            scale: animCtrl.value, child: plant);
+                      } else if (effectType == 'harvest') {
+                        return Opacity(
+                          opacity: 1.0 - animCtrl.value,
+                          child: Transform.scale(
+                              scale: 1.0 + animCtrl.value * 0.5,
+                              child: plant),
+                        );
+                      } else if (effectType == 'pest') {
+                        final shake =
+                            math.sin(animCtrl.value * 4 * math.pi) * 4;
+                        return Transform.translate(
+                            offset: Offset(shake, 0), child: plant);
+                      }
+                      return plant;
+                    },
+                  )
+                : null,
+          ),
+
+          // Water ripple
+          if (effectType == 'water')
             Center(
-              child: cell.plantType != null
-                  ? AnimatedBuilder(
-                      animation: animController,
-                      builder: (context, child) {
-                        // Animation dựa trên effect type
-                        Widget plantWidget = Semantics(
-                          image: true,
-                          label: '${_getPlantName(cell.plantType!)} plant, growth: ${cell.growthStage}%',
-                          child: Image.asset(
-                            AssetLoader.getPlantAsset(cell.plantType!, cell.growthStage),
-                            width: 40,
-                            height: 40,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Text(
-                                _getPlantIcon(cell.plantType!),
-                                style: const TextStyle(fontSize: 24),
-                              );
-                            },
-                          ),
-                        );
-                        
-                        if (effectType == 'plant') {
-                          // Scale from 0 to 1
-                          return Transform.scale(
-                            scale: animController.value,
-                            child: plantWidget,
-                          );
-                        } else if (effectType == 'harvest') {
-                          // Scale up + fade out
-                          return Opacity(
-                            opacity: 1.0 - animController.value,
-                            child: Transform.scale(
-                              scale: 1.0 + (animController.value * 0.5),
-                              child: plantWidget,
-                            ),
-                          );
-                        } else if (effectType == 'pest') {
-                          // Shake effect
-                          final shake = math.sin(animController.value * 4 * 3.14159) * 4;
-                          return Transform.translate(
-                            offset: Offset(shake, 0),
-                            child: plantWidget,
-                          );
-                        }
-                        
-                        return plantWidget;
-                      },
-                    )
-                  : null,
+              child: AnimatedBuilder(
+                animation: animCtrl,
+                builder: (_, _) => Container(
+                  width: 40 * (1 + animCtrl.value),
+                  height: 40 * (1 + animCtrl.value),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 1.0 - animCtrl.value),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            
-            // Water ripple effect
-            if (effectType == 'water')
-              Center(
-                child: AnimatedBuilder(
-                  animation: animController,
-                  builder: (context, child) {
-                    return Container(
-                      width: 40 * (1 + animController.value),
-                      height: 40 * (1 + animController.value),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.blue.withOpacity(1.0 - animController.value),
-                          width: 2,
-                        ),
+
+          // Harvest floating points
+          if (effectType == 'harvest' && _cellHarvestPoints.containsKey(key))
+            Center(
+              child: AnimatedBuilder(
+                animation: animCtrl,
+                builder: (_, _) => Transform.translate(
+                  offset: Offset(0, -animCtrl.value * 30),
+                  child: Opacity(
+                    opacity: 1.0 - animCtrl.value,
+                    child: Text(
+                      '+${_cellHarvestPoints[key]}',
+                      style: TextStyle(
+                        fontSize: 16 + animCtrl.value * 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
-            
-            // Floating points text khi harvest
-            if (effectType == 'harvest' && _cellHarvestPoints.containsKey(key))
-              Center(
-                child: AnimatedBuilder(
-                  animation: animController,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(0, -animController.value * 30),
-                      child: Opacity(
-                        opacity: 1.0 - animController.value,
-                        child: Text(
-                          '+${_cellHarvestPoints[key]}',
-                          style: TextStyle(
-                            fontSize: 16 + (animController.value * 8),
-                            fontWeight: FontWeight.bold,
-                            color: Colors.amber,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.5),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
+            ),
+
+          // Status indicators
+          if (cell.plantType != null) ...[
+            if (cell.needsWater)
+              Positioned(
+                top: 2,
+                left: 2,
+                child: _indicator(Colors.blue, Icons.water_drop),
+              ),
+            if (cell.hasPest)
+              Positioned(
+                top: 2,
+                right: 2,
+                child: _indicator(Colors.red, Icons.bug_report),
+              ),
+            if (cell.growthStage >= 100)
+              Positioned(
+                bottom: 2,
+                right: 2,
+                child: _indicator(Colors.green, Icons.check_circle),
+              ),
+            if (cell.growthStage < 100)
+              Positioned(
+                bottom: 2,
+                left: 4,
+                right: 4,
+                child: Container(
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: cell.growthStage / 100),
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOut,
+                    builder: (_, value, _) => FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: value,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.lightGreen,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
-            
-            // Indicators ở góc
-            if (cell.plantType != null) ...[
-              // Icon tưới nước (góc trên trái)
-              if (cell.needsWater)
-                Positioned(
-                  top: 2,
-                  left: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.water_drop,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              
-              // Icon sâu bệnh (góc trên phải)
-              if (cell.hasPest)
-                Positioned(
-                  top: 2,
-                  right: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.bug_report,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              
-              // Icon thu hoạch (góc dưới phải)
-              if (cell.growthStage >= 100)
-                Positioned(
-                  bottom: 2,
-                  right: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check_circle,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              
-              // Thanh % ở dưới (TÙY CHỌN) với smooth animation
-              if (cell.growthStage < 100)
-                Positioned(
-                  bottom: 2,
-                  left: 4,
-                  right: 4,
-                  child: Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: cell.growthStage / 100),
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeOut,
-                      builder: (context, value, child) {
-                        return FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: value,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.lightGreen,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }
 
-  String _getPlantIcon(String plantType) => GardenService.getPlantIcon(plantType);
+  Widget _indicator(Color color, IconData icon) => Container(
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 12, color: Colors.white),
+      );
+
+  // ==================== INVENTORY SECTION ====================
 
   Widget _buildInventorySection(AppTheme theme) {
     final l10n = AppLocalizations.of(context);
@@ -719,32 +675,36 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
       children: [
         Text(
           l10n.inventory,
-          style: AppTypography.bodyLarge(context,
+          style: AppTypography.bodyLarge(
+            context,
             color: theme.text,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),
-        
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: _progress.inventory.entries.map((entry) {
             final isSelected = _selectedPlantType == entry.key;
             final count = entry.value;
-            
             return InkWell(
-              onTap: count > 0 ? () {
-                setState(() {
-                  _selectedPlantType = isSelected ? null : entry.key;
-                });
-              } : null,
+              onTap: count > 0
+                  ? () => setState(() {
+                        _selectedPlantType =
+                            isSelected ? null : entry.key;
+                      })
+                  : null,
+              borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? theme.primary : theme.background,
                   border: Border.all(
-                    color: count > 0 ? theme.border : theme.border.withOpacity(0.3),
+                    color: count > 0
+                        ? theme.border
+                        : theme.border.withValues(alpha: 0.3),
                     width: 1.5,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -753,7 +713,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _getPlantIcon(entry.key),
+                      GardenService.getPlantIcon(entry.key),
                       style: TextStyle(
                         fontSize: 20,
                         color: count > 0 ? null : Colors.grey,
@@ -762,9 +722,12 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
                     const SizedBox(width: 8),
                     Text(
                       'x${entry.value}',
-                      style: AppTypography.bodyLarge(context,
+                      style: AppTypography.bodyLarge(
+                        context,
                         color: isSelected ? theme.background : theme.text,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -777,76 +740,7 @@ class _GardenModalState extends State<GardenModal> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildActionsSection(AppTheme theme) {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      key: _actionsKey,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.action,
-          style: AppTypography.bodyLarge(context,
-            color: theme.text,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildActionButton(
-              icon: Icons.yard,
-              label: l10n.plant,
-              actionKey: 'plant',
-              canEnable: _canEnablePlantButton,
-              theme: theme,
-            ),
-            _buildActionButton(
-              icon: Icons.water_drop,
-              label: l10n.water,
-              actionKey: 'water',
-              canEnable: _hasPlantNeedingWater,
-              theme: theme,
-            ),
-            _buildActionButton(
-              icon: Icons.bug_report,
-              label: l10n.pestControl,
-              actionKey: 'pestControl',
-              canEnable: _hasPlantWithPest,
-              theme: theme,
-            ),
-            _buildActionButton(
-              icon: Icons.agriculture,
-              label: l10n.harvest,
-              actionKey: 'harvest',
-              canEnable: _hasPlantReadyToHarvest,
-              theme: theme,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required String actionKey,
-    required bool canEnable,
-    required AppTheme theme,
-  }) {
-    final isSelected = _selectedAction == actionKey;
-    
-    return AppButton(
-      label: label,
-      icon: icon,
-      isActive: isSelected,
-      onPressed: () => _toggleAction(actionKey),
-      isDisabled: !canEnable,
-    );
-  }
+  // ==================== HELPERS ====================
 
   String _getPlantName(String plantType) {
     switch (plantType.toLowerCase()) {

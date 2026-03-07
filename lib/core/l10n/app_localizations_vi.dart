@@ -328,33 +328,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get inventory => 'KHO ĐỒ';
 
-  @override
-  String get action => 'Hành động';
-
-  @override
-  String get plant => 'Trồng';
-
-  @override
-  String get water => 'Tưới nước';
-
-  @override
-  String get pestControl => 'Bắt sâu';
-
-  @override
-  String get harvest => 'Thu hoạch';
-
-  @override
-  String get plantedSuccessfully => 'Đã trồng thành công!';
-
-  @override
-  String get wateredSuccessfully => 'Đã tưới nước!';
-
-  @override
-  String get pestControlSuccessfully => 'Đã bắt sâu!';
-
-  @override
-  String harvestedSuccessfully(int count, int points) => 'Thu hoạch $count cây! +$points điểm';
-
   // Aquarium
   @override
   String get fish => 'con cá';
@@ -903,19 +876,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   // Tutorial - Garden
   @override
-  String get tutorialGardenGridDesc => 'Đây là khu vườn 4x4 của bạn! Mỗi ô có thể trồng một cây. Cây sẽ lớn dần theo thời gian và cần được chăm sóc.';
+  String get tutorialGardenGridDesc => 'Khu vườn 4x4 của bạn! Nhấn vào ô để chăm sóc cây. Nhấn giữ và kéo để thao tác nhiều ô cùng lúc.';
 
   @override
   String get tutorialGardenInventoryTitle => 'Kho hạt giống';
 
   @override
-  String get tutorialGardenInventoryDesc => 'Kho hạt giống của bạn! Chọn loại hạt bạn muốn trồng. Mỗi loại cây có thời gian lớn và điểm thưởng khác nhau.';
+  String get tutorialGardenInventoryDesc => 'Chọn loại hạt giống, sau đó nhấn ô trống để trồng. Mỗi loại cây có thời gian lớn và điểm thưởng riêng.';
 
   @override
-  String get tutorialGardenActionsTitle => 'Hành động';
-
-  @override
-  String get tutorialGardenActionsDesc => 'Các hành động: Trồng cây mới (cần chọn loại cây trong kho hạt giống), Tưới nước khi cây khát, Trừ sâu khi bị sâu bệnh, Thu hoạch khi cây đã chín. Chọn hành động rồi chạm vào ô đất tương ứng!';
 
   // Breathing Exercise
   @override

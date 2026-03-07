@@ -325,33 +325,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inventory => 'INVENTORY';
 
-  @override
-  String get action => 'Action';
-
-  @override
-  String get plant => 'Plant';
-
-  @override
-  String get water => 'Water';
-
-  @override
-  String get pestControl => 'Pest Control';
-
-  @override
-  String get harvest => 'Harvest';
-
-  @override
-  String get plantedSuccessfully => 'Planted successfully!';
-
-  @override
-  String get wateredSuccessfully => 'Watered successfully!';
-
-  @override
-  String get pestControlSuccessfully => 'Pest control completed!';
-
-  @override
-  String harvestedSuccessfully(int count, int points) => 'Harvested $count plants! +$points points';
-
   // Aquarium
   @override
   String get fish => 'fish';
@@ -900,19 +873,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   // Tutorial - Garden
   @override
-  String get tutorialGardenGridDesc => 'This is your 4x4 garden! Each plot can hold one plant. Plants will grow over time and need care.';
+  String get tutorialGardenGridDesc => 'Your 4x4 garden! Tap a plot to tend your plant. Press and drag to act on multiple plots at once.';
 
   @override
   String get tutorialGardenInventoryTitle => 'Seed Inventory';
 
   @override
-  String get tutorialGardenInventoryDesc => 'Your seed inventory! Select the type of seed you want to plant. Each plant has different growth time and rewards.';
+  String get tutorialGardenInventoryDesc => 'Select a seed type, then tap an empty plot to plant it. Each plant has different growth time and rewards.';
 
   @override
-  String get tutorialGardenActionsTitle => 'Actions';
-
-  @override
-  String get tutorialGardenActionsDesc => 'Available actions: Plant new crops (need to select seed type in inventory), Water when thirsty, Remove pests when infected, Harvest when fully grown. Select an action then tap the corresponding plot!';
 
   // Breathing Exercise
   @override
