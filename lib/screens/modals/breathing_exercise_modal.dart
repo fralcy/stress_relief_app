@@ -95,11 +95,11 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
 
   Widget _buildExerciseSelection() {
     final l10n = AppLocalizations.of(context);
-    final exercises = [
-      {'type': '4-7-8', 'name': l10n.exercise478, 'desc': l10n.exercise478Desc},
-      {'type': 'box', 'name': l10n.exerciseBox, 'desc': l10n.exerciseBoxDesc},
-      {'type': 'deep_belly', 'name': l10n.exerciseDeepBelly, 'desc': l10n.exerciseDeepBellyDesc},
-      {'type': 'calm', 'name': l10n.exerciseCalm, 'desc': l10n.exerciseCalmDesc},
+    final exercises = <Map<String, dynamic>>[
+      {'type': '4-7-8',       'name': l10n.exercise478,        'desc': l10n.exercise478Desc,        'icon': Icons.bedtime},
+      {'type': 'box',         'name': l10n.exerciseBox,         'desc': l10n.exerciseBoxDesc,        'icon': Icons.crop_square},
+      {'type': 'deep_belly',  'name': l10n.exerciseDeepBelly,  'desc': l10n.exerciseDeepBellyDesc,  'icon': Icons.self_improvement},
+      {'type': 'calm',        'name': l10n.exerciseCalm,        'desc': l10n.exerciseCalmDesc,       'icon': Icons.spa},
     ];
 
     return Column(
@@ -110,10 +110,11 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
         ...exercises.map((ex) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _ExerciseCard(
-                name: ex['name']!,
-                description: ex['desc']!,
+                name: ex['name'] as String,
+                description: ex['desc'] as String,
+                icon: ex['icon'] as IconData,
                 onTap: () {
-                  setState(() => _selectedExercise = ex['type']);
+                  setState(() => _selectedExercise = ex['type'] as String);
                   SfxService().buttonClick();
                 },
               ),
@@ -444,43 +445,65 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
 class _ExerciseCard extends StatelessWidget {
   final String name;
   final String description;
+  final IconData icon;
   final VoidCallback onTap;
 
   const _ExerciseCard({
     required this.name,
     required this.description,
+    required this.icon,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
+            color: theme.colorScheme.primary.withValues(alpha: 0.35),
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              name,
-              style: AppTypography.bodyLarge(context).copyWith(
-                fontWeight: FontWeight.bold,
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: theme.colorScheme.onPrimary, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: AppTypography.bodyLarge(context).copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    description,
+                    style: AppTypography.bodySmall(context).copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              style: AppTypography.bodyMedium(context).copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, color: theme.colorScheme.primary),
           ],
         ),
       ),
@@ -505,7 +528,7 @@ class _CircularProgressPainter extends CustomPainter {
 
     // Background circle
     final bgPaint = Paint()
-      ..color = color.withOpacity(0.2)
+      ..color = color.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8;
     canvas.drawCircle(center, radius, bgPaint);

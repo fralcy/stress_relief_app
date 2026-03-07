@@ -22,6 +22,9 @@ class LineGraph extends StatelessWidget {
 
   final double height;
 
+  /// If set, draws a larger highlighted dot at this index.
+  final int? highlightIndex;
+
   const LineGraph({
     super.key,
     required this.values,
@@ -30,6 +33,7 @@ class LineGraph extends StatelessWidget {
     this.minY = 0,
     this.yUnit = '',
     this.height = 160,
+    this.highlightIndex,
   }) : assert(values.length == labels.length);
 
   @override
@@ -55,6 +59,7 @@ class LineGraph extends StatelessWidget {
           lineColor: color,
           textColor: textColor,
           gridColor: textColor.withValues(alpha: 0.15),
+          highlightIndex: highlightIndex,
         ),
       ),
     );
@@ -70,6 +75,7 @@ class _LineGraphPainter extends CustomPainter {
   final Color lineColor;
   final Color textColor;
   final Color gridColor;
+  final int? highlightIndex;
 
   static const double _leftPadding = 32;
   static const double _rightPadding = 20;
@@ -85,6 +91,7 @@ class _LineGraphPainter extends CustomPainter {
     required this.lineColor,
     required this.textColor,
     required this.gridColor,
+    this.highlightIndex,
   });
 
   @override
@@ -172,9 +179,16 @@ class _LineGraphPainter extends CustomPainter {
     for (int i = 0; i < n; i++) {
       if (values[i] == null) continue;
       final pt = toPoint(i, values[i]!);
-      canvas.drawCircle(pt, 4, Paint()..color = lineColor);
-      canvas.drawCircle(
-          pt, 2.5, Paint()..color = Colors.white.withValues(alpha: 0.9));
+      final isHighlighted = highlightIndex != null && i == highlightIndex;
+      if (isHighlighted) {
+        // Outer glow ring
+        canvas.drawCircle(pt, 9, Paint()..color = lineColor.withValues(alpha: 0.25));
+        canvas.drawCircle(pt, 6, Paint()..color = lineColor);
+        canvas.drawCircle(pt, 3.5, Paint()..color = Colors.white.withValues(alpha: 0.95));
+      } else {
+        canvas.drawCircle(pt, 4, Paint()..color = lineColor);
+        canvas.drawCircle(pt, 2.5, Paint()..color = Colors.white.withValues(alpha: 0.9));
+      }
     }
 
     // --- X-axis labels ---
@@ -223,5 +237,6 @@ class _LineGraphPainter extends CustomPainter {
   bool shouldRepaint(_LineGraphPainter oldDelegate) =>
       oldDelegate.values != values ||
       oldDelegate.maxY != maxY ||
-      oldDelegate.lineColor != lineColor;
+      oldDelegate.lineColor != lineColor ||
+      oldDelegate.highlightIndex != highlightIndex;
 }

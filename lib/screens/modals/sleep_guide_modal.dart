@@ -42,8 +42,9 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   int? _logBedtimeMinutes;
   int? _logWakeTimeMinutes;
   int? _logQuality;
+  bool _showDurationGraph = true;
 
-  static const _qualityEmojis = ['😴', '😕', '😐', '🙂', '😊'];
+  static const _qualityEmojis = ['😢', '😕', '😐', '🙂', '😊'];
 
   @override
   void initState() {
@@ -79,8 +80,8 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
 
   void _loadLogForSelectedDay() {
     final log = _currentLog;
-    _logBedtimeMinutes = log?.bedtimeMinutes;
-    _logWakeTimeMinutes = log?.wakeTimeMinutes;
+    _logBedtimeMinutes = log?.bedtimeMinutes ?? 22 * 60; // default 22:00
+    _logWakeTimeMinutes = log?.wakeTimeMinutes ?? 7 * 60; // default 07:00
     _logQuality = log?.quality;
   }
 
@@ -335,10 +336,11 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
 
   Widget _buildSleepGraph(AppLocalizations l10n) {
     final logs = DataManager().sleepLogs;
-    final values = <double?>[];
+    final durationValues = <double?>[];
+    final qualityValues = <double?>[];
     final labels = <String>[];
 
-    // Oldest → newest (left to right)
+    // Oldest → newest (left to right), i=6 = 6 days ago, i=0 = today
     for (int i = 6; i >= 0; i--) {
       final date = _dateFor(i);
       final log = logs.cast<SleepLog?>().firstWhere(
@@ -349,35 +351,33 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
                 l.date.day == date.day,
             orElse: () => null,
           );
-      values.add(log?.durationHours);
+      durationValues.add(log?.durationHours);
+      qualityValues.add(log?.quality?.toDouble());
       labels.add('${date.day}/${date.month}');
     }
 
-    final hasAny = values.any((v) => v != null);
+    final hasAnyLog = durationValues.any((v) => v != null) ||
+        qualityValues.any((v) => v != null);
+
+    final graphValues = _showDurationGraph ? durationValues : qualityValues;
+    final graphMaxY = _showDurationGraph ? 12.0 : 5.0;
+    final graphUnit = _showDurationGraph ? l10n.hoursUnit : '';
+
+    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(l10n.sleepHistory, style: AppTypography.bodyMedium(context)),
-            const Spacer(),
-            Text(
-              l10n.sleepDuration,
-              style: AppTypography.bodySmall(context).copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
+        Text(l10n.sleepHistory, style: AppTypography.bodyMedium(context)),
         const SizedBox(height: 8),
-        if (hasAny)
+        if (hasAnyLog)
           LineGraph(
-            values: values,
+            values: graphValues,
             labels: labels,
             minY: 0,
-            maxY: 12,
-            yUnit: l10n.hoursUnit,
+            maxY: graphMaxY,
+            yUnit: graphUnit,
+            highlightIndex: 6 - _selectedDayIndex,
           )
         else
           SizedBox(
@@ -386,11 +386,28 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
               child: Text(
                 l10n.noSleepData,
                 style: AppTypography.bodySmall(context).copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
           ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildGraphTabButton(
+              label: l10n.sleepDuration,
+              selected: _showDurationGraph,
+              onTap: () => setState(() => _showDurationGraph = true),
+            ),
+            const SizedBox(width: 8),
+            _buildGraphTabButton(
+              label: l10n.sleepQuality,
+              selected: !_showDurationGraph,
+              onTap: () => setState(() => _showDurationGraph = false),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -613,6 +630,40 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           },
         ),
       ],
+    );
+  }
+
+  // ==================== SHARED WIDGET ====================
+
+  // ==================== GRAPH TAB BUTTON ====================
+
+  Widget _buildGraphTabButton({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.bodySmall(context).copyWith(
+            color: selected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 
