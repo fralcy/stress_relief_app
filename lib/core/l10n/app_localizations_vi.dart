@@ -1055,13 +1055,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get locked => 'Chưa mở khóa';
 
   @override
+  String get goToFeature => 'Đến tính năng';
+
+  @override
   String achievementCategoryName(String category) {
     switch (category) {
-      case 'onboarding': return 'Bắt đầu';
+      case 'engagement': return 'Gắn bó';
+      case 'schedule': return 'Lập lịch';
       case 'diary': return 'Nhật ký cảm xúc';
       case 'breathing': return 'Hít thở';
       case 'sleep': return 'Giấc ngủ';
-      case 'minigames': return 'Hoạt động';
+      case 'garden': return 'Làm vườn';
+      case 'aquarium': return 'Nuôi cá';
+      case 'painting': return 'Vẽ tranh';
+      case 'music': return 'Âm nhạc';
       case 'score': return 'Điểm thưởng';
       default: return category;
     }
@@ -1072,22 +1079,35 @@ class AppLocalizationsVi extends AppLocalizations {
     switch (id) {
       case 'first_steps': return 'Bước đầu tiên';
       case 'app_explorer': return 'Khám phá ứng dụng';
+      case 'days_7': return 'Người quen thuộc';
+      case 'days_30': return 'Người trung thành';
+      case 'schedule_task_10': return 'Bắt đầu kế hoạch';
+      case 'schedule_task_100': return 'Người có kỷ luật';
+      case 'schedule_task_300': return 'Bậc thầy lịch trình';
       case 'first_diary': return 'Lần đầu viết nhật ký';
-      case 'diary_5': return 'Đang hình thành thói quen';
       case 'diary_20': return 'Nhà văn nhật ký';
-      case 'diary_streak_7': return 'Tuần tự kiểm';
+      case 'diary_50': return 'Nhà văn nội tâm';
       case 'first_breath': return 'Hơi thở đầu tiên';
-      case 'breathing_10': return 'Người thở chánh niệm';
-      case 'breathing_478_master': return 'Cao thủ 4-7-8';
-      case 'breathing_box_master': return 'Thở hộp chuyên nghiệp';
+      case 'breathing_20': return 'Người thở chánh niệm';
+      case 'breathing_100': return 'Bậc thầy hơi thở';
       case 'first_sleep_log': return 'Theo dõi giấc ngủ';
-      case 'sleep_log_7': return 'Thói quen giấc ngủ';
-      case 'sleep_streak_5': return 'Chuỗi ngủ đúng giờ';
-      case 'sleep_quality_high': return 'Giấc ngủ ngon';
+      case 'sleep_log_10': return 'Thói quen giấc ngủ';
+      case 'sleep_log_30': return 'Chuyên gia giấc ngủ';
       case 'first_harvest': return 'Bàn tay xanh';
-      case 'harvest_10': return 'Người làm vườn';
-      case 'aquarium_5_fish': return 'Nhà sưu tầm cá';
-      case 'first_painting': return 'Nghệ sĩ';
+      case 'harvest_100': return 'Người làm vườn';
+      case 'harvest_300': return 'Nông dân bậc thầy';
+      case 'garden_points_1000': return 'Vườn sinh lợi';
+      case 'garden_points_5000': return 'Khu vườn phồn thịnh';
+      case 'garden_points_10000': return 'Nông trang trù phú';
+      case 'first_aquarium_claim': return 'Xu đầu tiên';
+      case 'aquarium_points_1000': return 'Bể cá sinh lợi';
+      case 'aquarium_points_5000': return 'Đại dương thu nhỏ';
+      case 'painting_pixels_512': return 'Họa sĩ tập sự';
+      case 'painting_pixels_2560': return 'Bộ sưu tập tranh';
+      case 'painting_pixels_5120': return 'Họa sĩ bậc thầy';
+      case 'music_notes_60': return 'Giai điệu đầu tiên';
+      case 'music_notes_300': return 'Nhạc sĩ tập sự';
+      case 'music_notes_600': return 'Nhạc sĩ bậc thầy';
       case 'score_100': return 'Trăm điểm';
       case 'score_500': return 'Người thành công';
       default: return id;
@@ -1099,22 +1119,35 @@ class AppLocalizationsVi extends AppLocalizations {
     switch (id) {
       case 'first_steps': return 'Mở ứng dụng lần đầu tiên';
       case 'app_explorer': return 'Thử 3 tính năng khác nhau';
+      case 'days_7': return 'Sử dụng ứng dụng trong 7 ngày khác nhau';
+      case 'days_30': return 'Sử dụng ứng dụng trong 30 ngày khác nhau';
+      case 'schedule_task_10': return 'Hoàn thành 10 nhiệm vụ đã lên lịch';
+      case 'schedule_task_100': return 'Hoàn thành 100 nhiệm vụ đã lên lịch';
+      case 'schedule_task_300': return 'Hoàn thành 300 nhiệm vụ đã lên lịch';
       case 'first_diary': return 'Viết mục nhật ký cảm xúc đầu tiên';
-      case 'diary_5': return 'Viết 5 mục nhật ký';
       case 'diary_20': return 'Viết 20 mục nhật ký';
-      case 'diary_streak_7': return 'Viết nhật ký 7 ngày liên tiếp';
+      case 'diary_50': return 'Viết 50 mục nhật ký';
       case 'first_breath': return 'Hoàn thành buổi hít thở đầu tiên';
-      case 'breathing_10': return 'Hoàn thành 10 buổi hít thở';
-      case 'breathing_478_master': return 'Hoàn thành 10 buổi hít thở 4-7-8';
-      case 'breathing_box_master': return 'Hoàn thành 10 buổi thở hộp';
+      case 'breathing_20': return 'Hoàn thành 20 buổi hít thở';
+      case 'breathing_100': return 'Hoàn thành 100 buổi hít thở';
       case 'first_sleep_log': return 'Ghi lại giấc ngủ lần đầu tiên';
-      case 'sleep_log_7': return 'Ghi lại giấc ngủ 7 lần';
-      case 'sleep_streak_5': return 'Ghi lại giấc ngủ 5 ngày liên tiếp';
-      case 'sleep_quality_high': return 'Ghi 5 đêm có chất lượng từ 4 trở lên';
+      case 'sleep_log_10': return 'Ghi lại giấc ngủ 10 lần';
+      case 'sleep_log_30': return 'Ghi lại giấc ngủ 30 lần';
       case 'first_harvest': return 'Thu hoạch cây lần đầu tiên';
-      case 'harvest_10': return 'Thu hoạch cây 10 lần';
-      case 'aquarium_5_fish': return 'Sở hữu 5 con cá trong bể';
-      case 'first_painting': return 'Lưu bức tranh đầu tiên';
+      case 'harvest_100': return 'Thu hoạch cây 100 lần';
+      case 'harvest_300': return 'Thu hoạch cây 300 lần';
+      case 'garden_points_1000': return 'Kiếm 1.000 điểm từ làm vườn';
+      case 'garden_points_5000': return 'Kiếm 5.000 điểm từ làm vườn';
+      case 'garden_points_10000': return 'Kiếm 10.000 điểm từ làm vườn';
+      case 'first_aquarium_claim': return 'Nhận xu từ bể cá lần đầu tiên';
+      case 'aquarium_points_1000': return 'Kiếm 1.000 điểm từ bể cá';
+      case 'aquarium_points_5000': return 'Kiếm 5.000 điểm từ bể cá';
+      case 'painting_pixels_512': return 'Tô 512 pixels';
+      case 'painting_pixels_2560': return 'Tô 2.560 pixels';
+      case 'painting_pixels_5120': return 'Tô 5.120 pixels';
+      case 'music_notes_60': return 'Đặt 60 nốt nhạc';
+      case 'music_notes_300': return 'Đặt 300 nốt nhạc';
+      case 'music_notes_600': return 'Đặt 600 nốt nhạc';
       case 'score_100': return 'Kiếm tổng cộng 100 điểm';
       case 'score_500': return 'Kiếm tổng cộng 500 điểm';
       default: return '';

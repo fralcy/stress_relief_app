@@ -1052,13 +1052,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get locked => 'Locked';
 
   @override
+  String get goToFeature => 'Go to feature';
+
+  @override
   String achievementCategoryName(String category) {
     switch (category) {
-      case 'onboarding': return 'Getting Started';
+      case 'engagement': return 'Engagement';
+      case 'schedule': return 'Schedule';
       case 'diary': return 'Emotion Diary';
       case 'breathing': return 'Breathing';
       case 'sleep': return 'Sleep';
-      case 'minigames': return 'Activities';
+      case 'garden': return 'Garden';
+      case 'aquarium': return 'Aquarium';
+      case 'painting': return 'Painting';
+      case 'music': return 'Music';
       case 'score': return 'Points';
       default: return category;
     }
@@ -1069,22 +1076,35 @@ class AppLocalizationsEn extends AppLocalizations {
     switch (id) {
       case 'first_steps': return 'First Steps';
       case 'app_explorer': return 'App Explorer';
+      case 'days_7': return 'Regular User';
+      case 'days_30': return 'Devoted User';
+      case 'schedule_task_10': return 'Planner';
+      case 'schedule_task_100': return 'Disciplined';
+      case 'schedule_task_300': return 'Schedule Master';
       case 'first_diary': return 'First Entry';
-      case 'diary_5': return 'Getting Started';
       case 'diary_20': return 'Consistent Writer';
-      case 'diary_streak_7': return 'Week of Reflection';
+      case 'diary_50': return 'Inner Writer';
       case 'first_breath': return 'First Breath';
-      case 'breathing_10': return 'Mindful Breather';
-      case 'breathing_478_master': return '4-7-8 Master';
-      case 'breathing_box_master': return 'Box Breathing Pro';
+      case 'breathing_20': return 'Mindful Breather';
+      case 'breathing_100': return 'Breathing Master';
       case 'first_sleep_log': return 'Sleep Tracker';
-      case 'sleep_log_7': return 'Sleep Habit';
-      case 'sleep_streak_5': return 'Sleep Streak';
-      case 'sleep_quality_high': return 'Sweet Dreams';
+      case 'sleep_log_10': return 'Sleep Habit';
+      case 'sleep_log_30': return 'Sleep Expert';
       case 'first_harvest': return 'Green Thumb';
-      case 'harvest_10': return 'Master Gardener';
-      case 'aquarium_5_fish': return 'Fish Collector';
-      case 'first_painting': return 'Artist';
+      case 'harvest_100': return 'Master Gardener';
+      case 'harvest_300': return 'Seasoned Farmer';
+      case 'garden_points_1000': return 'Fruitful Garden';
+      case 'garden_points_5000': return 'Thriving Garden';
+      case 'garden_points_10000': return 'Bountiful Farm';
+      case 'first_aquarium_claim': return 'First Coins';
+      case 'aquarium_points_1000': return 'Profitable Tank';
+      case 'aquarium_points_5000': return 'Ocean Keeper';
+      case 'painting_pixels_512': return 'Budding Artist';
+      case 'painting_pixels_2560': return 'Art Gallery';
+      case 'painting_pixels_5120': return 'Master Artist';
+      case 'music_notes_60': return 'First Melody';
+      case 'music_notes_300': return 'Music Maker';
+      case 'music_notes_600': return 'Music Master';
       case 'score_100': return 'Century';
       case 'score_500': return 'High Achiever';
       default: return id;
@@ -1096,22 +1116,35 @@ class AppLocalizationsEn extends AppLocalizations {
     switch (id) {
       case 'first_steps': return 'Open the app for the first time';
       case 'app_explorer': return 'Try 3 different features';
+      case 'days_7': return 'Use the app on 7 different days';
+      case 'days_30': return 'Use the app on 30 different days';
+      case 'schedule_task_10': return 'Complete 10 scheduled tasks';
+      case 'schedule_task_100': return 'Complete 100 scheduled tasks';
+      case 'schedule_task_300': return 'Complete 300 scheduled tasks';
       case 'first_diary': return 'Write your first emotion diary entry';
-      case 'diary_5': return 'Write 5 diary entries';
       case 'diary_20': return 'Write 20 diary entries';
-      case 'diary_streak_7': return 'Write diary entries 7 days in a row';
+      case 'diary_50': return 'Write 50 diary entries';
       case 'first_breath': return 'Complete your first breathing session';
-      case 'breathing_10': return 'Complete 10 breathing sessions';
-      case 'breathing_478_master': return 'Complete 10 sessions of 4-7-8 breathing';
-      case 'breathing_box_master': return 'Complete 10 sessions of box breathing';
+      case 'breathing_20': return 'Complete 20 breathing sessions';
+      case 'breathing_100': return 'Complete 100 breathing sessions';
       case 'first_sleep_log': return 'Log your sleep for the first time';
-      case 'sleep_log_7': return 'Log your sleep 7 times';
-      case 'sleep_streak_5': return 'Log sleep 5 days in a row';
-      case 'sleep_quality_high': return 'Log 5 nights with quality 4 or above';
+      case 'sleep_log_10': return 'Log your sleep 10 times';
+      case 'sleep_log_30': return 'Log your sleep 30 times';
       case 'first_harvest': return 'Harvest a plant for the first time';
-      case 'harvest_10': return 'Harvest plants 10 times';
-      case 'aquarium_5_fish': return 'Own 5 fish in your aquarium';
-      case 'first_painting': return 'Save your first painting';
+      case 'harvest_100': return 'Harvest plants 100 times';
+      case 'harvest_300': return 'Harvest plants 300 times';
+      case 'garden_points_1000': return 'Earn 1,000 points from gardening';
+      case 'garden_points_5000': return 'Earn 5,000 points from gardening';
+      case 'garden_points_10000': return 'Earn 10,000 points from gardening';
+      case 'first_aquarium_claim': return 'Claim coins from your aquarium for the first time';
+      case 'aquarium_points_1000': return 'Earn 1,000 points from your aquarium';
+      case 'aquarium_points_5000': return 'Earn 5,000 points from your aquarium';
+      case 'painting_pixels_512': return 'Paint 512 pixels';
+      case 'painting_pixels_2560': return 'Paint 2,560 pixels';
+      case 'painting_pixels_5120': return 'Paint 5,120 pixels';
+      case 'music_notes_60': return 'Place 60 notes in your compositions';
+      case 'music_notes_300': return 'Place 300 notes in your compositions';
+      case 'music_notes_600': return 'Place 600 notes in your compositions';
       case 'score_100': return 'Earn a total of 100 points';
       case 'score_500': return 'Earn a total of 500 points';
       default: return '';

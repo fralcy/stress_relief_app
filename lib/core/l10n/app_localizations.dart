@@ -399,9 +399,10 @@ abstract class AppLocalizations {
   String get achievementsTitle;
   String get achievementUnlocked;
   String get locked;
+  String get goToFeature;
 
   /// Returns the localized category name.
-  /// [category] matches AchievementCategory enum name (e.g. 'onboarding').
+  /// [category] matches AchievementCategory enum name (e.g. 'engagement').
   String achievementCategoryName(String category);
 
   /// Returns the localized title for the given achievement [id].
