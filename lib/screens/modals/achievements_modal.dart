@@ -11,28 +11,48 @@ import '../../core/widgets/app_modal.dart';
 class AchievementsModal {
   AchievementsModal._();
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(
+    BuildContext context, {
+    void Function(String featureId)? onNavigate,
+  }) {
     final l10n = AppLocalizations.of(context);
     return AppModal.show(
       context: context,
       title: l10n.achievementsTitle,
       maxHeight: 680,
-      content: const _AchievementsContent(),
+      content: _AchievementsContent(onNavigate: onNavigate),
     );
   }
 }
 
 class _AchievementsContent extends StatelessWidget {
-  const _AchievementsContent();
+  final void Function(String featureId)? onNavigate;
+
+  const _AchievementsContent({this.onNavigate});
 
   static const _categoryOrder = [
-    AchievementCategory.onboarding,
+    AchievementCategory.engagement,
+    AchievementCategory.schedule,
     AchievementCategory.diary,
     AchievementCategory.breathing,
     AchievementCategory.sleep,
-    AchievementCategory.minigames,
+    AchievementCategory.garden,
+    AchievementCategory.aquarium,
+    AchievementCategory.painting,
+    AchievementCategory.music,
     AchievementCategory.score,
   ];
+
+  static const _categoryFeatureId = {
+    AchievementCategory.schedule: 'schedule',
+    AchievementCategory.diary: 'diary',
+    AchievementCategory.breathing: 'breathing',
+    AchievementCategory.sleep: 'sleep',
+    AchievementCategory.garden: 'garden',
+    AchievementCategory.aquarium: 'aquarium',
+    AchievementCategory.painting: 'painting',
+    AchievementCategory.music: 'music',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +150,7 @@ class _AchievementsContent extends StatelessWidget {
     final categoryAchievements = AchievementService.all
         .where((a) => a.category == cat)
         .toList();
+    final featureId = _categoryFeatureId[cat];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,13 +158,43 @@ class _AchievementsContent extends StatelessWidget {
         // Category header
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            l10n.achievementCategoryName(cat.name),
-            style: AppTypography.labelMedium(
-              context,
-              color: context.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.achievementCategoryName(cat.name),
+                style: AppTypography.labelMedium(
+                  context,
+                  color: context.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (onNavigate != null && featureId != null)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onNavigate!(featureId);
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.goToFeature,
+                        style: AppTypography.labelSmall(
+                          context,
+                          color: context.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 11,
+                        color: context.primaryColor,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
         // Achievement cards
