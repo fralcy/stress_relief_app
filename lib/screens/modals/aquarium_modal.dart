@@ -311,6 +311,15 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     // Update user profile points
     await context.read<ScoreProvider>().addPoints(claimablePoints);
 
+    // Achievement trigger
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context
+          .read<AchievementProvider>()
+          .onAquariumClaimed(claimablePoints, score);
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
+    }
+
     setState(() {
       _progress = _progress.copyWith(
         earnings: _progress.earnings + claimablePoints,

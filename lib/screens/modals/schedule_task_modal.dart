@@ -13,6 +13,8 @@ import '../../core/utils/sfx_service.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/widgets/achievement_popup.dart';
 import '../../models/schedule_task.dart';
 
 // Export
@@ -124,9 +126,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     _loadTasks();
     await _updateNotifications();
 
-    // Play appropriate sound
+    // Play appropriate sound + trigger achievement
     if (updatedTask.isCompleted) {
       SfxService().taskComplete();
+      if (mounted) {
+        final score = context.read<ScoreProvider>();
+        final newly = await context
+            .read<AchievementProvider>()
+            .onScheduleTaskCompleted(score);
+        if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
+      }
     } else {
       SfxService().buttonClick();
     }

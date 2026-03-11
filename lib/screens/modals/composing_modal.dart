@@ -64,6 +64,9 @@ class _ComposingModalState extends State<ComposingModal> {
   // Selected instrument and note
   InstrumentType _selectedInstrument = InstrumentType.piano;
   int? _selectedNote;
+
+  // Achievement tracking — cumulative note changes this session
+  int _noteChangeCount = 0;
   
   // Timeline: [beat][track] = note (1-8) or null
   final List<List<int?>> _timeline = List.generate(
@@ -147,6 +150,7 @@ class _ComposingModalState extends State<ComposingModal> {
       } else {
         _timeline[beatIndex][trackIndex] = _selectedNote;
       }
+      _noteChangeCount++;
     });
     
     // Auto-save
@@ -295,9 +299,12 @@ class _ComposingModalState extends State<ComposingModal> {
     await _saveTrack();
 
     // Achievement trigger
-    if (mounted) {
+    if (_noteChangeCount > 0 && mounted) {
       final score = context.read<ScoreProvider>();
-      final newly = await context.read<AchievementProvider>().onMusicTrackSaved(score);
+      final delta = _noteChangeCount;
+      _noteChangeCount = 0;
+      final newly =
+          await context.read<AchievementProvider>().onNotesChanged(delta, score);
       if (newly.isNotEmpty && mounted) {
         AchievementPopup.show(context, newly);
       }

@@ -339,8 +339,9 @@ class _GardenModalState extends State<GardenModal>
     await context.read<ScoreProvider>().addPoints(result['pointsGained']);
     if (mounted) {
       final score = context.read<ScoreProvider>();
-      final newly =
-          await context.read<AchievementProvider>().onHarvest(score);
+      final newly = await context
+          .read<AchievementProvider>()
+          .onHarvest(result['pointsGained'] as int, score);
       if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
     }
     _cellHarvestPoints['$row-$col'] = result['pointsGained'];

@@ -54,6 +54,9 @@ class _DrawingModalState extends State<DrawingModal> {
   // Undo history
   final List<List<List<int>>> _history = [];
   static const int _maxHistorySize = 20;
+
+  // Achievement tracking — cumulative pixel changes this session
+  int _pixelChangeCount = 0;
   
   // Scroll control
   bool _isDrawing = false;
@@ -109,13 +112,14 @@ class _DrawingModalState extends State<DrawingModal> {
 
   void _onPixelPaint(int row, int col) {
     if (_pixels[row][col] == _selectedColorIndex) return;
-    
+
     _saveToHistory();
-    
+
     setState(() {
       _pixels[row][col] = _selectedColorIndex;
+      _pixelChangeCount++;
     });
-    
+
     // Auto-save
     _paintingService.savePainting(_pixels, name: _drawingName);
   }
@@ -219,9 +223,12 @@ class _DrawingModalState extends State<DrawingModal> {
     await _paintingService.savePainting(_pixels, name: newName);
 
     // Achievement trigger
-    if (mounted) {
+    if (_pixelChangeCount > 0 && mounted) {
       final score = context.read<ScoreProvider>();
-      final newly = await context.read<AchievementProvider>().onPaintingSaved(score);
+      final delta = _pixelChangeCount;
+      _pixelChangeCount = 0;
+      final newly =
+          await context.read<AchievementProvider>().onPixelsPainted(delta, score);
       if (newly.isNotEmpty && mounted) {
         AchievementPopup.show(context, newly);
       }
