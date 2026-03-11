@@ -24,8 +24,18 @@ class AchievementProvider extends ChangeNotifier {
   // Trigger methods — call after the corresponding action
   // ----------------------------------------------------------
 
+  Future<List<Achievement>> onAppOpened(ScoreProvider score) async {
+    final ids = await AchievementService().onAppOpened();
+    return _handleUnlocks(ids, score);
+  }
+
   Future<List<Achievement>> onFirstLaunch(ScoreProvider score) async {
     final ids = await AchievementService().onFirstLaunch();
+    return _handleUnlocks(ids, score);
+  }
+
+  Future<List<Achievement>> onScheduleTaskCompleted(ScoreProvider score) async {
+    final ids = await AchievementService().onScheduleTaskCompleted();
     return _handleUnlocks(ids, score);
   }
 
@@ -51,8 +61,19 @@ class AchievementProvider extends ChangeNotifier {
     return _handleUnlocks(ids, score);
   }
 
-  Future<List<Achievement>> onHarvest(ScoreProvider score) async {
-    final ids = await AchievementService().onHarvest();
+  Future<List<Achievement>> onHarvest(
+    int pointsGained,
+    ScoreProvider score,
+  ) async {
+    final ids = await AchievementService().onHarvest(pointsGained: pointsGained);
+    return _handleUnlocks(ids, score);
+  }
+
+  Future<List<Achievement>> onAquariumClaimed(
+    int pointsClaimed,
+    ScoreProvider score,
+  ) async {
+    final ids = await AchievementService().onAquariumClaimed(pointsClaimed);
     return _handleUnlocks(ids, score);
   }
 
@@ -65,13 +86,19 @@ class AchievementProvider extends ChangeNotifier {
     return _handleUnlocks(ids, score);
   }
 
-  Future<List<Achievement>> onPaintingSaved(ScoreProvider score) async {
-    final ids = await AchievementService().onPaintingSaved();
+  Future<List<Achievement>> onPixelsPainted(
+    int delta,
+    ScoreProvider score,
+  ) async {
+    final ids = await AchievementService().onPixelsPainted(delta: delta);
     return _handleUnlocks(ids, score);
   }
 
-  Future<List<Achievement>> onMusicTrackSaved(ScoreProvider score) async {
-    final ids = await AchievementService().onMusicTrackSaved();
+  Future<List<Achievement>> onNotesChanged(
+    int delta,
+    ScoreProvider score,
+  ) async {
+    final ids = await AchievementService().onNotesChanged(delta: delta);
     return _handleUnlocks(ids, score);
   }
 
@@ -90,12 +117,10 @@ class AchievementProvider extends ChangeNotifier {
     final diaryCount = dm.emotionDiaries.length;
     final breathingCount = dm.breathingSessions.length;
     final sleepLogCount = dm.sleepLogs.length;
-    // GardenProgress has no harvest count field — use existing counter from progress
     final harvestCount =
         dm.achievementProgress.counter(AchievementService.kHarvestCount);
-    final fishCount = dm.aquariumProgress?.fishes.length ?? 0;
-    final paintingCount =
-        dm.paintingProgress?.savedPaintings?.length ?? 0;
+    final scheduleTaskCount =
+        dm.achievementProgress.counter(AchievementService.kScheduleTaskCount);
     final totalPoints = score.profile.totalPoints;
 
     final ids = await AchievementService().retroactiveCheck(
@@ -103,8 +128,7 @@ class AchievementProvider extends ChangeNotifier {
       breathingCount: breathingCount,
       sleepLogCount: sleepLogCount,
       harvestCount: harvestCount,
-      fishCount: fishCount,
-      paintingCount: paintingCount,
+      scheduleTaskCount: scheduleTaskCount,
       totalPoints: totalPoints,
     );
 
