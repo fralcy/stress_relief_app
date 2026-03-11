@@ -88,6 +88,9 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
     if (!mounted) return;
     final score = context.read<ScoreProvider>();
     await context.read<AchievementProvider>().retroactiveCheck(score);
+    if (mounted) {
+      await context.read<AchievementProvider>().onAppOpened(score);
+    }
   }
 
   Future<void> _checkDebugMode() async {
@@ -391,7 +394,18 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             label: l10n.achievements,
             onPressed: () {
               SfxService().buttonClick();
-              AchievementsModal.show(context);
+              AchievementsModal.show(context, onNavigate: (featureId) {
+                switch (featureId) {
+                  case 'schedule': ScheduleTaskModal.show(context);
+                  case 'diary': EmotionDiaryModal.show(context);
+                  case 'breathing': BreathingExerciseModal.show(context);
+                  case 'sleep': SleepGuideModal.show(context);
+                  case 'garden': GardenModal.show(context);
+                  case 'aquarium': AquariumModal.show(context);
+                  case 'painting': DrawingModal.show(context);
+                  case 'music': ComposingModal.show(context);
+                }
+              });
             },
           ),
         ];
