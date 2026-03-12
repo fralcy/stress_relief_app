@@ -5,6 +5,7 @@ import '../../core/constants/app_shapes.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/achievement_provider.dart';
+import '../../core/providers/score_provider.dart';
 import '../../core/utils/achievement_service.dart';
 import '../../core/widgets/app_modal.dart';
 
@@ -151,6 +152,8 @@ class _AchievementsContent extends StatelessWidget {
         .where((a) => a.category == cat)
         .toList();
     final featureId = _categoryFeatureId[cat];
+    final totalPoints = context.watch<ScoreProvider>().profile.totalPoints;
+    final progressText = _buildProgressText(l10n, cat, categoryAchievements, progress, totalPoints);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +162,6 @@ class _AchievementsContent extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 l10n.achievementCategoryName(cat.name),
@@ -169,6 +171,17 @@ class _AchievementsContent extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              const Spacer(),
+              if (progressText != null) ...[
+                Text(
+                  progressText,
+                  style: AppTypography.labelSmall(
+                    context,
+                    color: context.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               if (onNavigate != null && featureId != null)
                 GestureDetector(
                   onTap: () {
@@ -206,6 +219,69 @@ class _AchievementsContent extends StatelessWidget {
                 )),
       ],
     );
+  }
+
+  /// Returns "x/y unit" for the next uncompleted achievement, or null if all done.
+  String? _buildProgressText(
+    AppLocalizations l10n,
+    AchievementCategory cat,
+    List<Achievement> achievements,
+    dynamic progress,
+    int totalPoints,
+  ) {
+    final Iterable<Achievement> locked = achievements.where((a) => !progress.isUnlocked(a.id));
+    if (locked.isEmpty) return null;
+    final info = _progressInfo(locked.first.id, progress, totalPoints);
+    if (info == null) return null;
+    return '${info.$1}/${info.$2} ${l10n.achievementUnit(info.$3)}';
+  }
+
+  static int _countBits(int n) {
+    int c = 0;
+    int v = n;
+    while (v > 0) { c += v & 1; v >>= 1; }
+    return c;
+  }
+
+  /// Returns (current, target, unitKey) for the given achievement ID, or null.
+  static (int, int, String)? _progressInfo(String id, dynamic progress, int totalPoints) {
+    int c(String key) => (progress.counters[key] as int?) ?? 0;
+    return switch (id) {
+      'days_7'              => (c(AchievementService.kDaysUsed), 7, 'days'),
+      'days_30'             => (c(AchievementService.kDaysUsed), 30, 'days'),
+      'app_explorer'        => (_countBits(c(AchievementService.kFeaturesUsed)), 3, 'features'),
+      'schedule_task_10'    => (c(AchievementService.kScheduleTaskCount), 10, 'tasks'),
+      'schedule_task_100'   => (c(AchievementService.kScheduleTaskCount), 100, 'tasks'),
+      'schedule_task_300'   => (c(AchievementService.kScheduleTaskCount), 300, 'tasks'),
+      'first_diary'         => (c(AchievementService.kDiaryCount), 1, 'entries'),
+      'diary_20'            => (c(AchievementService.kDiaryCount), 20, 'entries'),
+      'diary_50'            => (c(AchievementService.kDiaryCount), 50, 'entries'),
+      'first_breath'        => (c(AchievementService.kBreathingTotal), 1, 'sessions'),
+      'breathing_20'        => (c(AchievementService.kBreathingTotal), 20, 'sessions'),
+      'breathing_100'       => (c(AchievementService.kBreathingTotal), 100, 'sessions'),
+      'first_sleep_log'     => (c(AchievementService.kSleepLogCount), 1, 'logs'),
+      'sleep_log_10'        => (c(AchievementService.kSleepLogCount), 10, 'logs'),
+      'sleep_log_30'        => (c(AchievementService.kSleepLogCount), 30, 'logs'),
+      'first_harvest'       => (c(AchievementService.kHarvestCount), 1, 'harvests'),
+      'harvest_100'         => (c(AchievementService.kHarvestCount), 100, 'harvests'),
+      'harvest_300'         => (c(AchievementService.kHarvestCount), 300, 'harvests'),
+      'garden_points_1000'  => (c(AchievementService.kGardenPoints), 1000, 'points'),
+      'garden_points_5000'  => (c(AchievementService.kGardenPoints), 5000, 'points'),
+      'garden_points_10000' => (c(AchievementService.kGardenPoints), 10000, 'points'),
+      'first_aquarium_claim'=> (c('aquarium_claim_count'), 1, 'claims'),
+      'aquarium_points_1000'=> (c(AchievementService.kAquariumPoints), 1000, 'points'),
+      'aquarium_points_5000'=> (c(AchievementService.kAquariumPoints), 5000, 'points'),
+      'painting_pixels_512' => (c(AchievementService.kPixelsPainted), 512, 'pixels'),
+      'painting_pixels_2560'=> (c(AchievementService.kPixelsPainted), 2560, 'pixels'),
+      'painting_pixels_5120'=> (c(AchievementService.kPixelsPainted), 5120, 'pixels'),
+      'music_notes_60'      => (c(AchievementService.kNotesChanged), 60, 'notes'),
+      'music_notes_300'     => (c(AchievementService.kNotesChanged), 300, 'notes'),
+      'music_notes_600'     => (c(AchievementService.kNotesChanged), 600, 'notes'),
+      'score_1000'          => (totalPoints, 1000, 'points'),
+      'score_5000'          => (totalPoints, 5000, 'points'),
+      'score_20000'         => (totalPoints, 20000, 'points'),
+      _                     => null,
+    };
   }
 }
 

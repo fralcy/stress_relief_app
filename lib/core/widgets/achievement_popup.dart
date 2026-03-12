@@ -186,7 +186,7 @@ class _AchievementDialogState extends State<_AchievementDialog> {
                     ],
                     const SizedBox(height: 14),
                     Text(
-                      'Tap to dismiss',
+                      l10n.tapToDismiss,
                       style: AppTypography.bodySmall(
                         context,
                         color: context.onSurfaceVariant.withValues(alpha: 0.6),

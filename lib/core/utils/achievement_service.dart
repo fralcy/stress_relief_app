@@ -351,19 +351,27 @@ class AchievementService {
       category: AchievementCategory.music,
     ),
 
-    // === SCORE (2) ===
+    // === SCORE (3) ===
     Achievement(
-      id: 'score_100',
-      titleGetter: () => 'Century',
-      descriptionGetter: () => 'Earn a total of 100 points',
+      id: 'score_1000',
+      titleGetter: () => 'Score: 1K',
+      descriptionGetter: () => 'Earn a total of 1,000 points',
       icon: Icons.looks_one_outlined,
       pointsReward: 0, // No reward to avoid infinite loop
       category: AchievementCategory.score,
     ),
     Achievement(
-      id: 'score_500',
-      titleGetter: () => 'High Achiever',
-      descriptionGetter: () => 'Earn a total of 500 points',
+      id: 'score_5000',
+      titleGetter: () => 'Score: 5K',
+      descriptionGetter: () => 'Earn a total of 5,000 points',
+      icon: Icons.military_tech_outlined,
+      pointsReward: 0,
+      category: AchievementCategory.score,
+    ),
+    Achievement(
+      id: 'score_20000',
+      titleGetter: () => 'Score: 20K',
+      descriptionGetter: () => 'Earn a total of 20,000 points',
       icon: Icons.emoji_events_outlined,
       pointsReward: 0,
       category: AchievementCategory.score,
@@ -644,8 +652,9 @@ class AchievementService {
     final p = _load();
 
     final candidates = <String>[
-      if (totalPoints >= 100) 'score_100',
-      if (totalPoints >= 500) 'score_500',
+      if (totalPoints >= 1000) 'score_1000',
+      if (totalPoints >= 5000) 'score_5000',
+      if (totalPoints >= 20000) 'score_20000',
     ];
 
     final newly = _tryUnlock(p, candidates);
@@ -716,8 +725,9 @@ class AchievementService {
       if (scheduleTaskCount >= 10) 'schedule_task_10',
       if (scheduleTaskCount >= 100) 'schedule_task_100',
       if (scheduleTaskCount >= 300) 'schedule_task_300',
-      if (totalPoints >= 100) 'score_100',
-      if (totalPoints >= 500) 'score_500',
+      if (totalPoints >= 1000) 'score_1000',
+      if (totalPoints >= 5000) 'score_5000',
+      if (totalPoints >= 20000) 'score_20000',
       if (featuresUsed >= 3) 'app_explorer',
     ];
 

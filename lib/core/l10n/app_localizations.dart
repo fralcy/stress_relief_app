@@ -400,6 +400,10 @@ abstract class AppLocalizations {
   String get achievementUnlocked;
   String get locked;
   String get goToFeature;
+  String get tapToDismiss;
+
+  /// Returns the localized unit label for achievement progress (e.g. 'days', 'tasks').
+  String achievementUnit(String unitKey);
 
   /// Returns the localized category name.
   /// [category] matches AchievementCategory enum name (e.g. 'engagement').
