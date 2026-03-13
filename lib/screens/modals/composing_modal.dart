@@ -4,6 +4,7 @@ import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/composing_service.dart';
+import '../../core/utils/achievement_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import 'dart:async';
 import '../../core/utils/bgm_service.dart';
@@ -65,7 +66,8 @@ class _ComposingModalState extends State<ComposingModal> {
   InstrumentType _selectedInstrument = InstrumentType.piano;
   int? _selectedNote;
 
-  // Achievement tracking — cumulative note changes this session
+  // Achievement tracking — sliding window (last 3 states) + net change counter
+  final List<List<List<int?>>> _stateBuffer = [];
   int _noteChangeCount = 0;
   
   // Timeline: [beat][track] = note (1-8) or null
@@ -115,6 +117,10 @@ class _ComposingModalState extends State<ComposingModal> {
         _isLoading = false;
       });
     }
+    _stateBuffer
+      ..clear()
+      ..add(_timeline.map((row) => List<int?>.from(row)).toList());
+    _noteChangeCount = 0;
   }
 
   @override
@@ -122,7 +128,24 @@ class _ComposingModalState extends State<ComposingModal> {
     _nameController.dispose();
     _playbackTimer?.cancel();
     _composingService.stopAll();
+    if (_noteChangeCount > 0) {
+      AchievementService().addNotesOnly(_noteChangeCount);
+    }
     super.dispose();
+  }
+
+  /// Flush pending [_noteChangeCount] to achievement service and show popup.
+  Future<void> _flushNoteAchievement() async {
+    if (_noteChangeCount <= 0 || !mounted) return;
+    final score = context.read<ScoreProvider>();
+    final provider = context.read<AchievementProvider>();
+    final delta = _noteChangeCount;
+    _noteChangeCount = 0;
+    _stateBuffer
+      ..clear()
+      ..add(_timeline.map((row) => List<int?>.from(row)).toList());
+    final newly = await provider.onNotesChanged(delta, score);
+    if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
   }
 
   void _onInstrumentSelected(InstrumentType instrument) {
@@ -150,9 +173,26 @@ class _ComposingModalState extends State<ComposingModal> {
       } else {
         _timeline[beatIndex][trackIndex] = _selectedNote;
       }
-      _noteChangeCount++;
     });
-    
+
+    // Sliding window: keep last 3 snapshots, compare front vs back
+    _stateBuffer.add(_timeline.map((row) => List<int?>.from(row)).toList());
+    if (_stateBuffer.length > 3) _stateBuffer.removeAt(0);
+
+    final front = _stateBuffer.first;
+    final back = _stateBuffer.last;
+    bool differ = false;
+    outer: for (int b = 0; b < back.length; b++) {
+      for (int t = 0; t < back[b].length; t++) {
+        if (back[b][t] != front[b][t]) { differ = true; break outer; }
+      }
+    }
+    if (differ) {
+      _noteChangeCount++;
+    } else if (_noteChangeCount > 0) {
+      _noteChangeCount--;
+    }
+
     // Auto-save
     _saveTrack();
   }
@@ -264,6 +304,9 @@ class _ComposingModalState extends State<ComposingModal> {
   }
 
   Future<void> _onOpen() async {
+    // Flush pending note counter before switching track
+    await _flushNoteAchievement();
+
     // Show library modal
     await LibraryModal.show(
       context,
@@ -298,17 +341,8 @@ class _ComposingModalState extends State<ComposingModal> {
     // Re-save track with new name
     await _saveTrack();
 
-    // Achievement trigger
-    if (_noteChangeCount > 0 && mounted) {
-      final score = context.read<ScoreProvider>();
-      final delta = _noteChangeCount;
-      _noteChangeCount = 0;
-      final newly =
-          await context.read<AchievementProvider>().onNotesChanged(delta, score);
-      if (newly.isNotEmpty && mounted) {
-        AchievementPopup.show(context, newly);
-      }
-    }
+    // Achievement trigger — flush sliding window counter
+    await _flushNoteAchievement();
   }
 
   void _onCancelEdit() {

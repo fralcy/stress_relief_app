@@ -488,16 +488,18 @@ class AchievementService {
     return newly;
   }
 
-  /// Call after a schedule task is marked completed.
-  Future<List<String>> onScheduleTaskCompleted() async {
+  /// Call when the user claims daily schedule points. [count] is the number
+  /// of completed tasks at the time of claiming.
+  Future<List<String>> onScheduleClaimed(int count) async {
+    if (count <= 0) return [];
     final p = _load();
     _markFeatureUsed(p, _kScheduleBit);
-    final count = _increment(p, kScheduleTaskCount);
+    final total = _increment(p, kScheduleTaskCount, count);
 
     final candidates = <String>[
-      if (count >= 10) 'schedule_task_10',
-      if (count >= 100) 'schedule_task_100',
-      if (count >= 300) 'schedule_task_300',
+      if (total >= 10) 'schedule_task_10',
+      if (total >= 100) 'schedule_task_100',
+      if (total >= 300) 'schedule_task_300',
       ..._appExplorerCandidates(p),
     ];
 
@@ -627,6 +629,15 @@ class AchievementService {
     final newly = _tryUnlock(p, candidates);
     await _save(p);
     return newly;
+  }
+
+  /// Persist [delta] note changes without checking thresholds.
+  /// Used for fire-and-forget flush on modal dispose.
+  Future<void> addNotesOnly(int delta) async {
+    if (delta <= 0) return;
+    final p = _load();
+    _increment(p, kNotesChanged, delta);
+    await _save(p);
   }
 
   /// Call after notes are changed. [delta] is the number of note toggles this session.

@@ -34,8 +34,11 @@ class AchievementProvider extends ChangeNotifier {
     return _handleUnlocks(ids, score);
   }
 
-  Future<List<Achievement>> onScheduleTaskCompleted(ScoreProvider score) async {
-    final ids = await AchievementService().onScheduleTaskCompleted();
+  Future<List<Achievement>> onScheduleClaimed(
+    int count,
+    ScoreProvider score,
+  ) async {
+    final ids = await AchievementService().onScheduleClaimed(count);
     return _handleUnlocks(ids, score);
   }
 

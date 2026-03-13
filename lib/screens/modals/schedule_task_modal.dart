@@ -126,16 +126,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     _loadTasks();
     await _updateNotifications();
 
-    // Play appropriate sound + trigger achievement
     if (updatedTask.isCompleted) {
       SfxService().taskComplete();
-      if (mounted) {
-        final score = context.read<ScoreProvider>();
-        final newly = await context
-            .read<AchievementProvider>()
-            .onScheduleTaskCompleted(score);
-        if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
-      }
     } else {
       SfxService().buttonClick();
     }
@@ -208,6 +200,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     // Update last claim date (skip in debug mode to allow multiple claims)
     if (!_isDebugMode) {
       await context.read<ScoreProvider>().updateLastClaimDate(DateTime.now());
+    }
+
+    // Achievement trigger — count completed tasks at claim time
+    if (mounted) {
+      final completedCount = tasks.where((t) => t.isCompleted).length;
+      final score = context.read<ScoreProvider>();
+      final newly = await context
+          .read<AchievementProvider>()
+          .onScheduleClaimed(completedCount, score);
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
     }
 
     // Xử lý tasks: xóa completed non-daily, reset completed daily

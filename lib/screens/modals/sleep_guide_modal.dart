@@ -112,6 +112,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         l.date.year == date.year &&
         l.date.month == date.month &&
         l.date.day == date.day);
+    final isNew = idx < 0;
 
     if (idx >= 0) {
       logs[idx] = newLog;
@@ -125,7 +126,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     await DataManager().saveSleepLogs(logs);
     if (!mounted) return;
     SfxService().taskComplete();
-    _triggerSleepAchievement(_logQuality ?? 3);
+    if (isNew) _triggerSleepAchievement(_logQuality ?? 3);
 
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
