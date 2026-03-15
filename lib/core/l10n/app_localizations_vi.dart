@@ -387,6 +387,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tankFull => 'BỂ ĐẦY';
 
   @override
+  String get fishHungry => 'đói';
+
+  @override
   String get maxFish => 'Tối đa 10 con';
 
   // Painting Room
@@ -854,19 +857,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   // Tutorial - Aquarium
   @override
-  String get tutorialAquariumTankDesc => 'Đây là bể cá của bạn! Cá sẽ bơi lượn tự do và tạo ra điểm theo thời gian. Hãy chăm sóc chúng thật tốt!';
-
-  @override
-  String get tutorialAquariumFeedTitle => 'Cho cá ăn';
-
-  @override
-  String get tutorialAquariumFeedDesc => 'Cho cá ăn mỗi 20 giờ để chúng tiếp tục tạo điểm. Nếu không cho ăn đúng giờ, cá sẽ ngừng tạo điểm! Chú ý thanh tiến trình để biết khi nào cần cho ăn.';
-
-  @override
-  String get tutorialAquariumClaimTitle => 'Thu điểm';
-
-  @override
-  String get tutorialAquariumClaimDesc => 'Nhấn để thu điểm mà cá đã tạo ra! Mỗi loại cá có tỉ lệ tạo điểm khác nhau. Càng nuôi nhiều cá, càng có nhiều điểm mỗi giờ.';
+  String get tutorialAquariumTankDesc => 'Nhấn trực tiếp vào từng con cá để tương tác! Biểu tượng 🍞 nghĩa là cá đang đói — nhấn để cho ăn. Biểu tượng 🪙 nghĩa là có điểm chờ nhận — nhấn để nhận. Thanh nhỏ phía dưới mỗi cá cho thấy tiến trình chu kỳ 20 giờ.';
 
   @override
   String get tutorialAquariumShopTitle => 'Cửa hàng cá';

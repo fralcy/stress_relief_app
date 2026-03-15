@@ -384,6 +384,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tankFull => 'TANK FULL';
 
   @override
+  String get fishHungry => 'hungry';
+
+  @override
   String get maxFish => 'Max 10 fish';
 
   // Painting Room
@@ -851,19 +854,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   // Tutorial - Aquarium
   @override
-  String get tutorialAquariumTankDesc => 'This is your aquarium! Fish will swim freely and generate points over time. Take good care of them!';
-
-  @override
-  String get tutorialAquariumFeedTitle => 'Feed Fish';
-
-  @override
-  String get tutorialAquariumFeedDesc => 'Feed your fish every 20 hours to keep them generating points. If you don\'t feed them on time, they will stop generating points! Watch the progress bar to know when to feed.';
-
-  @override
-  String get tutorialAquariumClaimTitle => 'Claim Points';
-
-  @override
-  String get tutorialAquariumClaimDesc => 'Tap to claim the points your fish have generated! Each fish type has a different point generation rate. The more fish you have, the more points per hour.';
+  String get tutorialAquariumTankDesc => 'Tap directly on each fish to interact! The 🍞 icon means the fish is hungry — tap to feed it. The 🪙 icon means coins are waiting — tap to collect. The small bar below each fish shows its 20-hour cycle progress.';
 
   @override
   String get tutorialAquariumShopTitle => 'Fish Shop';

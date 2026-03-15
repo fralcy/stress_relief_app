@@ -610,10 +610,7 @@ class SyncService {
     return {
       'hasData': true,
       'fishes': progress.fishes.map((fish) => _fishToMap(fish)).toList(),
-      'lastFed': Timestamp.fromDate(progress.lastFed),
       'earnings': progress.earnings,
-      'lastClaimed': progress.lastClaimed != null 
-          ? Timestamp.fromDate(progress.lastClaimed!) : null,
       'lastUpdated': Timestamp.fromDate(DateTime.now()),
     };
   }
@@ -624,28 +621,29 @@ class SyncService {
     final fishesData = map['fishes'] as List<dynamic>?;
     if (fishesData == null) return null;
 
-    final fishes = fishesData.map((fishData) => 
+    final fishes = fishesData.map((fishData) =>
       _fishFromMap(fishData as Map<String, dynamic>)
     ).toList();
 
     return AquariumProgress(
       fishes: fishes,
-      lastFed: (map['lastFed'] as Timestamp).toDate(),
       earnings: map['earnings'] ?? 0,
-      lastClaimed: map['lastClaimed'] != null 
-          ? (map['lastClaimed'] as Timestamp).toDate() : null,
     );
   }
 
   Map<String, dynamic> _fishToMap(Fish fish) {
     return {
       'type': fish.type,
+      'lastFed': fish.lastFed != null ? Timestamp.fromDate(fish.lastFed!) : null,
+      'lastClaimed': fish.lastClaimed != null ? Timestamp.fromDate(fish.lastClaimed!) : null,
     };
   }
 
   Fish _fishFromMap(Map<String, dynamic> map) {
     return Fish(
       type: map['type'] ?? 'betta',
+      lastFed: map['lastFed'] != null ? (map['lastFed'] as Timestamp).toDate() : null,
+      lastClaimed: map['lastClaimed'] != null ? (map['lastClaimed'] as Timestamp).toDate() : null,
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
@@ -16,7 +17,6 @@ import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
 import '../../models/aquarium_progress.dart';
 import '../../core/widgets/app_modal.dart';
-import '../../core/widgets/app_button.dart';
 import '../../core/l10n/app_localizations.dart';
 
 /// Modal mini-game nuôi cá
@@ -26,7 +26,6 @@ class AquariumModal extends StatefulWidget {
   @override
   State<AquariumModal> createState() => _AquariumModalState();
 
-  /// Helper để show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_AquariumModalState>();
@@ -45,26 +44,17 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   final List<_FishAnimationData> _fishAnimations = [];
   Timer? _animationTimer;
 
-  // Animation controllers cho effects
-  AnimationController? _feedAnimationController;
-  AnimationController? _claimAnimationController;
-  AnimationController? _borderPulseController;
+  // Feed particle animations — mỗi cá có animation riêng, chạy song song
+  final List<_FeedParticleAnim> _feedAnims = [];
 
-  bool _showFeedParticles = false;
-  bool _showClaimCoins = false;
-  int _claimedPoints = 0;
+  // Coin animations per fish
+  final List<_CoinAnimState> _coinAnims = [];
 
-  // Lưu trữ thông tin particles để tránh tính toán lại mỗi frame
-  final List<FoodParticleData> _foodParticles = [];
-
-  // Debug mode state
   bool _isDebugMode = false;
   final AuthService _authService = AuthService();
+  final _random = Random();
 
-  // Tutorial overlay keys
   final GlobalKey _tankKey = GlobalKey();
-  final GlobalKey _feedButtonKey = GlobalKey();
-  final GlobalKey _claimButtonKey = GlobalKey();
   final GlobalKey _fishShopKey = GlobalKey();
 
   @override
@@ -73,97 +63,84 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     _loadProgress();
     _startAnimationTimer();
     _checkDebugMode();
-    
-    // Initialize animation controllers
-    _feedAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000), // 3 giây cho thức ăn rơi chậm
-    );
-    
-    _claimAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    
-    _borderPulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+
   }
 
   @override
   void dispose() {
     _animationTimer?.cancel();
-    _feedAnimationController?.dispose();
-    _claimAnimationController?.dispose();
-    _borderPulseController?.dispose();
+    for (final fa in _feedAnims) {
+      fa.cleanupTimer?.cancel();
+      fa.controller.dispose();
+    }
+    for (final anim in _coinAnims) {
+      anim.controller.dispose();
+    }
     super.dispose();
   }
 
   void _startAnimationTimer() {
-    // Update animation every 3 seconds
     _animationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (mounted) {
-        setState(() {
-          _updateFishAnimations();
-        });
-      }
+      if (mounted) setState(() => _updateFishAnimations());
     });
   }
 
   void _updateFishAnimations() {
     final containerSize = MediaQuery.of(context).size.width;
-    final fishSize = 48.0; // Fish image width
-    
-    for (var anim in _fishAnimations) {
-      final newPos = AquariumService.getRandomPosition(
-        containerSize - fishSize, 
-        containerSize - fishSize,
-      );
-      
-      // Determine if fish should flip (moving right vs left)
-      final movingRight = newPos['x']! > anim.targetX;
-      
+    const fishSize = 48.0;
+    final maxCoord = containerSize - fishSize;
+
+    for (int i = 0; i < _fishAnimations.length; i++) {
+      final anim = _fishAnimations[i];
+      if (anim.isBeingFed) continue; // Cá đứng yên khi đang ăn
+
+      final fish = i < _progress.fishes.length ? _progress.fishes[i] : null;
+      final isHungry = fish != null && AquariumService.isHungry(fish);
+      anim.isHungry = isHungry;
+
+      double newX, newY;
+      if (isHungry) {
+        // Cá đói di chuyển gần hơn, trong vùng nhỏ hơn (60% giữa bể)
+        final centerX = maxCoord / 2;
+        final centerY = maxCoord / 2;
+        final spread = maxCoord * 0.3;
+        newX = (centerX + (_random.nextDouble() - 0.5) * spread * 2).clamp(maxCoord * 0.1, maxCoord * 0.9);
+        newY = (centerY + (_random.nextDouble() - 0.5) * spread * 2).clamp(maxCoord * 0.1, maxCoord * 0.9);
+      } else {
+        final pos = AquariumService.getRandomPosition(maxCoord, maxCoord);
+        newX = pos['x']!;
+        newY = pos['y']!;
+      }
+
       anim.oldX = anim.targetX;
-      anim.targetX = newPos['x']!;
-      anim.targetY = newPos['y']!;
+      anim.flipHorizontal = newX > anim.targetX;
+      anim.targetX = newX;
+      anim.targetY = newY;
       anim.targetScale = AquariumService.getRandomScale();
-      anim.flipHorizontal = movingRight; // Flip when moving right
     }
   }
 
   void _loadProgress() {
     var progress = DataManager().aquariumProgress;
-    
-    // Nếu chưa có data → khởi tạo mặc định với 2 con betta
     progress ??= AquariumProgress(
-      fishes: [
-        Fish(type: 'betta'),
-        Fish(type: 'betta'),
-      ],
-      lastFed: DateTime.now(),
+      fishes: [Fish(type: 'betta'), Fish(type: 'betta')],
       earnings: 0,
-      lastClaimed: null,
     );
-    
     setState(() {
       _progress = progress!;
       _initializeFishAnimations();
     });
-    
     _saveProgress();
   }
 
   void _initializeFishAnimations() {
     _fishAnimations.clear();
     final containerSize = MediaQuery.of(context).size.width;
-    final fishSize = 48.0;
-    
+    const fishSize = 48.0;
+
     for (int i = 0; i < _progress.fishes.length; i++) {
-      final pos = AquariumService.getRandomPosition(
-        containerSize - fishSize, 
-        containerSize - fishSize,
-      );
+      final fish = _progress.fishes[i];
+      final pos = AquariumService.getRandomPosition(containerSize - fishSize, containerSize - fishSize);
       _fishAnimations.add(_FishAnimationData(
         currentX: pos['x']!,
         currentY: pos['y']!,
@@ -173,250 +150,230 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
         currentScale: 1.0,
         targetScale: 1.0,
         flipHorizontal: false,
+        isHungry: AquariumService.isHungry(fish),
+        isBeingFed: false,
       ));
     }
   }
 
-  void _saveProgress() {
-    DataManager().saveAquariumProgress(_progress);
-  }
+  void _saveProgress() => DataManager().saveAquariumProgress(_progress);
 
   Future<void> _checkDebugMode() async {
     final isDebug = await _authService.isDebugMode;
-    if (mounted) {
-      setState(() {
-        _isDebugMode = isDebug;
-      });
+    if (mounted) setState(() => _isDebugMode = isDebug);
+  }
+
+  // Priority: claim trước, sau đó mới feed (để không mất xu tích lũy)
+  Future<void> _onTapFish(int index) async {
+    if (index >= _progress.fishes.length) return;
+    final fish = _progress.fishes[index];
+    final anim = _fishAnimations[index];
+
+    final claimable = AquariumService.calculateFishClaimablePoints(fish);
+    if (claimable > 0) {
+      await _claimFish(index, fish, anim, claimable);
+    } else if (AquariumService.isHungry(fish)) {
+      await _feedFish(index, fish, anim);
     }
   }
 
-  Future<void> _debugSkipFeedCycle() async {
-    if (!_isDebugMode) return;
+  Future<void> _feedFish(int index, Fish fish, _FishAnimationData anim) async {
+    final double maxCoord = MediaQuery.of(context).size.width - 48.0;
 
-    final newLastFed = AquariumService.debugSkipFeedCycle(_progress.lastFed);
+    final double landX = (anim.targetX + 24 + (_random.nextDouble() - 0.5) * 16).clamp(4, maxCoord + 44);
+    final double startY = anim.targetY - 50;
+    final double landY = (anim.targetY + 16).clamp(0, maxCoord + 44);
 
-    setState(() {
-      _progress = _progress.copyWith(lastFed: newLastFed);
-    });
-    _saveProgress();
+    final updatedFish = AquariumService.feedFish(fish);
+    final newFishes = List<Fish>.from(_progress.fishes);
+    newFishes[index] = updatedFish;
 
-    SfxService().buttonClick();
-  }
-
-  Future<void> _debugMaxPoints() async {
-    if (!_isDebugMode) return;
-
-    final newLastClaimed = AquariumService.debugMaximizeClaimablePoints(
-      _progress.lastFed,
-      _progress.lastClaimed,
+    // Tạo animation riêng cho con cá này — chạy song song với các cá khác
+    final controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    final feedAnim = _FeedParticleAnim(
+      controller: controller,
+      fishAnim: anim,
+      particleX: landX,
+      particleStartY: startY,
+      particleLandY: landY,
     );
 
     setState(() {
-      _progress = _progress.copyWith(lastClaimed: newLastClaimed);
-    });
-    _saveProgress();
-
-    SfxService().buttonClick();
-  }
-
-  void _showTutorial() {
-    final l10n = AppLocalizations.of(context);
-
-    final steps = [
-      TutorialStep(
-        targetKey: _tankKey,
-        title: '🐟 ${l10n.aquarium}',
-        description: l10n.tutorialAquariumTankDesc,
-        tag: 'tank',
-      ),
-      TutorialStep(
-        targetKey: _feedButtonKey,
-        title: '🍞 ${l10n.tutorialAquariumFeedTitle}',
-        description: l10n.tutorialAquariumFeedDesc,
-        tag: 'feed',
-      ),
-      TutorialStep(
-        targetKey: _claimButtonKey,
-        title: '🪙 ${l10n.tutorialAquariumClaimTitle}',
-        description: l10n.tutorialAquariumClaimDesc,
-        tag: 'claim',
-      ),
-      TutorialStep(
-        targetKey: _fishShopKey,
-        title: '🐠 ${l10n.tutorialAquariumShopTitle}',
-        description: l10n.tutorialAquariumShopDesc,
-        tag: 'shop',
-      ),
-    ];
-
-    final tutorial = TutorialOverlay(
-      context: context,
-      steps: steps,
-      nextText: l10n.tutorialNext,
-      skipText: l10n.tutorialSkip,
-      finshText: l10n.tutorialGotIt, // Note: typo in package - 'finish' not 'finsh'
-      onComplete: () {
-        SfxService().buttonClick();
-      },
-    );
-
-    tutorial.show();
-  }
-
-  void _onFeed() {
-    if (!AquariumService.canFeed(_progress.lastFed)) return;
-
-    // Khởi tạo particles một lần duy nhất
-    _initializeFoodParticles();
-
-    setState(() {
-      _progress = _progress.copyWith(
-        lastFed: DateTime.now(),
-        lastClaimed: null, // Reset lastClaimed khi feed mới
-      );
-      _showFeedParticles = true;
+      _progress = _progress.copyWith(fishes: newFishes);
+      anim.isHungry = false;
+      anim.isBeingFed = true;
+      _feedAnims.add(feedAnim);
     });
 
-    _feedAnimationController?.forward(from: 0).then((_) {
-      if (mounted) {
+    controller.forward().then((_) {
+      if (!mounted) return;
+      setState(() {
+        feedAnim.phase = 1;
+        anim.targetX = (landX - 24).clamp(0, maxCoord);
+        anim.targetY = (landY - 24).clamp(0, maxCoord);
+      });
+
+      feedAnim.cleanupTimer = Timer(const Duration(milliseconds: 900), () {
+        if (!mounted) return;
         setState(() {
-          _showFeedParticles = false;
+          _feedAnims.remove(feedAnim);
+          anim.isBeingFed = false;
         });
-      }
+        feedAnim.controller.dispose();
+      });
     });
 
     _saveProgress();
     SfxService().taskComplete();
   }
 
-  void _initializeFoodParticles() {
-    _foodParticles.clear();
-    final containerSize = MediaQuery.of(context).size.width;
+  Future<void> _claimFish(int index, Fish fish, _FishAnimationData anim, int claimable) async {
+    final updatedFish = AquariumService.claimFish(fish);
+    final newFishes = List<Fish>.from(_progress.fishes);
+    newFishes[index] = updatedFish;
 
-    // Sử dụng service để generate particles
-    _foodParticles.addAll(
-      AquariumService.generateFoodParticles(containerSize: containerSize),
+    final coinController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
     );
-  }
-
-  void _onClaim() async {
-    final claimablePoints = AquariumService.calculateClaimablePoints(
-      _progress.fishes,
-      _progress.lastFed,
-      _progress.lastClaimed,
+    final coinAnim = _CoinAnimState(
+      controller: coinController,
+      points: claimable,
+      x: anim.targetX + 24,
+      y: anim.targetY + 24,
     );
-    
-    if (claimablePoints == 0) return;
-    
-    // Update user profile points
-    await context.read<ScoreProvider>().addPoints(claimablePoints);
 
-    // Achievement trigger
+    setState(() {
+      _progress = _progress.copyWith(
+        fishes: newFishes,
+        earnings: _progress.earnings + claimable,
+      );
+      _coinAnims.add(coinAnim);
+    });
+
+    coinController.forward().then((_) {
+      if (mounted) {
+        setState(() => _coinAnims.remove(coinAnim));
+        coinAnim.controller.dispose();
+      }
+    });
+
+    await context.read<ScoreProvider>().addPoints(claimable);
     if (mounted) {
       final score = context.read<ScoreProvider>();
       final newly = await context
           .read<AchievementProvider>()
-          .onAquariumClaimed(claimablePoints, score);
+          .onAquariumClaimed(claimable, score);
       if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
     }
 
-    setState(() {
-      _progress = _progress.copyWith(
-        earnings: _progress.earnings + claimablePoints,
-        lastClaimed: DateTime.now(),
-      );
-      _claimedPoints = claimablePoints;
-      _showClaimCoins = true;
-    });
-    
-    _claimAnimationController?.forward(from: 0).then((_) {
-      if (mounted) {
-        setState(() {
-          _showClaimCoins = false;
-        });
-      }
-    });
-    
     _saveProgress();
     SfxService().reward();
-  }  void _onBuyFish(String fishType) async {
+  }
+
+  void _onBuyFish(String fishType) async {
     final config = FishConfigs.getConfig(fishType);
     if (config == null) return;
-    
     final currentProfile = DataManager().userProfile;
-    
-    // Check có đủ điểm không
     if (currentProfile.currentPoints < config.price) return;
-    
-    // Kiểm tra max 10 con
     if (_progress.fishes.length >= 10) return;
-    
-    // Trừ điểm từ user profile
+
     await context.read<ScoreProvider>().subtractPoints(config.price);
-    
+
     setState(() {
-      final newFishes = List<Fish>.from(_progress.fishes)
-        ..add(Fish(type: fishType));
-      
+      final newFishes = List<Fish>.from(_progress.fishes)..add(Fish(type: fishType));
       _progress = _progress.copyWith(fishes: newFishes);
-      
-      // Add animation cho cá mới với smooth entry
       final containerSize = MediaQuery.of(context).size.width;
-      final pos = AquariumService.getRandomPosition(containerSize, containerSize);
+      final pos = AquariumService.getRandomPosition(containerSize - 48, containerSize - 48);
       _fishAnimations.add(_FishAnimationData(
         currentX: pos['x']!,
         currentY: pos['y']!,
         targetX: pos['x']!,
         targetY: pos['y']!,
-        oldX: pos['x']!, 
-        currentScale: 0.0, // Start from scale 0
-        targetScale: 1.0,  // Grow to normal size
-        flipHorizontal: false, 
+        oldX: pos['x']!,
+        currentScale: 0.0,
+        targetScale: 1.0,
+        flipHorizontal: false,
+        isHungry: true,
+        isBeingFed: false,
       ));
     });
-    
+
     _saveProgress();
     SfxService().reward();
 
-    // Achievement trigger
     if (mounted) {
       final score = context.read<ScoreProvider>();
       final newly = await context
           .read<AchievementProvider>()
           .onFishCountChanged(_progress.fishes.length, score);
-      if (newly.isNotEmpty && mounted) {
-        AchievementPopup.show(context, newly);
-      }
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
     }
   }
 
   void _onSellFish(String fishType) async {
     final fishIndex = _progress.fishes.indexWhere((f) => f.type == fishType);
     if (fishIndex == -1) return;
-    
     final config = FishConfigs.getConfig(fishType);
-    if (config != null) {
-      // Hoàn lại 100% giá khi bán
-      await context.read<ScoreProvider>().addPoints(config.price);
-    }
-    
+    if (config != null) await context.read<ScoreProvider>().addPoints(config.price);
+
     setState(() {
-      final newFishes = List<Fish>.from(_progress.fishes)
-        ..removeAt(fishIndex);
-      
+      final newFishes = List<Fish>.from(_progress.fishes)..removeAt(fishIndex);
       _progress = _progress.copyWith(fishes: newFishes);
-      
-      // Remove animation
-      if (fishIndex < _fishAnimations.length) {
-        _fishAnimations.removeAt(fishIndex);
-      }
+      if (fishIndex < _fishAnimations.length) _fishAnimations.removeAt(fishIndex);
     });
-    
+
     _saveProgress();
     SfxService().buttonClick();
   }
 
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    final tutorial = TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(
+          targetKey: _tankKey,
+          title: '🐟 ${l10n.aquarium}',
+          description: l10n.tutorialAquariumTankDesc,
+          tag: 'tank',
+        ),
+        TutorialStep(
+          targetKey: _fishShopKey,
+          title: '🐠 ${l10n.tutorialAquariumShopTitle}',
+          description: l10n.tutorialAquariumShopDesc,
+          tag: 'shop',
+        ),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    );
+    tutorial.show();
+  }
 
+  Future<void> _debugSkipFeedCycle() async {
+    if (!_isDebugMode) return;
+    final newFishes = AquariumService.debugSkipAllFeedCycles(_progress.fishes);
+    setState(() {
+      _progress = _progress.copyWith(fishes: newFishes);
+      for (final anim in _fishAnimations) { anim.isHungry = true; }
+    });
+    _saveProgress();
+    SfxService().buttonClick();
+  }
+
+  Future<void> _debugMaxPoints() async {
+    if (!_isDebugMode) return;
+    final newFishes = AquariumService.debugMaximizeAllClaimablePoints(_progress.fishes);
+    setState(() => _progress = _progress.copyWith(fishes: newFishes));
+    _saveProgress();
+    SfxService().buttonClick();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -424,48 +381,20 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     final l10n = AppLocalizations.of(context);
     final currentPoints = context.watch<ScoreProvider>().currentPoints;
 
-    // Tính toán thông tin hiển thị
     final totalFish = _progress.fishes.length;
-    final totalPointsPerHour = _progress.fishes.fold<int>(
-      0,
-      (sum, fish) {
-        final config = FishConfigs.getConfig(fish.type);
-        return sum + (config?.pointsPerHour ?? 0);
-      },
-    );
-    
-    final cycleProgress = AquariumService.calculateCycleProgress(_progress.lastFed);
-    final canFeed = AquariumService.canFeed(_progress.lastFed);
-    final claimablePoints = AquariumService.calculateClaimablePoints(
-      _progress.fishes,
-      _progress.lastFed,
-      _progress.lastClaimed,
-    );
-    
-    // Tính thời gian từ lastFed
-    final hoursSinceFed = DateTime.now().difference(_progress.lastFed).inHours;
+    final totalPointsPerHour = _progress.fishes.fold<int>(0, (sum, fish) {
+      final config = FishConfigs.getConfig(fish.type);
+      return sum + (config?.pointsPerHour ?? 0);
+    });
+    final hungryCount = _progress.fishes.where(AquariumService.isHungry).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // PHẦN TRÊN: Bể cá
-        _buildTankSection(
-          theme,
-          l10n,
-          totalFish,
-          totalPointsPerHour,
-          hoursSinceFed,
-          cycleProgress,
-          canFeed,
-          claimablePoints,
-          currentPoints,
-        ),
-        
+        _buildTankSection(theme, l10n, totalFish, totalPointsPerHour, hungryCount),
         const SizedBox(height: 16),
         Divider(color: theme.border, height: 1, thickness: 1.5),
         const SizedBox(height: 16),
-        
-        // PHẦN DƯỚI: Cửa hàng cá
         Expanded(
           child: SingleChildScrollView(
             child: _buildFishShop(theme, l10n, currentPoints),
@@ -480,16 +409,12 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     AppLocalizations l10n,
     int totalFish,
     int totalPointsPerHour,
-    int hoursSinceFed,
-    int cycleProgress,
-    bool canFeed,
-    int claimablePoints,
-    int currentPoints,
+    int hungryCount,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Info section - simplified
+        // Info bar
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -500,79 +425,39 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
-        
-        const SizedBox(height: 8),
-        
-        // Cycle progress
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${l10n.lastFed} $hoursSinceFed ${l10n.hoursAgo}',
-                    style: AppTypography.bodySmall(context,
-                      color: theme.text.withOpacity(0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: cycleProgress / 100,
-                    backgroundColor: theme.border,
-                    valueColor: AlwaysStoppedAnimation(
-                      canFeed ? Colors.green : theme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '$cycleProgress% - ${canFeed ? l10n.readyToFeed : "${20 - hoursSinceFed}${l10n.hoursLeft}"}',
-                    style: AppTypography.captionSmall(context,
-                      color: canFeed ? Colors.green : theme.text.withOpacity(0.6),
-                    ),
-                  ),
-                ],
+            if (hungryCount > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.primary.withOpacity(0.4)),
+                ),
+                child: Text(
+                  '🐟 $hungryCount ${l10n.fishHungry}',
+                  style: AppTypography.captionSmall(context,
+                    color: theme.primary,
+                  ).copyWith(fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
           ],
         ),
-        
+
         const SizedBox(height: 12),
-        
-        // Bể cá với background image
+
+        // Bể cá — viền cố định màu primary
         AspectRatio(
           key: _tankKey,
           aspectRatio: 1.0,
-          child: AnimatedBuilder(
-            animation: _borderPulseController!,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: canFeed 
-                        ? Color.lerp(Colors.green, Colors.lightGreenAccent, _borderPulseController!.value)!
-                        : theme.border,
-                    width: canFeed ? 2 + (_borderPulseController!.value * 2) : 2,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: canFeed ? [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.3 * _borderPulseController!.value),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ] : null,
-                ),
-                child: child,
-              );
-            },
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.primary, width: 2),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Stack(
                 children: [
-                  // Background bể cá - theo theme hiện tại
                   Positioned.fill(
                     child: Semantics(
                       image: true,
@@ -585,52 +470,13 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                       ),
                     ),
                   ),
-                  
-                  // Các con cá với animation
                   ..._buildAnimatedFish(),
-                  
-                  // Feed particles animation
-                  if (_showFeedParticles)
-                    ..._buildFeedParticles(),
-                    
-                  // Claim coins animation
-                  if (_showClaimCoins)
-                    _buildClaimCoinsEffect(),
+                  ..._buildFeedParticles(),
+                  ..._buildCoinAnimations(),
                 ],
               ),
             ),
           ),
-        ),
-        
-        const SizedBox(height: 12),
-        
-        // Buttons - improved layout to prevent text overflow
-        Column(
-          children: [
-            // Feed button - full width
-            SizedBox(
-              key: _feedButtonKey,
-              width: double.infinity,
-              child: AppButton(
-                label: '🍞 ${l10n.feedNow}',
-                isDisabled: !canFeed,
-                onPressed: canFeed ? _onFeed : null,
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Claim button - full width
-            SizedBox(
-              key: _claimButtonKey,
-              width: double.infinity,
-              child: AppButton(
-                label: claimablePoints > 0
-                    ? '🪙 ${l10n.claimCoins} ($claimablePoints)'
-                    : '🪙 ${l10n.claimCoins}',
-                isDisabled: claimablePoints <= 0,
-                onPressed: claimablePoints > 0 ? _onClaim : null,
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -655,31 +501,91 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       ];
     }
 
-    List<Widget> fishWidgets = [];
+    final theme = context.theme;
+    final List<Widget> fishWidgets = [];
 
     for (int i = 0; i < _progress.fishes.length && i < _fishAnimations.length; i++) {
       final fish = _progress.fishes[i];
       final anim = _fishAnimations[i];
-      
+      final isHungry = anim.isHungry;
+      final claimable = AquariumService.calculateFishClaimablePoints(fish);
+      final cycleProgress = AquariumService.calculateFishCycleProgress(fish);
+
+      // Cá đang ăn dùng duration nhanh hơn (bơi về phía thức ăn)
+      final moveDuration = anim.isBeingFed
+          ? const Duration(milliseconds: 1000)
+          : AquariumService.getFishMovementDuration(fish);
+
       fishWidgets.add(
         AnimatedPositioned(
-          duration: const Duration(seconds: 2),
+          duration: moveDuration,
           curve: Curves.easeInOut,
-          left: anim.targetX,
-          top: anim.targetY,
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 500),
-            scale: anim.targetScale,
-            child: Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()..scale(anim.flipHorizontal ? -1.0 : 1.0, 1.0),
-              child: Semantics(
-                image: true,
-                label: '${_getFishName(fish.type)} fish',
-                child: Image.asset(
-                  AssetLoader.getFishAsset(fish.type),
-                  width: 48,
-                  height: 48,
+          left: anim.targetX - 12, // hitbox 72x72, cá căn giữa tại 12+24=36
+          top: anim.targetY - 12,
+          child: GestureDetector(
+            onTap: () => _onTapFish(i),
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: 72,
+              height: 72,
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 500),
+                scale: anim.targetScale,
+                child: Stack(
+                  children: [
+                    // Cá
+                    Align(
+                      alignment: Alignment.center,
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..scale(anim.flipHorizontal ? -1.0 : 1.0, 1.0),
+                        child: Semantics(
+                          image: true,
+                          label: '${_getFishName(fish.type)} fish',
+                          child: Image.asset(
+                            AssetLoader.getFishAsset(fish.type),
+                            width: 48,
+                            height: 48,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Góc trên trái: icon đói
+                    if (isHungry)
+                      const Positioned(
+                        top: 1,
+                        left: 1,
+                        child: Text('🍞', style: TextStyle(fontSize: 12)),
+                      ),
+
+                    // Góc trên phải: icon có xu (chỉ khi không đói hoặc đang chờ nhận)
+                    if (claimable > 0)
+                      const Positioned(
+                        top: 1,
+                        right: 1,
+                        child: Text('🪙', style: TextStyle(fontSize: 11)),
+                      ),
+
+                    // Progress bar phía dưới cá
+                    Positioned(
+                      bottom: 2,
+                      left: 12,
+                      right: 12,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: cycleProgress / 100,
+                          backgroundColor: Colors.white.withOpacity(0.25),
+                          valueColor: AlwaysStoppedAnimation(
+                            theme.primary,
+                          ),
+                          minHeight: 3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -690,48 +596,68 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
     return fishWidgets;
   }
-  
+
+  // Particles song song — mỗi cá đang được cho ăn có widget riêng
   List<Widget> _buildFeedParticles() {
-    // Sử dụng particles đã được khởi tạo sẵn để tránh tính toán lại mỗi frame
-    if (_foodParticles.isEmpty) return [];
-
-    return _foodParticles.map((particle) {
+    return _feedAnims.map((fa) {
+      if (fa.phase == 1) {
+        return Positioned(
+          left: fa.particleX - 4,
+          top: fa.particleLandY - 4,
+          child: _particleDot(),
+        );
+      }
       return AnimatedBuilder(
-        animation: _feedAnimationController!,
-        builder: (context, child) {
-          // Tính progress với delay
-          final rawProgress = _feedAnimationController!.value - particle.delay;
-          final adjustedProgress = particle.delay < 1.0
-              ? (rawProgress / (1.0 - particle.delay)).clamp(0.0, 1.0)
-              : rawProgress.clamp(0.0, 1.0);
-
-          // Vị trí Y: rơi từ -20 xuống vị trí đích
-          final startY = -20.0;
-          final endY = particle.targetY;
-          final currentY = startY + (endY - startY) * adjustedProgress;
-
-          // Chỉ hiển thị khi đã đến lượt (sau delay)
-          if (_feedAnimationController!.value < particle.delay) {
-            return const SizedBox.shrink();
-          }
-
+        animation: fa.controller,
+        builder: (context, _) {
+          final p = fa.controller.value;
+          final currentY = fa.particleStartY + (fa.particleLandY - fa.particleStartY) * p;
           return Positioned(
-            left: particle.targetX,
+            left: fa.particleX - 4,
             top: currentY,
+            child: _particleDot(),
+          );
+        },
+      );
+    }).toList();
+  }
+
+  Widget _particleDot() => Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: Colors.brown.shade400,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 2),
+          ],
+        ),
+      );
+
+  List<Widget> _buildCoinAnimations() {
+    return _coinAnims.map((coinAnim) {
+      return AnimatedBuilder(
+        animation: coinAnim.controller,
+        builder: (context, _) {
+          final p = coinAnim.controller.value;
+          return Positioned(
+            left: coinAnim.x - 28,
+            top: coinAnim.y - p * 55 - 16,
             child: Opacity(
-              opacity: (1.0 - adjustedProgress * 0.3).clamp(0.0, 1.0),
+              opacity: (1.0 - p * 1.1).clamp(0.0, 1.0),
               child: Container(
-                width: 8,
-                height: 8,
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.brown,
-                  shape: BoxShape.circle,
+                  color: Colors.amber.withOpacity(0.92),
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 2,
-                    ),
+                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2)),
                   ],
+                ),
+                child: Text(
+                  '+${coinAnim.points} 🪙',
+                  style: AppTypography.bodySmall(context, color: Colors.white)
+                      .copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -740,55 +666,12 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       );
     }).toList();
   }
-  
-  Widget _buildClaimCoinsEffect() {
-    return Center(
-      child: AnimatedBuilder(
-        animation: _claimAnimationController!,
-        builder: (context, child) {
-          final progress = _claimAnimationController!.value;
-          
-          return Transform.translate(
-            offset: Offset(0, -progress * 50), // Move up
-            child: Opacity(
-              opacity: 1.0 - progress,
-              child: Transform.scale(
-                scale: 1.0 + (progress * 0.5),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    '+$_claimedPoints 🪙',
-                    style: AppTypography.h2(context,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 
   Widget _buildFishShop(AppTheme theme, AppLocalizations l10n, int currentPoints) {
-    // Đếm số lượng từng loại cá
     final Map<String, int> fishCounts = {};
     for (var fish in _progress.fishes) {
       fishCounts[fish.type] = (fishCounts[fish.type] ?? 0) + 1;
     }
-
     final isTankFull = _progress.fishes.length >= 10;
 
     return Column(
@@ -798,13 +681,8 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.fishShop,
-              style: AppTypography.bodyLarge(context,
-                color: theme.text,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(l10n.fishShop,
+              style: AppTypography.bodyLarge(context, color: theme.text, fontWeight: FontWeight.bold)),
             if (isTankFull)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -812,25 +690,16 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                   color: Colors.red.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(
-                  l10n.tankFull,
-                  style: AppTypography.bodySmall(context,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(l10n.tankFull,
+                  style: AppTypography.bodySmall(context, color: Colors.red, fontWeight: FontWeight.bold)),
               ),
           ],
         ),
         const SizedBox(height: 12),
-        
-        // List các loại cá từ config
         ...FishConfigs.fishes.entries.map((entry) {
           final fishType = entry.key;
           final config = entry.value;
           final owned = fishCounts[fishType] ?? 0;
-
-          // Get localized name
           String localizedName = config.name;
           switch (fishType) {
             case 'betta': localizedName = l10n.betta; break;
@@ -840,32 +709,15 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             case 'cory': localizedName = l10n.cory; break;
             case 'platy': localizedName = l10n.platy; break;
           }
-
-          return _buildFishCard(
-            fishType,
-            localizedName,
-            config.pointsPerHour,
-            config.price,
-            owned,
-            theme,
-            l10n,
-            currentPoints,
-            isTankFull,
-          );
-        }).toList(),
-
-        // Debug section
+          return _buildFishCard(fishType, localizedName, config.pointsPerHour, config.price,
+              owned, theme, l10n, currentPoints, isTankFull);
+        }),
         if (_isDebugMode) ...[
           const SizedBox(height: 16),
           Divider(color: theme.border, height: 1, thickness: 1.5),
           const SizedBox(height: 16),
-          Text(
-            'DEBUG MODE',
-            style: AppTypography.bodyLarge(context,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
-          ),
+          Text('DEBUG MODE',
+            style: AppTypography.bodyLarge(context, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -877,9 +729,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
@@ -893,9 +743,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
@@ -908,18 +756,10 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   }
 
   Widget _buildFishCard(
-    String fishType,
-    String name,
-    int pointsPerHour,
-    int price,
-    int owned,
-    AppTheme theme,
-    AppLocalizations l10n,
-    int currentPoints,
-    bool isTankFull,
+    String fishType, String name, int pointsPerHour, int price, int owned,
+    AppTheme theme, AppLocalizations l10n, int currentPoints, bool isTankFull,
   ) {
     final canBuy = currentPoints >= price && !isTankFull;
-    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -930,81 +770,47 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       ),
       child: Row(
         children: [
-          // Ảnh cá
           Semantics(
             image: true,
             label: '${_getFishName(fishType)} fish',
-            child: Image.asset(
-              AssetLoader.getFishAsset(fishType),
-              width: 48,
-              height: 48,
-            ),
+            child: Image.asset(AssetLoader.getFishAsset(fishType), width: 48, height: 48),
           ),
-          
           const SizedBox(width: 12),
-          
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: AppTypography.bodyLarge(context,
-                    color: theme.text,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '🪙 $pointsPerHour/${l10n.hour}',
-                  style: AppTypography.bodyMedium(context,
-                    color: theme.text.withOpacity(0.7),
-                  ),
-                ),
+                Text(name,
+                  style: AppTypography.bodyLarge(context, color: theme.text, fontWeight: FontWeight.bold)),
+                Text('🪙 $pointsPerHour/${l10n.hour}',
+                  style: AppTypography.bodyMedium(context, color: theme.text.withOpacity(0.7))),
                 Row(
                   children: [
                     const Icon(Icons.monetization_on, size: 14, color: Colors.amber),
                     const SizedBox(width: 4),
-                    Text(
-                      '$price',
+                    Text('$price',
                       style: AppTypography.bodySmall(context,
-                        color: canBuy
-                            ? Colors.amber
-                            : Colors.red.withOpacity(0.7),
+                        color: canBuy ? Colors.amber : Colors.red.withOpacity(0.7),
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                      )),
                   ],
                 ),
               ],
             ),
           ),
-          
-          // Nút [ - ]  owned  [ + ]
           Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: owned > 0 ? () => _onSellFish(fishType) : null,
-                color: owned > 0
-                    ? theme.primary
-                    : theme.text.withOpacity(0.3),
+                color: owned > 0 ? theme.primary : theme.text.withOpacity(0.3),
               ),
-              
-              Text(
-                '$owned ${l10n.owned}',
-                style: AppTypography.bodyMedium(context,
-                  color: theme.text,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              
+              Text('$owned ${l10n.owned}',
+                style: AppTypography.bodyMedium(context, color: theme.text, fontWeight: FontWeight.bold)),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: canBuy ? () => _onBuyFish(fishType) : null,
-                color: canBuy
-                    ? theme.primary
-                    : theme.text.withOpacity(0.3),
+                color: canBuy ? theme.primary : theme.text.withOpacity(0.3),
               ),
             ],
           ),
@@ -1015,43 +821,57 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
   String _getFishName(String fishType) {
     switch (fishType.toLowerCase()) {
-      case 'betta':
-        return 'Betta';
-      case 'guppy':
-        return 'Guppy';
-      case 'neon':
-        return 'Neon Tetra';
-      case 'molly':
-        return 'Molly';
-      case 'cory':
-        return 'Cory Catfish';
-      case 'platy':
-        return 'Platy';
-      default:
-        return fishType;
+      case 'betta': return 'Betta';
+      case 'guppy': return 'Guppy';
+      case 'neon': return 'Neon Tetra';
+      case 'molly': return 'Molly';
+      case 'cory': return 'Cory Catfish';
+      case 'platy': return 'Platy';
+      default: return fishType;
     }
   }
 }
 
-// Helper class cho animation data
 class _FishAnimationData {
-  double currentX;
-  double currentY;
-  double targetX;
-  double targetY;
-  double oldX; // Track old position for flip detection
-  double currentScale;
-  double targetScale;
-  bool flipHorizontal; // true = facing left, false = facing right
+  double currentX, currentY, targetX, targetY, oldX, currentScale, targetScale;
+  bool flipHorizontal, isHungry, isBeingFed;
 
   _FishAnimationData({
-    required this.currentX,
-    required this.currentY,
-    required this.targetX,
-    required this.targetY,
+    required this.currentX, required this.currentY,
+    required this.targetX, required this.targetY,
     required this.oldX,
-    required this.currentScale,
-    required this.targetScale,
+    required this.currentScale, required this.targetScale,
     required this.flipHorizontal,
+    required this.isHungry,
+    required this.isBeingFed,
+  });
+}
+
+class _FeedParticleAnim {
+  final AnimationController controller;
+  final _FishAnimationData fishAnim;
+  final double particleX, particleStartY, particleLandY;
+  int phase = 0; // 0 = falling, 1 = landed
+  Timer? cleanupTimer;
+
+  _FeedParticleAnim({
+    required this.controller,
+    required this.fishAnim,
+    required this.particleX,
+    required this.particleStartY,
+    required this.particleLandY,
+  });
+}
+
+class _CoinAnimState {
+  final AnimationController controller;
+  final int points;
+  final double x, y;
+
+  _CoinAnimState({
+    required this.controller,
+    required this.points,
+    required this.x,
+    required this.y,
   });
 }

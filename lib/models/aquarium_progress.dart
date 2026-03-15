@@ -6,18 +6,30 @@ part 'aquarium_progress.g.dart';
 @HiveType(typeId: 13)
 class Fish {
   @HiveField(0)
-  final String type;      // Loại cá
+  final String type;
+
+  @HiveField(1)
+  final DateTime? lastFed; // null = chưa từng được cho ăn (đói)
+
+  @HiveField(2)
+  final DateTime? lastClaimed; // null = chưa từng nhận xu từ con cá này
 
   Fish({
     required this.type,
+    this.lastFed,
+    this.lastClaimed,
   });
-
 
   Fish copyWith({
     String? type,
+    DateTime? lastFed,
+    DateTime? lastClaimed,
+    bool clearLastClaimed = false,
   }) {
     return Fish(
       type: type ?? this.type,
+      lastFed: lastFed ?? this.lastFed,
+      lastClaimed: clearLastClaimed ? null : (lastClaimed ?? this.lastClaimed),
     );
   }
 }
@@ -27,34 +39,22 @@ class Fish {
 class AquariumProgress {
   @HiveField(0)
   final List<Fish> fishes; // Danh sách cá trong bể, tối đa 10 con
-  
-  @HiveField(1)
-  final DateTime lastFed; // Thời điểm cho ăn lần cuối
-  
-  @HiveField(2)
-  final int earnings; // Tổng điểm kiếm được
 
-  @HiveField(3)
-  final DateTime? lastClaimed; // Thời điểm nhận điểm lần cuối
+  @HiveField(2)
+  final int earnings; // Tổng điểm kiếm được (field index giữ nguyên để tương thích dữ liệu cũ)
 
   AquariumProgress({
     required this.fishes,
-    required this.lastFed,
     required this.earnings,
-    this.lastClaimed,
   });
 
   AquariumProgress copyWith({
     List<Fish>? fishes,
-    DateTime? lastFed,
     int? earnings,
-    DateTime? lastClaimed,
   }) {
     return AquariumProgress(
       fishes: fishes ?? this.fishes,
-      lastFed: lastFed ?? this.lastFed,
       earnings: earnings ?? this.earnings,
-      lastClaimed: lastClaimed ?? this.lastClaimed,
     );
   }
 }

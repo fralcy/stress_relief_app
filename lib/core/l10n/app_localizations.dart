@@ -162,6 +162,7 @@ abstract class AppLocalizations {
   String get hoursLeft;
   String get claimCoins;
   String get tankFull;
+  String get fishHungry;
   String get maxFish;
 
   // Painting Room
@@ -322,10 +323,6 @@ abstract class AppLocalizations {
 
   // Tutorial - Aquarium
   String get tutorialAquariumTankDesc;
-  String get tutorialAquariumFeedTitle;
-  String get tutorialAquariumFeedDesc;
-  String get tutorialAquariumClaimTitle;
-  String get tutorialAquariumClaimDesc;
   String get tutorialAquariumShopTitle;
   String get tutorialAquariumShopDesc;
 
