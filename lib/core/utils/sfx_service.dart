@@ -20,6 +20,10 @@ class SfxService {
     'reward': 'audio/sfx/reward.mp3',
     'error': 'audio/sfx/error.mp3',
     'page_transition': 'audio/sfx/page_transition.mp3',
+    // Rock Balancing LAN game
+    'celebration': 'audio/sfx/celebration.mp3',
+    'rock_hit': 'audio/sfx/rock_hit.mp3',
+    'rock_land': 'audio/sfx/rock_land.mp3',
   };
 
   /// Khởi tạo service
@@ -79,6 +83,15 @@ class SfxService {
 
   /// Page transition - Chuyển màn hình 🔄
   Future<void> pageTransition() => play('page_transition');
+
+  /// Celebration - Vượt kỷ lục (rock balancing) 🎉
+  Future<void> celebration() => play('celebration');
+
+  /// Rock hit - Hai viên đá va chạm nhau
+  Future<void> rockHit() => play('rock_hit');
+
+  /// Rock land - Đá chạm đất
+  Future<void> rockLand() => play('rock_land');
 
   /// Đổi volume (0-100)
   void changeVolume(int volume) {

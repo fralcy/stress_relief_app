@@ -17,6 +17,7 @@ import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
 import '../../models/aquarium_progress.dart';
 import '../../core/widgets/app_modal.dart';
+import '../../core/widgets/floating_label_anim.dart';
 import '../../core/l10n/app_localizations.dart';
 
 /// Modal mini-game nuôi cá
@@ -635,36 +636,13 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       );
 
   List<Widget> _buildCoinAnimations() {
-    return _coinAnims.map((coinAnim) {
-      return AnimatedBuilder(
-        animation: coinAnim.controller,
-        builder: (context, _) {
-          final p = coinAnim.controller.value;
-          return Positioned(
-            left: coinAnim.x - 28,
-            top: coinAnim.y - p * 55 - 16,
-            child: Opacity(
-              opacity: (1.0 - p * 1.1).clamp(0.0, 1.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.92),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2)),
-                  ],
-                ),
-                child: Text(
-                  '+${coinAnim.points} 🪙',
-                  style: AppTypography.bodySmall(context, color: Colors.white)
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }).toList();
+    return _coinAnims.map((coinAnim) => FloatingLabelAnim(
+      x: coinAnim.x,
+      y: coinAnim.y,
+      label: '+${coinAnim.points} 🪙',
+      controller: coinAnim.controller,
+      backgroundColor: Colors.amber,
+    )).toList();
   }
 
   Widget _buildFishShop(AppTheme theme, AppLocalizations l10n, int currentPoints) {
