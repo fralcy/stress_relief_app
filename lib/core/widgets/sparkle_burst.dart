@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// Hiệu ứng nổ hạt nhỏ tại một điểm trong Stack, dùng cho:
@@ -42,16 +43,67 @@ class SparkleBurst extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement
-    // Logic:
-    //   - Sinh [particleCount] hướng bay đều nhau (360 / particleCount độ)
-    //   - Mỗi hạt: hình tròn 4–6px
-    //   - Animation t ∈ [0, 1]:
-    //       pos = origin + direction * t * radius
-    //       opacity = (1.0 - t).clamp(0, 1)
-    //       scale  = 1.0 - t * 0.5
-    //   - Vẽ bằng AnimatedBuilder + CustomPaint hoặc Positioned stack
-    //   - Có thể thêm màu biến thiên nhẹ (color.withOpacity(opacity))
-    throw UnimplementedError('SparkleBurst.build chưa được triển khai');
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (_, child) {
+        final t = controller.value;
+        return CustomPaint(
+          painter: _SparklePainter(
+            origin: origin,
+            t: t,
+            particleCount: particleCount,
+            color: color,
+            radius: radius,
+          ),
+          // Transparent child to occupy correct hit-test area
+          child: const SizedBox.expand(),
+        );
+      },
+    );
   }
+}
+
+class _SparklePainter extends CustomPainter {
+  final Offset origin;
+  final double t;
+  final int particleCount;
+  final Color color;
+  final double radius;
+
+  // Hướng bay cố định cho mỗi hạt — tính 1 lần theo particleCount
+  late final List<Offset> _directions;
+
+  _SparklePainter({
+    required this.origin,
+    required this.t,
+    required this.particleCount,
+    required this.color,
+    required this.radius,
+  }) {
+    final angleStep = 2 * pi / particleCount;
+    _directions = List.generate(particleCount, (i) {
+      final angle = i * angleStep;
+      return Offset(cos(angle), sin(angle));
+    });
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (int i = 0; i < particleCount; i++) {
+      final dist = t * radius;
+      final pos = origin + _directions[i] * dist;
+      final opacity = (1.0 - t).clamp(0.0, 1.0);
+      final particleRadius = (3.0 + 2.0 * (1.0 - t)).clamp(1.0, 5.0);
+
+      // Hạt chẵn: màu chính, hạt lẻ: màu nhạt hơn
+      final c = (i % 2 == 0)
+          ? color.withValues(alpha: opacity)
+          : color.withValues(alpha: opacity * 0.6);
+
+      canvas.drawCircle(pos, particleRadius, Paint()..color = c);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SparklePainter old) => old.t != t;
 }
