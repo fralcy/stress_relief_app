@@ -386,6 +386,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fishHungry => 'hungry';
 
+  // ==================== ROCK BALANCING LAN ====================
+  @override String get players => 'Players';
+  @override String get rockBalancing => 'Rock Balancing';
+  @override String get playTogether => 'Play with Friends 🪨';
+  @override String get lanNotConnected => 'Please connect to LAN before playing';
+  @override String get rockCount => 'Number of rocks';
+  @override String get startGame => 'Start';
+  @override String get waitingForPlayers => 'Waiting for players...';
+  @override String get readyLabel => 'Ready';
+  @override String get notReadyLabel => 'Not ready';
+  @override String get lobbyHost => 'Host';
+  @override String get record => 'Record';
+  @override String get endGame => 'End game';
+  @override String get overview => 'Overview';
+  @override String get rocksStacked => 'Rocks stacked';
+  @override String get maxHeightLabel => 'Max height';
+
   @override
   String get maxFish => 'Max 10 fish';
 

@@ -163,6 +163,23 @@ abstract class AppLocalizations {
   String get claimCoins;
   String get tankFull;
   String get fishHungry;
+
+  // ==================== ROCK BALANCING LAN ====================
+  String get players;
+  String get rockBalancing;
+  String get playTogether;
+  String get lanNotConnected;
+  String get rockCount;
+  String get startGame;
+  String get waitingForPlayers;
+  String get readyLabel;
+  String get notReadyLabel;
+  String get lobbyHost;
+  String get record;
+  String get endGame;
+  String get overview;
+  String get rocksStacked;
+  String get maxHeightLabel;
   String get maxFish;
 
   // Painting Room

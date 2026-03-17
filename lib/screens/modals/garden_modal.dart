@@ -17,6 +17,8 @@ import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
 import '../../models/garden_progress.dart';
+import '../../core/providers/lan_provider.dart';
+import 'rock_balancing_lobby_modal.dart';
 
 /// Modal mini-game làm vườn/trồng trọt
 class GardenModal extends StatefulWidget {
@@ -367,6 +369,12 @@ class _GardenModalState extends State<GardenModal>
 
         _buildInventorySection(theme),
 
+        const SizedBox(height: 16),
+        Divider(color: theme.border, height: 1, thickness: 1.5),
+        const SizedBox(height: 16),
+
+        _buildPlayTogetherButton(theme),
+
         // Debug section
         if (_isDebugMode) ...[
           const SizedBox(height: 16),
@@ -420,6 +428,65 @@ class _GardenModalState extends State<GardenModal>
           ),
         ],
       ],
+    );
+  }
+
+  // ==================== PLAY TOGETHER ====================
+
+  Widget _buildPlayTogetherButton(AppTheme theme) {
+    final l10n = AppLocalizations.of(context);
+    final lan = context.watch<LanProvider>();
+    final isConnected = lan.isActive;
+
+    return GestureDetector(
+      onTap: () {
+        SfxService().buttonClick();
+        if (!isConnected) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.lanNotConnected),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+        RockBalancingLobbyModal.show(context);
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: theme.primary.withValues(alpha: isConnected ? 0.12 : 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: theme.primary.withValues(alpha: isConnected ? 0.4 : 0.2),
+          ),
+        ),
+        child: Row(
+          children: [
+            Text('🪨', style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.playTogether,
+                style: AppTypography.bodyMedium(
+                  context,
+                  color: isConnected
+                      ? theme.primary
+                      : theme.text.withValues(alpha: 0.4),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: isConnected
+                  ? theme.primary
+                  : theme.text.withValues(alpha: 0.3),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

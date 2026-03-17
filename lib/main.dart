@@ -16,6 +16,7 @@ import 'core/providers/score_provider.dart';
 import 'core/providers/scene_provider.dart';
 import 'core/providers/achievement_provider.dart';
 import 'core/providers/lan_provider.dart';
+import 'core/providers/game_room_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -67,6 +68,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SceneProvider()),
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
         ChangeNotifierProvider(create: (_) => LanProvider()),
+        ChangeNotifierProvider(create: (_) => GameRoomProvider()),
       ],
       child: const MyApp(),
     ),

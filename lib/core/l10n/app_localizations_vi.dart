@@ -389,6 +389,23 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get fishHungry => 'đói';
 
+  // ==================== ROCK BALANCING LAN ====================
+  @override String get players => 'Người chơi';
+  @override String get rockBalancing => 'Xếp đá';
+  @override String get playTogether => 'Chơi cùng bạn bè 🪨';
+  @override String get lanNotConnected => 'Cần kết nối LAN trước khi chơi';
+  @override String get rockCount => 'Số viên đá';
+  @override String get startGame => 'Bắt đầu';
+  @override String get waitingForPlayers => 'Chờ người chơi...';
+  @override String get readyLabel => 'Sẵn sàng';
+  @override String get notReadyLabel => 'Chưa sẵn sàng';
+  @override String get lobbyHost => 'Chủ phòng';
+  @override String get record => 'Kỷ lục';
+  @override String get endGame => 'Kết thúc';
+  @override String get overview => 'Toàn cảnh';
+  @override String get rocksStacked => 'Viên đá xếp lên';
+  @override String get maxHeightLabel => 'Chiều cao tối đa';
+
   @override
   String get maxFish => 'Tối đa 10 con';
 
