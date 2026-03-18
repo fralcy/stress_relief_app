@@ -170,7 +170,14 @@ abstract class AppLocalizations {
   String get playTogether;
   String get lanNotConnected;
   String get rockCount;
+  String get joinGame;
   String get startGame;
+  String get requireApproval;
+  String get approveLabel;
+  String get kickLabel;
+  String get pendingApproval;
+  String get deniedByHost;
+  String get kickedByHost;
   String get waitingForPlayers;
   String get readyLabel;
   String get notReadyLabel;

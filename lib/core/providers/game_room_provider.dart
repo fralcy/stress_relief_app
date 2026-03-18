@@ -18,6 +18,12 @@ class GameActionEvent {
 }
 
 // ============================================================
+// LobbyErrorType — lý do client bị đẩy ra khỏi lobby
+// ============================================================
+
+enum LobbyErrorType { denied, kicked }
+
+// ============================================================
 // GameRoomProvider
 // ============================================================
 
@@ -26,24 +32,6 @@ class GameActionEvent {
 ///
 /// Host là authority: nhận [GameEvent.playerAction] từ client,
 /// xử lý logic game, rồi gọi [broadcastGameState] để đẩy state mới.
-///
-/// Usage (host — sau khi [LanProvider.startHosting]):
-/// ```dart
-/// provider.init(uid, displayName);
-/// provider.createRoom(GameType.rockBalancing);
-/// provider.playerActions.listen((action) {
-///   final newState = processAction(action);
-///   provider.broadcastGameState(newState);
-/// });
-/// ```
-///
-/// Usage (client — sau khi [LanProvider.connect]):
-/// ```dart
-/// provider.init(uid, displayName);
-/// provider.joinRoom(displayName);
-/// provider.setReady(true);
-/// // watch provider.gameState trong widget
-/// ```
 class GameRoomProvider extends ChangeNotifier {
   GameRoom? _room;
   Map<String, dynamic> _gameState = {};
@@ -51,8 +39,16 @@ class GameRoomProvider extends ChangeNotifier {
   String _localPlayerId = '';
   String _localDisplayName = '';
 
+  /// Map từ player user ID → server-internal socket clientId.
+  /// Host dùng để gửi targeted message đến client cụ thể.
+  final Map<String, String> _playerSocketIds = {};
+
   StreamSubscription<LanIncomingEvent>? _lanSub;
   final StreamController<GameActionEvent> _actionController =
+      StreamController.broadcast();
+
+  /// Stream lỗi cho client: bị từ chối hoặc bị kick.
+  final StreamController<LobbyErrorType> _lobbyErrorController =
       StreamController.broadcast();
 
   // ----------------------------------------------------------
@@ -79,14 +75,14 @@ class GameRoomProvider extends ChangeNotifier {
   /// rồi gọi [broadcastGameState] với state mới.
   Stream<GameActionEvent> get playerActions => _actionController.stream;
 
+  /// Client lắng nghe stream này để biết khi bị từ chối hoặc kick.
+  Stream<LobbyErrorType> get lobbyErrors => _lobbyErrorController.stream;
+
   // ----------------------------------------------------------
   // Init / dispose
   // ----------------------------------------------------------
 
   /// Khởi tạo provider với ID và tên hiển thị của người chơi cục bộ.
-  ///
-  /// Gọi sau khi LAN kết nối thành công, trước khi tạo/vào phòng.
-  /// [playerId] nên là Firebase Auth UID hoặc ID ổn định tương đương.
   void init(String playerId, String displayName) {
     _localPlayerId = playerId;
     _localDisplayName = displayName;
@@ -98,6 +94,7 @@ class GameRoomProvider extends ChangeNotifier {
   void dispose() {
     _lanSub?.cancel();
     _actionController.close();
+    _lobbyErrorController.close();
     super.dispose();
   }
 
@@ -106,25 +103,64 @@ class GameRoomProvider extends ChangeNotifier {
   // ----------------------------------------------------------
 
   /// Tạo phòng mới (host only). Gọi sau [init].
-  ///
-  /// Host tự động sẵn sàng; các client join sau sẽ cần [setReady].
-  void createRoom(GameType gameType) {
+  void createRoom(GameType gameType, {bool requireApproval = false}) {
     final host = GamePlayer(
       id: _localPlayerId,
       displayName: _localDisplayName,
       isReady: true,
       isHost: true,
     );
-    _room = GameRoom(gameType: gameType, players: [host]);
+    _room = GameRoom(
+      gameType: gameType,
+      players: [host],
+      requireApproval: requireApproval,
+    );
     _gameState = {};
     _gameResults = null;
     _broadcastLobbyState();
     notifyListeners();
   }
 
+  /// Thay đổi chế độ xác nhận (host only, chỉ khi đang waiting).
+  void setRequireApproval(bool value) {
+    if (!isHost || _room == null) return;
+    if (_room!.status != GameRoomStatus.waiting) return;
+    _room = _room!.copyWith(requireApproval: value);
+    _broadcastLobbyState();
+    notifyListeners();
+  }
+
+  /// Chấp nhận player đang pending (host only).
+  void approvePlayer(String playerId) {
+    if (!isHost || _room == null) return;
+    final socketId = _playerSocketIds[playerId];
+    if (socketId == null) return;
+    _updatePlayerPending(playerId, false);
+    LanService().sendMessage(
+      GameMessage.playerApprove(_localPlayerId, socketId, playerId),
+    );
+    _broadcastLobbyState();
+  }
+
+  /// Từ chối hoặc kick player (host only).
+  /// Gửi [playerKick] nếu player đã được chấp nhận, [playerDeny] nếu còn pending.
+  void kickPlayer(String playerId) {
+    if (!isHost || _room == null) return;
+    final socketId = _playerSocketIds[playerId];
+    final player = _room!.players.cast<GamePlayer?>()
+        .firstWhere((p) => p?.id == playerId, orElse: () => null);
+    if (player == null) return;
+
+    if (socketId != null) {
+      final event = player.isPending
+          ? GameMessage.playerDeny(_localPlayerId, socketId, playerId)
+          : GameMessage.playerKick(_localPlayerId, socketId, playerId);
+      LanService().sendMessage(event);
+    }
+    _removePlayer(playerId);
+  }
+
   /// Bắt đầu game (host only). Kèm [initialState] phù hợp với [GameType].
-  ///
-  /// Ví dụ: `{'stones': [], 'currentTurn': hostId}` cho Xếp đá.
   void startGame(Map<String, dynamic> initialState) {
     if (!isHost) return;
     _gameState = initialState;
@@ -136,8 +172,6 @@ class GameRoomProvider extends ChangeNotifier {
   }
 
   /// Broadcast state game mới đến tất cả client (host only).
-  ///
-  /// Game widget gọi method này sau mỗi lần xử lý [playerActions].
   void broadcastGameState(Map<String, dynamic> state) {
     if (!isHost) return;
     _gameState = state;
@@ -174,9 +208,6 @@ class GameRoomProvider extends ChangeNotifier {
   // ----------------------------------------------------------
 
   /// Cập nhật trạng thái sẵn sàng.
-  ///
-  /// Host: cập nhật local và rebroadcast lobby.
-  /// Client: gửi message đến host.
   void setReady(bool isReady) {
     if (isHost) {
       _updatePlayerReady(_localPlayerId, isReady);
@@ -189,9 +220,6 @@ class GameRoomProvider extends ChangeNotifier {
   }
 
   /// Gửi action game đến host.
-  ///
-  /// [actionData] tự định nghĩa theo từng game, ví dụ:
-  /// `{'type': 'place_stone', 'x': 3, 'y': 5}` cho Xếp đá.
   void sendAction(Map<String, dynamic> actionData) {
     LanService().sendMessage(
       GameMessage.playerAction(_localPlayerId, actionData),
@@ -204,6 +232,7 @@ class GameRoomProvider extends ChangeNotifier {
     _room = null;
     _gameState = {};
     _gameResults = null;
+    _playerSocketIds.clear();
     notifyListeners();
   }
 
@@ -214,7 +243,6 @@ class GameRoomProvider extends ChangeNotifier {
   void _handleIncoming(LanIncomingEvent event) {
     final msg = event.message;
 
-    // Xử lý ngắt kết nối bất ngờ (bye message từ transport layer)
     if (msg.messageType == LanMessageType.bye && isHost) {
       _removePlayer(msg.senderId);
       return;
@@ -224,18 +252,25 @@ class GameRoomProvider extends ChangeNotifier {
     if (gm == null) return;
 
     if (isHost) {
-      _handleAsHost(gm, msg.senderId);
+      _handleAsHost(gm, msg.senderId, event.clientId);
     } else {
       _handleAsClient(gm);
     }
   }
 
-  void _handleAsHost(GameMessage gm, String fromId) {
+  void _handleAsHost(GameMessage gm, String fromId, String socketId) {
     switch (gm.event) {
       case GameEvent.playerJoin:
         if (_room == null) return;
+        if (_room!.isFull) return; // phòng đầy, bỏ qua
+        _playerSocketIds[fromId] = socketId;
         final name = gm.data['displayName'] as String? ?? fromId;
-        final newPlayer = GamePlayer(id: fromId, displayName: name);
+        final isPending = _room!.requireApproval;
+        final newPlayer = GamePlayer(
+          id: fromId,
+          displayName: name,
+          isPending: isPending,
+        );
         _room = _room!.copyWith(players: [..._room!.players, newPlayer]);
         _broadcastLobbyState();
         notifyListeners();
@@ -250,7 +285,8 @@ class GameRoomProvider extends ChangeNotifier {
 
       case GameEvent.playerAction:
         if (!_actionController.isClosed) {
-          _actionController.add(GameActionEvent(playerId: fromId, data: gm.data));
+          _actionController
+              .add(GameActionEvent(playerId: fromId, data: gm.data));
         }
 
       default:
@@ -263,6 +299,20 @@ class GameRoomProvider extends ChangeNotifier {
       case GameEvent.lobbyState:
         _room = GameRoom.fromJson(gm.data);
         notifyListeners();
+
+      case GameEvent.playerApprove:
+        // Lobby state được broadcast ngay sau đó — không cần xử lý thêm.
+        break;
+
+      case GameEvent.playerDeny:
+        if (!_lobbyErrorController.isClosed) {
+          _lobbyErrorController.add(LobbyErrorType.denied);
+        }
+
+      case GameEvent.playerKick:
+        if (!_lobbyErrorController.isClosed) {
+          _lobbyErrorController.add(LobbyErrorType.kicked);
+        }
 
       case GameEvent.gameStart:
         _gameState = gm.data;
@@ -296,6 +346,7 @@ class GameRoomProvider extends ChangeNotifier {
 
   void _removePlayer(String playerId) {
     if (_room == null) return;
+    _playerSocketIds.remove(playerId);
     final updated = _room!.players.where((p) => p.id != playerId).toList();
     _room = _room!.copyWith(players: updated);
     _broadcastLobbyState();
@@ -306,6 +357,15 @@ class GameRoomProvider extends ChangeNotifier {
     if (_room == null) return;
     final updated = _room!.players
         .map((p) => p.id == playerId ? p.copyWith(isReady: isReady) : p)
+        .toList();
+    _room = _room!.copyWith(players: updated);
+    notifyListeners();
+  }
+
+  void _updatePlayerPending(String playerId, bool isPending) {
+    if (_room == null) return;
+    final updated = _room!.players
+        .map((p) => p.id == playerId ? p.copyWith(isPending: isPending) : p)
         .toList();
     _room = _room!.copyWith(players: updated);
     notifyListeners();

@@ -20,6 +20,7 @@ import 'modals/scene_shop_modal.dart';
 import 'modals/schedule_task_modal.dart';
 import 'modals/emotion_diary_modal.dart';
 import 'modals/garden_modal.dart';
+import 'modals/rock_balancing_lobby_modal.dart';
 import 'modals/aquarium_modal.dart';
 import 'modals/drawing_modal.dart';
 import 'modals/gallery_modal.dart';
@@ -418,6 +419,14 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             onPressed: () {
               SfxService().buttonClick();
               GardenModal.show(context);
+            },
+          ),
+          FeatureButton(
+            icon: Icons.terrain,
+            label: l10n.rockBalancing,
+            onPressed: () {
+              SfxService().buttonClick();
+              RockBalancingLobbyModal.show(context);
             },
           ),
         ];

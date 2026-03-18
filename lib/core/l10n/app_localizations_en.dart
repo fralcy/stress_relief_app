@@ -392,7 +392,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get playTogether => 'Play with Friends 🪨';
   @override String get lanNotConnected => 'Please connect to LAN before playing';
   @override String get rockCount => 'Number of rocks';
+  @override String get joinGame => 'Join';
   @override String get startGame => 'Start';
+  @override String get requireApproval => 'Require Approval';
+  @override String get approveLabel => 'Approve';
+  @override String get kickLabel => 'Kick';
+  @override String get pendingApproval => 'Waiting for approval...';
+  @override String get deniedByHost => 'Join request denied';
+  @override String get kickedByHost => 'You were kicked from the room';
   @override String get waitingForPlayers => 'Waiting for players...';
   @override String get readyLabel => 'Ready';
   @override String get notReadyLabel => 'Not ready';

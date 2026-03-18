@@ -18,6 +18,15 @@ enum GameEvent {
   /// Client → host: cập nhật trạng thái sẵn sàng.
   playerReady,
 
+  /// Host → client cụ thể: chấp nhận vào phòng.
+  playerApprove,
+
+  /// Host → client cụ thể: từ chối vào phòng.
+  playerDeny,
+
+  /// Host → client cụ thể: kick khỏi phòng.
+  playerKick,
+
   /// Host → broadcast: bắt đầu game với state khởi tạo.
   gameStart,
 
@@ -90,6 +99,34 @@ class GameMessage {
   static LanMessage playerReady(String senderId, bool isReady) =>
       LanMessage.data(
           senderId, _wrap(GameEvent.playerReady, {'isReady': isReady}));
+
+  /// Host → client cụ thể: chấp nhận vào phòng.
+  /// [socketTargetId] là server-internal clientId (không phải player user ID).
+  static LanMessage playerApprove(
+          String senderId, String socketTargetId, String playerId) =>
+      LanMessage.data(
+        senderId,
+        _wrap(GameEvent.playerApprove, {'playerId': playerId}),
+        targetId: socketTargetId,
+      );
+
+  /// Host → client cụ thể: từ chối vào phòng.
+  static LanMessage playerDeny(
+          String senderId, String socketTargetId, String playerId) =>
+      LanMessage.data(
+        senderId,
+        _wrap(GameEvent.playerDeny, {'playerId': playerId}),
+        targetId: socketTargetId,
+      );
+
+  /// Host → client cụ thể: kick khỏi phòng.
+  static LanMessage playerKick(
+          String senderId, String socketTargetId, String playerId) =>
+      LanMessage.data(
+        senderId,
+        _wrap(GameEvent.playerKick, {'playerId': playerId}),
+        targetId: socketTargetId,
+      );
 
   static LanMessage gameStart(
           String senderId, Map<String, dynamic> initialState) =>

@@ -103,11 +103,36 @@ class RockBalancingModal extends StatefulWidget {
     required int rockCount,
     required int rockSeed,
   }) {
+    final h = MediaQuery.of(context).size.height * 0.95;
+    final l10n = AppLocalizations.of(context);
     return AppModal.show(
       context: context,
-      title: AppLocalizations.of(context).rockBalancing,
-      maxHeight: MediaQuery.of(context).size.height * 0.95,
-      minHeight: MediaQuery.of(context).size.height * 0.95,
+      title: l10n.rockBalancing,
+      maxHeight: h,
+      minHeight: h,
+      scrollable: false,
+      enableDrag: false,
+      onClose: () {
+        showDialog(
+          context: context,
+          builder: (dCtx) => AlertDialog(
+            title: Text(l10n.endGame),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dCtx).pop(),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dCtx).pop();
+                  Navigator.of(context).pop();
+                },
+                child: Text(l10n.ok),
+              ),
+            ],
+          ),
+        );
+      },
       content: RockBalancingModal(rockCount: rockCount, rockSeed: rockSeed),
     );
   }
@@ -115,21 +140,27 @@ class RockBalancingModal extends StatefulWidget {
 
 class _RockBalancingModalState extends State<RockBalancingModal>
     with TickerProviderStateMixin {
-  // ── Physics constants ────────────────────────────────────────
-  static const double _gravity = 600;
-  static const double _linearDamping = 0.92;
-  static const double _angularDamping = 0.88;
-  static const double _restitution = 0.25;
-  static const double _groundFriction = 0.75;
-  static const double _sleepVelThreshold = 8.0;
-  static const double _sleepOmegaThreshold = 0.08;
-  static const double _sleepDelay = 0.5;
-  static const double _groundThickness = 20;
+  // ── Physics constants (Gamey — feel over realism) ────────────
+  static const double _gravity          = 1800;
+  static const double _linearDamping    = 0.85; // heavy drag → no endless sliding
+  static const double _angularDamping   = 0.80;
+  static const double _staticFriction   = 0.9;  // very sticky
+  static const double _velThreshold     = 4.0;  // px/s — zero out below this
+  static const double _omegaThreshold   = 0.1;  // rad/s
+  static const double _groundThickness  = 20;
+  static const int    _solverIterations = 10;
+  static const double _slop      = 0.2;
+  static const double _baumgarte = 0.5;  // aggressive push-out per iteration
+  // Fixed timestep: identical dt on every device → deterministic → LAN sync
+  static const double _fixedDt = 1.0 / 60.0;
 
   // ── Physics state ────────────────────────────────────────────
   final List<_RockBody> _rocks = [];
   late Ticker _ticker;
   DateTime? _lastTick;
+  double _accumulator = 0.0;
+
+
 
   // ── Canvas ───────────────────────────────────────────────────
   double _canvasWidth = 0;
@@ -408,14 +439,30 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       _lastTick = now;
       return;
     }
-    final dt =
-        (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(0.0, 0.05);
+    final elapsed =
+        (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(0.0, 0.25);
     _lastTick = now;
 
+    // ── Fixed-timestep accumulator ─────────────────────────────────
+    // Runs physics in exact _fixedDt steps regardless of frame rate.
+    // Every device uses the same dt → deterministic → LAN in sync.
+    _accumulator += elapsed;
+    bool dirty = false;
+    while (_accumulator >= _fixedDt) {
+      dirty = _stepPhysics() || dirty;
+      _accumulator -= _fixedDt;
+    }
+
+    if (dirty) setState(() {});
+  }
+
+  /// One fixed-timestep physics step. Returns true if any rock moved.
+  bool _stepPhysics() {
+    const dt = _fixedDt;
     bool dirty = false;
 
+    // ── Lerp peer (remote) rocks ──────────────────────────────
     for (final rock in _rocks) {
-      // ── Lerp peer rocks ────────────────────────────────────
       if (rock.lerpPos != null) {
         rock.pos = Offset(
           lerpDouble(rock.pos.dx, rock.lerpPos!.dx, 0.2),
@@ -435,153 +482,179 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         }
         dirty = true;
       }
+    }
 
-      // Skip non-simulated rocks
+    // ── PHASE 1: Velocity integration ────────────────────────
+    for (final rock in _rocks) {
       if (rock.isKinematic || rock.isSleeping) continue;
+      rock.vel += Offset(0, _gravity * dt);
+      rock.vel *= _linearDamping;
+      rock.omega *= _angularDamping;
+      // Velocity snapping — zeroes micro-motion immediately (no drift)
+      if (rock.vel.distance < _velThreshold) rock.vel = Offset.zero;
+      if (rock.omega.abs() < _omegaThreshold) rock.omega = 0;
+    }
 
-      // ── Gravity + integration ──────────────────────────────
-      rock.vel = Offset(rock.vel.dx, rock.vel.dy + _gravity * dt);
-      rock.pos = Offset(
-        rock.pos.dx + rock.vel.dx * dt,
-        rock.pos.dy + rock.vel.dy * dt,
-      );
+    // ── PHASE 2: Sticky constraint solver ────────────────────
+    for (int iter = 0; iter < _solverIterations; iter++) {
+      for (int i = 0; i < _rocks.length; i++) {
+        for (int j = i + 1; j < _rocks.length; j++) {
+          final a = _rocks[i], b = _rocks[j];
+          if (a.isKinematic && b.isKinematic) continue;
+          if (a.isSleeping && b.isSleeping) continue;
+          final contact = satContact(a.worldVerts, b.worldVerts);
+          if (contact != null) {
+            _solveStickyContact(a, b, contact);
+            dirty = true;
+          }
+        }
+      }
+      for (final rock in _rocks) {
+        if (rock.isKinematic || rock.isSleeping) continue;
+        _solveStickyGround(rock);
+        _solveWall(rock);
+      }
+    }
+
+    // ── PHASE 3: Position update + sleep ─────────────────────
+    for (final rock in _rocks) {
+      if (rock.isKinematic || rock.isSleeping) continue;
+      rock.pos += rock.vel * dt;
       rock.angle += rock.omega * dt;
+      dirty = true;
 
-      // ── Damping ────────────────────────────────────────────
-      final ld = math.pow(_linearDamping, dt * 60).toDouble();
-      final ad = math.pow(_angularDamping, dt * 60).toDouble();
-      rock.vel = rock.vel * ld;
-      rock.omega *= ad;
+      // Sleep immediately once velocity is fully zeroed by snapping
+      if (rock.vel == Offset.zero && rock.omega == 0) {
+        rock.isSleeping = true;
+      }
+    }
 
-      // ── Wall bounds ────────────────────────────────────────
-      double leftPen = 0, rightPen = 0;
-      for (final v in rock.worldVerts) {
-        if (-v.dx > leftPen) leftPen = -v.dx;
-        if (v.dx - _canvasWidth > rightPen) rightPen = v.dx - _canvasWidth;
-      }
-      if (leftPen > 0) {
-        rock.pos = Offset(rock.pos.dx + leftPen, rock.pos.dy);
-        if (rock.vel.dx < 0) {
-          rock.vel = Offset(-rock.vel.dx * _restitution, rock.vel.dy);
-        }
-      }
-      if (rightPen > 0) {
-        rock.pos = Offset(rock.pos.dx - rightPen, rock.pos.dy);
-        if (rock.vel.dx > 0) {
-          rock.vel = Offset(-rock.vel.dx * _restitution, rock.vel.dy);
-        }
-      }
-
-      // ── Ground collision ───────────────────────────────────
+    // ── PHASE 4: Position correction (Baumgarte) ─────────────
+    // Directly push overlapping bodies apart by a fraction of penetration.
+    // Separated from velocity solving to avoid injecting energy (jitter).
+    // Ground: push rock up by (penetration − slop) × baumgarte.
+    for (final rock in _rocks) {
+      if (rock.isKinematic || rock.isSleeping) continue;
       double maxPen = 0;
       for (final v in rock.worldVerts) {
         final pen = v.dy - _groundY;
         if (pen > maxPen) maxPen = pen;
       }
-      if (maxPen > 0) {
-        rock.pos = Offset(rock.pos.dx, rock.pos.dy - maxPen);
-        if (rock.vel.dy > 80) {
-          // Only bounce if actually falling with speed
-          final now2 = DateTime.now();
-          if (now2.difference(_lastRockLandSfx).inMilliseconds > 300) {
-            _lastRockLandSfx = now2;
-            SfxService().rockLand();
-          }
-        }
-        rock.vel = Offset(
-          rock.vel.dx * _groundFriction,
-          -rock.vel.dy * _restitution,
-        );
-        rock.omega *= _groundFriction;
+      if (maxPen > _slop) {
+        rock.pos = Offset(rock.pos.dx, rock.pos.dy - (maxPen - _slop) * _baumgarte);
       }
-
-      // ── Sleep check ────────────────────────────────────────
-      if (rock.vel.distance < _sleepVelThreshold &&
-          rock.omega.abs() < _sleepOmegaThreshold) {
-        rock.sleepTimer += dt;
-        if (rock.sleepTimer >= _sleepDelay) {
-          rock.isSleeping = true;
-          rock.vel = Offset.zero;
-          rock.omega = 0;
-        }
-      } else {
-        rock.sleepTimer = 0;
-      }
-
-      dirty = true;
     }
-
-    // ── Rock–rock collisions ───────────────────────────────────
+    // Rock–rock: split correction proportional to inverse mass.
     for (int i = 0; i < _rocks.length; i++) {
       for (int j = i + 1; j < _rocks.length; j++) {
-        if (_resolveRockCollision(_rocks[i], _rocks[j])) dirty = true;
+        final a = _rocks[i], b = _rocks[j];
+        if (a.isKinematic && b.isKinematic) continue;
+        if (a.isSleeping && b.isSleeping) continue;
+        final c = satContact(a.worldVerts, b.worldVerts);
+        if (c == null || c.depth <= _slop) continue;
+        final invMA = (a.isKinematic || a.isSleeping) ? 0.0 : 1.0 / a.mass;
+        final invMB = (b.isKinematic || b.isSleeping) ? 0.0 : 1.0 / b.mass;
+        final total = invMA + invMB;
+        if (total == 0) continue;
+        final corrVec = c.normal * ((c.depth - _slop) * _baumgarte / total);
+        if (!a.isKinematic && !a.isSleeping) a.pos += corrVec * invMA;
+        if (!b.isKinematic && !b.isSleeping) b.pos -= corrVec * invMB;
       }
     }
 
-    if (dirty) setState(() {});
+    return dirty;
   }
 
-  bool _resolveRockCollision(_RockBody a, _RockBody b) {
-    // Skip if both are static
-    if ((a.isSleeping || a.isKinematic) &&
-        (b.isSleeping || b.isKinematic)) {
-      return false;
+  // Sticky rock–rock contact: position correction + velocity zeroing.
+  // "Gamey" approach — rocks lock together on contact instead of bouncing.
+  void _solveStickyContact(
+    _RockBody a,
+    _RockBody b,
+    ({Offset normal, double depth, Offset point}) c,
+  ) {
+    final invMA = (a.isKinematic || a.isSleeping) ? 0.0 : 1.0 / a.mass;
+    final invMB = (b.isKinematic || b.isSleeping) ? 0.0 : 1.0 / b.mass;
+    final total = invMA + invMB;
+    if (total == 0) return;
+
+    // ── Position correction (50% per iteration → resolves in ~2 iters) ──
+    final corrMag = math.max(0.0, c.depth - _slop) * _baumgarte;
+    if (corrMag > 0) {
+      final corrVec = c.normal * (corrMag / total);
+      if (!a.isKinematic && !a.isSleeping) a.pos += corrVec * invMA;
+      if (!b.isKinematic && !b.isSleeping) b.pos -= corrVec * invMB;
     }
 
-    final contact = satContact(a.worldVerts, b.worldVerts);
-    if (contact == null) return false;
-
-    // Wake sleeping rocks on impact
-    if (a.isSleeping) {
-      a.isSleeping = false;
-      a.sleepTimer = 0;
-    }
-    if (b.isSleeping) {
-      b.isSleeping = false;
-      b.sleepTimer = 0;
-    }
-
-    final normal = contact.normal;
-    final depth = contact.depth;
-    final totalMass = a.mass + b.mass;
-
-    // Positional correction
-    if (!a.isKinematic) {
-      a.pos -= normal * depth * (b.mass / totalMass);
-    }
-    if (!b.isKinematic) {
-      b.pos += normal * depth * (a.mass / totalMass);
+    // ── Velocity: zero approaching component (sticky, no bounce) ────────
+    final rA = c.point - a.pos;
+    final rB = c.point - b.pos;
+    final vA = a.vel + Offset(-a.omega * rA.dy, a.omega * rA.dx);
+    final vB = b.vel + Offset(-b.omega * rB.dy, b.omega * rB.dx);
+    final sepV = (vA - vB).dot(c.normal);
+    if (sepV < 0) {
+      // Bodies approaching — zero out velocity entirely for both
+      if (!a.isKinematic && !a.isSleeping) { a.vel = Offset.zero; a.omega = 0; }
+      if (!b.isKinematic && !b.isSleeping) { b.vel = Offset.zero; b.omega = 0; }
     }
 
-    // Impulse resolution
-    final relVel = a.vel - b.vel;
-    final relVelN = relVel.dx * normal.dx + relVel.dy * normal.dy;
-    if (relVelN > 0) return true; // separating, but position was corrected
+    // Wake sleeping rocks hit by a moving body
+    if (!a.isSleeping && b.isSleeping && a.vel != Offset.zero) {
+      b.isSleeping = false; b.sleepTimer = 0;
+    }
+    if (!b.isSleeping && a.isSleeping && b.vel != Offset.zero) {
+      a.isSleeping = false; a.sleepTimer = 0;
+    }
 
-    final invA = a.isKinematic ? 0.0 : 1.0 / a.mass;
-    final invB = b.isKinematic ? 0.0 : 1.0 / b.mass;
-    final invSum = invA + invB;
-    if (invSum == 0) return true;
-
-    final j = -(1 + _restitution) * relVelN / invSum;
-    final impulse = normal * j;
-
-    if (!a.isKinematic) a.vel += impulse * invA;
-    if (!b.isKinematic) b.vel -= impulse * invB;
-
-    // Small random angular nudge for visual interest
-    final rng = math.Random();
-    if (!a.isKinematic) a.omega += j * 0.003 * (rng.nextDouble() - 0.5);
-    if (!b.isKinematic) b.omega -= j * 0.003 * (rng.nextDouble() - 0.5);
-
-    // SFX with debounce
+    // SFX
     final now = DateTime.now();
-    if (j.abs() > 30 &&
-        now.difference(_lastRockHitSfx).inMilliseconds > 250) {
+    if (sepV < -30 && now.difference(_lastRockHitSfx).inMilliseconds > 250) {
       _lastRockHitSfx = now;
       SfxService().rockHit();
     }
-    return true;
+  }
+
+  // Sticky ground contact: per-vertex correction + velocity zeroing.
+  void _solveStickyGround(_RockBody rock) {
+    bool landed = false;
+    for (final v in rock.worldVerts) {
+      final depth = v.dy - _groundY;
+      if (depth <= 0) continue;
+
+      // Direct position push — no slop, instant correction
+      rock.pos = Offset(rock.pos.dx, rock.pos.dy - depth * _baumgarte);
+
+      // If falling into ground, zero downward velocity (sticky landing)
+      if (rock.vel.dy > 0) {
+        rock.vel = Offset(rock.vel.dx * (1 - _staticFriction), 0);
+        rock.omega *= 0.3;
+        landed = true;
+      }
+    }
+
+    if (landed) {
+      final now = DateTime.now();
+      if (now.difference(_lastRockLandSfx).inMilliseconds > 300) {
+        _lastRockLandSfx = now;
+        SfxService().rockLand();
+      }
+    }
+  }
+
+  // Wall constraint — direct position correction + velocity zeroing.
+  void _solveWall(_RockBody rock) {
+    double leftPen = 0, rightPen = 0;
+    for (final v in rock.worldVerts) {
+      if (-v.dx > leftPen) leftPen = -v.dx;
+      if (v.dx - _canvasWidth > rightPen) rightPen = v.dx - _canvasWidth;
+    }
+    if (leftPen > 0) {
+      rock.pos = Offset(rock.pos.dx + leftPen, rock.pos.dy);
+      if (rock.vel.dx < 0) rock.vel = Offset(0, rock.vel.dy);
+    }
+    if (rightPen > 0) {
+      rock.pos = Offset(rock.pos.dx - rightPen, rock.pos.dy);
+      if (rock.vel.dx > 0) rock.vel = Offset(0, rock.vel.dy);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -694,7 +767,10 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   void _checkBestHeight() {
     if (_rocks.isEmpty) return;
     double topY = _groundY;
+    // Anti-cheat: only count rocks that have settled (sleeping).
+    // Kinematic (held) rocks must NOT contribute to the height record.
     for (final rock in _rocks) {
+      if (!rock.isSleeping) continue;
       for (final v in rock.worldVerts) {
         if (v.dy < topY) topY = v.dy;
       }

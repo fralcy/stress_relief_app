@@ -17,6 +17,8 @@ class AppModal extends StatelessWidget {
   final double maxHeight;
   final double? minHeight;
   final VoidCallback? onHelpPressed;
+  final VoidCallback? onClose;
+  final bool scrollable;
 
   const AppModal({
     super.key,
@@ -25,6 +27,8 @@ class AppModal extends StatelessWidget {
     this.maxHeight = 600,
     this.minHeight,
     this.onHelpPressed,
+    this.onClose,
+    this.scrollable = true,
   });
 
   /// Show modal helper
@@ -35,17 +39,23 @@ class AppModal extends StatelessWidget {
     double maxHeight = 600,
     double? minHeight,
     VoidCallback? onHelpPressed,
+    VoidCallback? onClose,
+    bool scrollable = true,
+    bool enableDrag = true,
   }) {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      enableDrag: enableDrag,
       builder: (context) => AppModal(
         title: title,
         content: content,
         maxHeight: maxHeight,
         minHeight: minHeight,
         onHelpPressed: onHelpPressed,
+        onClose: onClose,
+        scrollable: scrollable,
       ),
     );
   }
@@ -86,15 +96,18 @@ class AppModal extends StatelessWidget {
             thickness: 1,
           ),
           
-          // Scrollable content với custom scroller
-          Flexible(
-            child: AppScroller(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: content,
+          // Content area
+          if (scrollable)
+            Flexible(
+              child: AppScroller(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: content,
+                ),
               ),
-            ),
-          ),
+            )
+          else
+            Expanded(child: content),
         ],
       ),
     );
@@ -151,7 +164,7 @@ class AppModal extends StatelessWidget {
               button: true,
               enabled: true,
               child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: onClose ?? () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close, size: 24),
                 // M3 semantic color for neutral action
                 color: context.onSurfaceVariant,

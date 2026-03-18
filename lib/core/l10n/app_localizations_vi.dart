@@ -395,7 +395,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get playTogether => 'Chơi cùng bạn bè 🪨';
   @override String get lanNotConnected => 'Cần kết nối LAN trước khi chơi';
   @override String get rockCount => 'Số viên đá';
+  @override String get joinGame => 'Tham gia';
   @override String get startGame => 'Bắt đầu';
+  @override String get requireApproval => 'Yêu cầu xác nhận';
+  @override String get approveLabel => 'Chấp nhận';
+  @override String get kickLabel => 'Kick';
+  @override String get pendingApproval => 'Chờ host xác nhận...';
+  @override String get deniedByHost => 'Yêu cầu tham gia bị từ chối';
+  @override String get kickedByHost => 'Bạn bị kick khỏi phòng';
   @override String get waitingForPlayers => 'Chờ người chơi...';
   @override String get readyLabel => 'Sẵn sàng';
   @override String get notReadyLabel => 'Chưa sẵn sàng';
