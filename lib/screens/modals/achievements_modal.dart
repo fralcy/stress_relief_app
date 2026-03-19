@@ -17,10 +17,11 @@ class AchievementsModal {
     void Function(String featureId)? onNavigate,
   }) {
     final l10n = AppLocalizations.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
     return AppModal.show(
       context: context,
       title: l10n.achievementsTitle,
-      maxHeight: 680,
+      maxHeight: screenHeight * 0.92,
       content: _AchievementsContent(onNavigate: onNavigate),
     );
   }
@@ -250,30 +251,34 @@ class _AchievementsContent extends StatelessWidget {
       'days_7'              => (c(AchievementService.kDaysUsed), 7, 'days'),
       'days_30'             => (c(AchievementService.kDaysUsed), 30, 'days'),
       'app_explorer'        => (_countBits(c(AchievementService.kFeaturesUsed)), 3, 'features'),
-      'schedule_task_10'    => (c(AchievementService.kScheduleTaskCount), 10, 'tasks'),
-      'schedule_task_100'   => (c(AchievementService.kScheduleTaskCount), 100, 'tasks'),
-      'schedule_task_300'   => (c(AchievementService.kScheduleTaskCount), 300, 'tasks'),
+      'first_schedule_task' => (c(AchievementService.kScheduleTaskCount), 1, 'tasks'),
+      'schedule_task_15'    => (c(AchievementService.kScheduleTaskCount), 15, 'tasks'),
+      'schedule_task_75'    => (c(AchievementService.kScheduleTaskCount), 75, 'tasks'),
+      'schedule_task_150'   => (c(AchievementService.kScheduleTaskCount), 150, 'tasks'),
       'first_diary'         => (c(AchievementService.kDiaryCount), 1, 'entries'),
       'diary_20'            => (c(AchievementService.kDiaryCount), 20, 'entries'),
-      'diary_50'            => (c(AchievementService.kDiaryCount), 50, 'entries'),
+      'diary_30'            => (c(AchievementService.kDiaryCount), 30, 'entries'),
       'first_breath'        => (c(AchievementService.kBreathingTotal), 1, 'sessions'),
       'breathing_20'        => (c(AchievementService.kBreathingTotal), 20, 'sessions'),
-      'breathing_100'       => (c(AchievementService.kBreathingTotal), 100, 'sessions'),
+      'breathing_30'        => (c(AchievementService.kBreathingTotal), 30, 'sessions'),
       'first_sleep_log'     => (c(AchievementService.kSleepLogCount), 1, 'logs'),
       'sleep_log_10'        => (c(AchievementService.kSleepLogCount), 10, 'logs'),
       'sleep_log_30'        => (c(AchievementService.kSleepLogCount), 30, 'logs'),
       'first_harvest'       => (c(AchievementService.kHarvestCount), 1, 'harvests'),
-      'harvest_100'         => (c(AchievementService.kHarvestCount), 100, 'harvests'),
-      'harvest_300'         => (c(AchievementService.kHarvestCount), 300, 'harvests'),
+      'harvest_80'          => (c(AchievementService.kHarvestCount), 80, 'harvests'),
+      'harvest_160'         => (c(AchievementService.kHarvestCount), 160, 'harvests'),
       'garden_points_1000'  => (c(AchievementService.kGardenPoints), 1000, 'points'),
-      'garden_points_5000'  => (c(AchievementService.kGardenPoints), 5000, 'points'),
-      'garden_points_10000' => (c(AchievementService.kGardenPoints), 10000, 'points'),
-      'first_aquarium_claim'=> (c('aquarium_claim_count'), 1, 'claims'),
-      'aquarium_points_1000'=> (c(AchievementService.kAquariumPoints), 1000, 'points'),
-      'aquarium_points_5000'=> (c(AchievementService.kAquariumPoints), 5000, 'points'),
+      'garden_points_3000'  => (c(AchievementService.kGardenPoints), 3000, 'points'),
+      'garden_points_6000'  => (c(AchievementService.kGardenPoints), 6000, 'points'),
+      'first_aquarium_claim' => (c('aquarium_claim_count'), 1, 'claims'),
+      'aquarium_points_1000' => (c(AchievementService.kAquariumPoints), 1000, 'points'),
+      'aquarium_points_5000' => (c(AchievementService.kAquariumPoints), 5000, 'points'),
+      'aquarium_points_10000'=> (c(AchievementService.kAquariumPoints), 10000, 'points'),
+      'first_painting'      => (c(AchievementService.kPixelsPainted), 1, 'pixels'),
       'painting_pixels_512' => (c(AchievementService.kPixelsPainted), 512, 'pixels'),
       'painting_pixels_2560'=> (c(AchievementService.kPixelsPainted), 2560, 'pixels'),
       'painting_pixels_5120'=> (c(AchievementService.kPixelsPainted), 5120, 'pixels'),
+      'first_music'         => (c(AchievementService.kNotesChanged), 1, 'notes'),
       'music_notes_60'      => (c(AchievementService.kNotesChanged), 60, 'notes'),
       'music_notes_300'     => (c(AchievementService.kNotesChanged), 300, 'notes'),
       'music_notes_600'     => (c(AchievementService.kNotesChanged), 600, 'notes'),
@@ -400,14 +405,25 @@ class _AchievementCard extends StatelessWidget {
   }
 
   Widget _buildUnlockedBadge(BuildContext context, dynamic theme) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: theme.primary.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(Icons.check_rounded,
-          size: 16, color: theme.primary),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: theme.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.check_rounded, size: 16, color: theme.primary),
+        ),
+        if (achievement.pointsReward > 0) ...[
+          const SizedBox(height: 2),
+          Text(
+            '+${achievement.pointsReward}',
+            style: AppTypography.bodySmall(context, color: theme.primary),
+          ),
+        ],
+      ],
     );
   }
 

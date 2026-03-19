@@ -3,23 +3,27 @@ import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_typography.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/score_provider.dart';
 import '../utils/data_manager.dart';
 import '../../screens/modals/settings_modal.dart';
 
 /// Header cố định ở top màn hình
-/// 
-/// Layout: [Scene Shop] [Coin: 1234] [Help] [Settings]
+///
+/// Layout: [Scene Shop] [Score] [Achievements] [Menu ☰]
+/// - Menu ☰ chứa: Guide, Settings
 /// - Background: transparent
 /// - Items: primary bg, background text
 class AppHeader extends StatefulWidget {
   final VoidCallback onSceneShopPressed;
   final VoidCallback? onHelpPressed;
+  final VoidCallback? onAchievementsPressed;
 
   const AppHeader({
     super.key,
     required this.onSceneShopPressed,
     this.onHelpPressed,
+    this.onAchievementsPressed,
   });
 
   @override
@@ -49,17 +53,72 @@ class _AppHeaderState extends State<AppHeader> {
     }
   }
 
+  Widget _buildMenuButton(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      label: 'Menu',
+      button: true,
+      enabled: true,
+      child: PopupMenuButton<String>(
+        onSelected: (value) {
+          if (value == 'guide') {
+            widget.onHelpPressed!();
+          } else if (value == 'settings') {
+            SettingsModal.show(context);
+          }
+        },
+        color: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        offset: const Offset(0, 52),
+        itemBuilder: (context) => [
+          if (widget.onHelpPressed != null)
+            PopupMenuItem<String>(
+              value: 'guide',
+              child: Row(
+                children: [
+                  Icon(Icons.help_outline, color: theme.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Text(l10n.tutorialTitle, style: AppTypography.bodyLarge(context, color: theme.text)),
+                ],
+              ),
+            ),
+          PopupMenuItem<String>(
+            value: 'settings',
+            child: Row(
+              children: [
+                Icon(Icons.settings, color: theme.primary, size: 20),
+                const SizedBox(width: 12),
+                Text(l10n.settings, style: AppTypography.bodyLarge(context, color: theme.text)),
+              ],
+            ),
+          ),
+        ],
+        child: Material(
+          color: theme.primary,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: Icon(Icons.menu, size: 24, color: theme.background),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    // Cập nhật điểm số mỗi lần rebuild
     final currentPoints = context.watch<ScoreProvider>().currentPoints;
-    
+
     return Container(
       height: 68,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         children: [
+          // [Shop]
           _buildHeaderButton(
             icon: Icons.landscape,
             onPressed: widget.onSceneShopPressed,
@@ -67,32 +126,25 @@ class _AppHeaderState extends State<AppHeader> {
             label: 'Scene Shop',
           ),
           const Spacer(),
+          // [Score]
           Semantics(
             label: 'Points: $currentPoints',
             readOnly: true,
             child: _buildCoinDisplay(currentPoints, theme),
           ),
           const Spacer(),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.onHelpPressed != null) ...[
-                _buildHeaderButton(
-                  icon: Icons.help_outline,
-                  onPressed: widget.onHelpPressed!,
-                  theme: theme,
-                  label: 'Help',
-                ),
-                const SizedBox(width: 8),
-              ],
-              _buildHeaderButton(
-                icon: Icons.settings,
-                onPressed: () => SettingsModal.show(context),
-                theme: theme,
-                label: 'Settings',
-              ),
-            ],
-          ),
+          // [Achievement]
+          if (widget.onAchievementsPressed != null) ...[
+            _buildHeaderButton(
+              icon: Icons.emoji_events_outlined,
+              onPressed: widget.onAchievementsPressed!,
+              theme: theme,
+              label: 'Achievements',
+            ),
+            const SizedBox(width: 8),
+          ],
+          // [Menu ☰]
+          _buildMenuButton(context),
         ],
       ),
     );

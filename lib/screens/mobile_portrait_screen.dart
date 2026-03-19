@@ -206,6 +206,21 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                     SfxService().buttonClick();
                     SceneShopModal.show(context);
                   },
+                  onAchievementsPressed: () {
+                    SfxService().buttonClick();
+                    AchievementsModal.show(context, onNavigate: (featureId) {
+                      switch (featureId) {
+                        case 'schedule': ScheduleTaskModal.show(context);
+                        case 'diary': EmotionDiaryModal.show(context);
+                        case 'breathing': BreathingExerciseModal.show(context);
+                        case 'sleep': SleepGuideModal.show(context);
+                        case 'garden': GardenModal.show(context);
+                        case 'aquarium': AquariumModal.show(context);
+                        case 'painting': DrawingModal.show(context);
+                        case 'music': ComposingModal.show(context);
+                      }
+                    });
+                  },
                   onHelpPressed: () {
                     SfxService().buttonClick();
                     Navigator.push(
@@ -388,25 +403,6 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             onPressed: () {
               SfxService().buttonClick();
               SleepGuideModal.show(context);
-            },
-          ),
-          FeatureButton(
-            icon: Icons.emoji_events_outlined,
-            label: l10n.achievements,
-            onPressed: () {
-              SfxService().buttonClick();
-              AchievementsModal.show(context, onNavigate: (featureId) {
-                switch (featureId) {
-                  case 'schedule': ScheduleTaskModal.show(context);
-                  case 'diary': EmotionDiaryModal.show(context);
-                  case 'breathing': BreathingExerciseModal.show(context);
-                  case 'sleep': SleepGuideModal.show(context);
-                  case 'garden': GardenModal.show(context);
-                  case 'aquarium': AquariumModal.show(context);
-                  case 'painting': DrawingModal.show(context);
-                  case 'music': ComposingModal.show(context);
-                }
-              });
             },
           ),
         ];

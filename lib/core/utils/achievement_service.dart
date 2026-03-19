@@ -119,27 +119,35 @@ class AchievementService {
       category: AchievementCategory.engagement,
     ),
 
-    // === SCHEDULE (3) ===
+    // === SCHEDULE (4) ===
     Achievement(
-      id: 'schedule_task_10',
+      id: 'first_schedule_task',
+      titleGetter: () => 'First Task',
+      descriptionGetter: () => 'Complete your first scheduled task',
+      icon: Icons.add_task,
+      pointsReward: 15,
+      category: AchievementCategory.schedule,
+    ),
+    Achievement(
+      id: 'schedule_task_15',
       titleGetter: () => 'Planner',
-      descriptionGetter: () => 'Complete 10 scheduled tasks',
+      descriptionGetter: () => 'Complete 15 scheduled tasks',
       icon: Icons.check_circle_outline,
       pointsReward: 15,
       category: AchievementCategory.schedule,
     ),
     Achievement(
-      id: 'schedule_task_100',
+      id: 'schedule_task_75',
       titleGetter: () => 'Disciplined',
-      descriptionGetter: () => 'Complete 100 scheduled tasks',
+      descriptionGetter: () => 'Complete 75 scheduled tasks',
       icon: Icons.task_alt,
       pointsReward: 40,
       category: AchievementCategory.schedule,
     ),
     Achievement(
-      id: 'schedule_task_300',
+      id: 'schedule_task_150',
       titleGetter: () => 'Schedule Master',
-      descriptionGetter: () => 'Complete 300 scheduled tasks',
+      descriptionGetter: () => 'Complete 150 scheduled tasks',
       icon: Icons.event_available,
       pointsReward: 100,
       category: AchievementCategory.schedule,
@@ -163,9 +171,9 @@ class AchievementService {
       category: AchievementCategory.diary,
     ),
     Achievement(
-      id: 'diary_50',
+      id: 'diary_30',
       titleGetter: () => 'Inner Writer',
-      descriptionGetter: () => 'Write 50 diary entries',
+      descriptionGetter: () => 'Write 30 diary entries',
       icon: Icons.history_edu,
       pointsReward: 75,
       category: AchievementCategory.diary,
@@ -189,9 +197,9 @@ class AchievementService {
       category: AchievementCategory.breathing,
     ),
     Achievement(
-      id: 'breathing_100',
+      id: 'breathing_30',
       titleGetter: () => 'Breathing Master',
-      descriptionGetter: () => 'Complete 100 breathing sessions',
+      descriptionGetter: () => 'Complete 30 breathing sessions',
       icon: Icons.spa_outlined,
       pointsReward: 75,
       category: AchievementCategory.breathing,
@@ -233,17 +241,17 @@ class AchievementService {
       category: AchievementCategory.garden,
     ),
     Achievement(
-      id: 'harvest_100',
+      id: 'harvest_80',
       titleGetter: () => 'Master Gardener',
-      descriptionGetter: () => 'Harvest plants 100 times',
+      descriptionGetter: () => 'Harvest plants 80 times',
       icon: Icons.grass,
       pointsReward: 50,
       category: AchievementCategory.garden,
     ),
     Achievement(
-      id: 'harvest_300',
+      id: 'harvest_160',
       titleGetter: () => 'Seasoned Farmer',
-      descriptionGetter: () => 'Harvest plants 300 times',
+      descriptionGetter: () => 'Harvest plants 160 times',
       icon: Icons.agriculture,
       pointsReward: 100,
       category: AchievementCategory.garden,
@@ -257,23 +265,26 @@ class AchievementService {
       category: AchievementCategory.garden,
     ),
     Achievement(
-      id: 'garden_points_5000',
+      id: 'garden_points_3000',
       titleGetter: () => 'Thriving Garden',
-      descriptionGetter: () => 'Earn 5,000 points from gardening',
+      descriptionGetter: () => 'Earn 3,000 points from gardening',
       icon: Icons.savings_outlined,
       pointsReward: 50,
       category: AchievementCategory.garden,
     ),
     Achievement(
-      id: 'garden_points_10000',
+      id: 'garden_points_6000',
       titleGetter: () => 'Bountiful Farm',
-      descriptionGetter: () => 'Earn 10,000 points from gardening',
-      icon: Icons.emoji_events_outlined,
+      descriptionGetter: () => 'Earn 6,000 points from gardening',
+      icon: Icons.yard,
       pointsReward: 100,
       category: AchievementCategory.garden,
     ),
 
-    // === AQUARIUM (3) ===
+    // === AQUARIUM (4) ===
+    // Note: claim count is NOT tracked as an achievement because the per-fish
+    // partial-claim mechanic (lastClaimed) makes count trivially inflateable.
+    // Points achievements are self-limiting (capped at ~400 pts/cycle).
     Achievement(
       id: 'first_aquarium_claim',
       titleGetter: () => 'First Coins',
@@ -287,7 +298,7 @@ class AchievementService {
       titleGetter: () => 'Profitable Tank',
       descriptionGetter: () => 'Earn 1,000 points from your aquarium',
       icon: Icons.water_outlined,
-      pointsReward: 40,
+      pointsReward: 15,
       category: AchievementCategory.aquarium,
     ),
     Achievement(
@@ -295,11 +306,27 @@ class AchievementService {
       titleGetter: () => 'Ocean Keeper',
       descriptionGetter: () => 'Earn 5,000 points from your aquarium',
       icon: Icons.waves_outlined,
+      pointsReward: 50,
+      category: AchievementCategory.aquarium,
+    ),
+    Achievement(
+      id: 'aquarium_points_10000',
+      titleGetter: () => 'Ocean Fortune',
+      descriptionGetter: () => 'Earn 10,000 points from your aquarium',
+      icon: Icons.water,
       pointsReward: 100,
       category: AchievementCategory.aquarium,
     ),
 
-    // === PAINTING (3) ===
+    // === PAINTING (4) ===
+    Achievement(
+      id: 'first_painting',
+      titleGetter: () => 'First Stroke',
+      descriptionGetter: () => 'Paint your first pixel',
+      icon: Icons.color_lens_outlined,
+      pointsReward: 15,
+      category: AchievementCategory.painting,
+    ),
     Achievement(
       id: 'painting_pixels_512',
       titleGetter: () => 'Budding Artist',
@@ -325,7 +352,15 @@ class AchievementService {
       category: AchievementCategory.painting,
     ),
 
-    // === MUSIC (3) ===
+    // === MUSIC (4) ===
+    Achievement(
+      id: 'first_music',
+      titleGetter: () => 'First Note',
+      descriptionGetter: () => 'Place your first note in a composition',
+      icon: Icons.piano,
+      pointsReward: 15,
+      category: AchievementCategory.music,
+    ),
     Achievement(
       id: 'music_notes_60',
       titleGetter: () => 'First Melody',
@@ -497,9 +532,10 @@ class AchievementService {
     final total = _increment(p, kScheduleTaskCount, count);
 
     final candidates = <String>[
-      if (total >= 10) 'schedule_task_10',
-      if (total >= 100) 'schedule_task_100',
-      if (total >= 300) 'schedule_task_300',
+      if (total >= 1) 'first_schedule_task',
+      if (total >= 15) 'schedule_task_15',
+      if (total >= 75) 'schedule_task_75',
+      if (total >= 150) 'schedule_task_150',
       ..._appExplorerCandidates(p),
     ];
 
@@ -517,7 +553,7 @@ class AchievementService {
     final candidates = <String>[
       if (count >= 1) 'first_diary',
       if (count >= 20) 'diary_20',
-      if (count >= 50) 'diary_50',
+      if (count >= 30) 'diary_30',
       ..._appExplorerCandidates(p),
     ];
 
@@ -535,7 +571,7 @@ class AchievementService {
     final candidates = <String>[
       if (total >= 1) 'first_breath',
       if (total >= 20) 'breathing_20',
-      if (total >= 100) 'breathing_100',
+      if (total >= 30) 'breathing_30',
       ..._appExplorerCandidates(p),
     ];
 
@@ -571,11 +607,11 @@ class AchievementService {
 
     final candidates = <String>[
       if (count >= 1) 'first_harvest',
-      if (count >= 100) 'harvest_100',
-      if (count >= 300) 'harvest_300',
+      if (count >= 80) 'harvest_80',
+      if (count >= 160) 'harvest_160',
       if (gardenPts >= 1000) 'garden_points_1000',
-      if (gardenPts >= 5000) 'garden_points_5000',
-      if (gardenPts >= 10000) 'garden_points_10000',
+      if (gardenPts >= 3000) 'garden_points_3000',
+      if (gardenPts >= 6000) 'garden_points_6000',
       ..._appExplorerCandidates(p),
     ];
 
@@ -595,6 +631,7 @@ class AchievementService {
       if (claimCount >= 1) 'first_aquarium_claim',
       if (totalPts >= 1000) 'aquarium_points_1000',
       if (totalPts >= 5000) 'aquarium_points_5000',
+      if (totalPts >= 10000) 'aquarium_points_10000',
       ..._appExplorerCandidates(p),
     ];
 
@@ -620,6 +657,7 @@ class AchievementService {
     final total = _increment(p, kPixelsPainted, delta);
 
     final candidates = <String>[
+      if (total >= 1) 'first_painting',
       if (total >= 512) 'painting_pixels_512',
       if (total >= 2560) 'painting_pixels_2560',
       if (total >= 5120) 'painting_pixels_5120',
@@ -647,6 +685,7 @@ class AchievementService {
     final total = _increment(p, kNotesChanged, delta);
 
     final candidates = <String>[
+      if (total >= 1) 'first_music',
       if (total >= 60) 'music_notes_60',
       if (total >= 300) 'music_notes_300',
       if (total >= 600) 'music_notes_600',
@@ -719,23 +758,38 @@ class AchievementService {
 
     final featuresUsed = _countBits(p.counters[kFeaturesUsed] ?? 0);
 
+    // Read stored counters for features not passed as parameters
+    final gardenPts = p.counters[kGardenPoints] ?? 0;
+    final aquariumClaimCount = p.counters['aquarium_claim_count'] ?? 0;
+    final aquariumPts = p.counters[kAquariumPoints] ?? 0;
+
     final candidates = <String>[
       'first_steps',
       if (diaryCount >= 1) 'first_diary',
       if (diaryCount >= 20) 'diary_20',
-      if (diaryCount >= 50) 'diary_50',
+      if (diaryCount >= 30) 'diary_30',
       if (breathingCount >= 1) 'first_breath',
       if (breathingCount >= 20) 'breathing_20',
-      if (breathingCount >= 100) 'breathing_100',
+      if (breathingCount >= 30) 'breathing_30',
       if (sleepLogCount >= 1) 'first_sleep_log',
       if (sleepLogCount >= 10) 'sleep_log_10',
       if (sleepLogCount >= 30) 'sleep_log_30',
       if (harvestCount >= 1) 'first_harvest',
-      if (harvestCount >= 100) 'harvest_100',
-      if (harvestCount >= 300) 'harvest_300',
-      if (scheduleTaskCount >= 10) 'schedule_task_10',
-      if (scheduleTaskCount >= 100) 'schedule_task_100',
-      if (scheduleTaskCount >= 300) 'schedule_task_300',
+      if (harvestCount >= 80) 'harvest_80',
+      if (harvestCount >= 160) 'harvest_160',
+      if (gardenPts >= 1000) 'garden_points_1000',
+      if (gardenPts >= 3000) 'garden_points_3000',
+      if (gardenPts >= 6000) 'garden_points_6000',
+      if (aquariumClaimCount >= 1) 'first_aquarium_claim',
+      if (aquariumPts >= 1000) 'aquarium_points_1000',
+      if (aquariumPts >= 5000) 'aquarium_points_5000',
+      if (aquariumPts >= 10000) 'aquarium_points_10000',
+      if (scheduleTaskCount >= 1) 'first_schedule_task',
+      if (scheduleTaskCount >= 15) 'schedule_task_15',
+      if (scheduleTaskCount >= 75) 'schedule_task_75',
+      if (scheduleTaskCount >= 150) 'schedule_task_150',
+      if ((p.counters[kPixelsPainted] ?? 0) >= 1) 'first_painting',
+      if ((p.counters[kNotesChanged] ?? 0) >= 1) 'first_music',
       if (totalPoints >= 1000) 'score_1000',
       if (totalPoints >= 5000) 'score_5000',
       if (totalPoints >= 20000) 'score_20000',
