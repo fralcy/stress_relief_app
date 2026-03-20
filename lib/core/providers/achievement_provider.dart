@@ -72,11 +72,21 @@ class AchievementProvider extends ChangeNotifier {
     return _handleUnlocks(ids, score);
   }
 
+  Future<List<Achievement>> onPlanted(ScoreProvider score) async {
+    final ids = await AchievementService().onPlanted();
+    return _handleUnlocks(ids, score);
+  }
+
   Future<List<Achievement>> onAquariumClaimed(
     int pointsClaimed,
     ScoreProvider score,
   ) async {
     final ids = await AchievementService().onAquariumClaimed(pointsClaimed);
+    return _handleUnlocks(ids, score);
+  }
+
+  Future<List<Achievement>> onFishFed(ScoreProvider score) async {
+    final ids = await AchievementService().onFishFed();
     return _handleUnlocks(ids, score);
   }
 
@@ -120,8 +130,6 @@ class AchievementProvider extends ChangeNotifier {
     final diaryCount = dm.emotionDiaries.length;
     final breathingCount = dm.breathingSessions.length;
     final sleepLogCount = dm.sleepLogs.length;
-    final harvestCount =
-        dm.achievementProgress.counter(AchievementService.kHarvestCount);
     final scheduleTaskCount =
         dm.achievementProgress.counter(AchievementService.kScheduleTaskCount);
     final totalPoints = score.profile.totalPoints;
@@ -130,7 +138,6 @@ class AchievementProvider extends ChangeNotifier {
       diaryCount: diaryCount,
       breathingCount: breathingCount,
       sleepLogCount: sleepLogCount,
-      harvestCount: harvestCount,
       scheduleTaskCount: scheduleTaskCount,
       totalPoints: totalPoints,
     );
@@ -147,8 +154,6 @@ class AchievementProvider extends ChangeNotifier {
     List<String> ids,
     ScoreProvider score,
   ) async {
-    if (ids.isEmpty) return [];
-
     // Award points for each newly unlocked achievement
     for (final id in ids) {
       final ach = AchievementService.findById(id);
@@ -157,14 +162,15 @@ class AchievementProvider extends ChangeNotifier {
       }
     }
 
-    // Clear newlyUnlocked queue from persistent storage
-    await AchievementService().clearNewlyUnlocked();
+    if (ids.isNotEmpty) {
+      await AchievementService().clearNewlyUnlocked();
+      refresh();
+    }
 
-    // Refresh in-memory state
-    refresh();
-
-    // Trigger points-based achievements after awarding rewards
-    // (score_100 / score_500 — pointsReward = 0, no recursion risk)
+    // Always check score-based achievements — score rewards are 0 so no recursion.
+    // Must run even when ids is empty: feature actions (harvest, claim) add points
+    // to ScoreProvider before this is called, so totalPoints may have crossed a
+    // threshold without any tiered achievement unlocking in the same event.
     final newTotal = score.profile.totalPoints;
     final pointIds =
         await AchievementService().onTotalPointsChanged(newTotal);
@@ -173,8 +179,8 @@ class AchievementProvider extends ChangeNotifier {
       refresh();
     }
 
-    // Return the Achievement objects for popup display
     final newly = ids + pointIds;
+    if (newly.isEmpty) return [];
     return newly
         .map(AchievementService.findById)
         .whereType<Achievement>()

@@ -229,6 +229,11 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
     _saveProgress();
     SfxService().taskComplete();
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context.read<AchievementProvider>().onFishFed(score);
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
+    }
   }
 
   Future<void> _claimFish(int index, Fish fish, _FishAnimationData anim, int claimable) async {

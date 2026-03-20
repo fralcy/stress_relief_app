@@ -70,16 +70,20 @@ class AchievementService {
 
   static const String kSleepLogCount = 'sleep_log_count';
 
-  static const String kHarvestCount = 'harvest_count';
-  static const String kGardenPoints = 'garden_points';
+  static const String kPlantCount = 'plant_count';
+  static const String kGardenPoints = 'garden_points';   // stat only (profile display)
 
-  static const String kAquariumPoints = 'aquarium_points';
+  static const String kFishFedCount = 'fish_fed_count';
+  static const String kAquariumPoints = 'aquarium_points'; // stat only (profile display)
 
   static const String kPixelsPainted = 'pixels_painted';
 
   static const String kNotesChanged = 'notes_changed';
 
   static const String kScheduleTaskCount = 'schedule_task_count';
+
+  /// Internal flag — set to 1 after retroactiveCheck runs, so it only runs once.
+  static const String _kRetroactiveDone = 'retroactive_done';
 
   // ----------------------------------------------------------
   // All 33 achievement definitions
@@ -153,7 +157,7 @@ class AchievementService {
       category: AchievementCategory.schedule,
     ),
 
-    // === DIARY (3) ===
+    // === DIARY (4) ===
     Achievement(
       id: 'first_diary',
       titleGetter: () => 'First Entry',
@@ -163,11 +167,19 @@ class AchievementService {
       category: AchievementCategory.diary,
     ),
     Achievement(
-      id: 'diary_20',
-      titleGetter: () => 'Consistent Writer',
-      descriptionGetter: () => 'Write 20 diary entries',
+      id: 'diary_5',
+      titleGetter: () => 'Budding Diarist',
+      descriptionGetter: () => 'Write 5 diary entries',
       icon: Icons.edit_note,
-      pointsReward: 35,
+      pointsReward: 25,
+      category: AchievementCategory.diary,
+    ),
+    Achievement(
+      id: 'diary_15',
+      titleGetter: () => 'Consistent Writer',
+      descriptionGetter: () => 'Write 15 diary entries',
+      icon: Icons.auto_stories,
+      pointsReward: 50,
       category: AchievementCategory.diary,
     ),
     Achievement(
@@ -179,7 +191,7 @@ class AchievementService {
       category: AchievementCategory.diary,
     ),
 
-    // === BREATHING (3) ===
+    // === BREATHING (4) ===
     Achievement(
       id: 'first_breath',
       titleGetter: () => 'First Breath',
@@ -189,11 +201,19 @@ class AchievementService {
       category: AchievementCategory.breathing,
     ),
     Achievement(
-      id: 'breathing_20',
-      titleGetter: () => 'Mindful Breather',
-      descriptionGetter: () => 'Complete 20 breathing sessions',
+      id: 'breathing_5',
+      titleGetter: () => 'Calm Seeker',
+      descriptionGetter: () => 'Complete 5 breathing sessions',
       icon: Icons.self_improvement,
-      pointsReward: 35,
+      pointsReward: 25,
+      category: AchievementCategory.breathing,
+    ),
+    Achievement(
+      id: 'breathing_15',
+      titleGetter: () => 'Mindful Breather',
+      descriptionGetter: () => 'Complete 15 breathing sessions',
+      icon: Icons.air_outlined,
+      pointsReward: 50,
       category: AchievementCategory.breathing,
     ),
     Achievement(
@@ -205,7 +225,7 @@ class AchievementService {
       category: AchievementCategory.breathing,
     ),
 
-    // === SLEEP (3) ===
+    // === SLEEP (4) ===
     Achievement(
       id: 'first_sleep_log',
       titleGetter: () => 'Sleep Tracker',
@@ -215,11 +235,19 @@ class AchievementService {
       category: AchievementCategory.sleep,
     ),
     Achievement(
-      id: 'sleep_log_10',
-      titleGetter: () => 'Sleep Habit',
-      descriptionGetter: () => 'Log your sleep 10 times',
+      id: 'sleep_log_5',
+      titleGetter: () => 'Rest Starter',
+      descriptionGetter: () => 'Log your sleep 5 times',
       icon: Icons.nights_stay_outlined,
-      pointsReward: 35,
+      pointsReward: 25,
+      category: AchievementCategory.sleep,
+    ),
+    Achievement(
+      id: 'sleep_log_15',
+      titleGetter: () => 'Sleep Habit',
+      descriptionGetter: () => 'Log your sleep 15 times',
+      icon: Icons.dark_mode_outlined,
+      pointsReward: 50,
       category: AchievementCategory.sleep,
     ),
     Achievement(
@@ -231,88 +259,69 @@ class AchievementService {
       category: AchievementCategory.sleep,
     ),
 
-    // === GARDEN (6) ===
+    // === GARDEN (4) ===
     Achievement(
-      id: 'first_harvest',
+      id: 'first_plant',
       titleGetter: () => 'Green Thumb',
-      descriptionGetter: () => 'Harvest a plant for the first time',
+      descriptionGetter: () => 'Plant your first seed',
       icon: Icons.eco_outlined,
       pointsReward: 15,
       category: AchievementCategory.garden,
     ),
     Achievement(
-      id: 'harvest_80',
-      titleGetter: () => 'Master Gardener',
-      descriptionGetter: () => 'Harvest plants 80 times',
+      id: 'plant_30',
+      titleGetter: () => 'Seedling Keeper',
+      descriptionGetter: () => 'Plant seeds 30 times',
+      icon: Icons.local_florist_outlined,
+      pointsReward: 25,
+      category: AchievementCategory.garden,
+    ),
+    Achievement(
+      id: 'plant_80',
+      titleGetter: () => 'Patient Gardener',
+      descriptionGetter: () => 'Plant seeds 80 times',
       icon: Icons.grass,
       pointsReward: 50,
       category: AchievementCategory.garden,
     ),
     Achievement(
-      id: 'harvest_160',
-      titleGetter: () => 'Seasoned Farmer',
-      descriptionGetter: () => 'Harvest plants 160 times',
+      id: 'plant_160',
+      titleGetter: () => 'Master Gardener',
+      descriptionGetter: () => 'Plant seeds 160 times',
       icon: Icons.agriculture,
-      pointsReward: 100,
-      category: AchievementCategory.garden,
-    ),
-    Achievement(
-      id: 'garden_points_1000',
-      titleGetter: () => 'Fruitful Garden',
-      descriptionGetter: () => 'Earn 1,000 points from gardening',
-      icon: Icons.monetization_on_outlined,
-      pointsReward: 15,
-      category: AchievementCategory.garden,
-    ),
-    Achievement(
-      id: 'garden_points_3000',
-      titleGetter: () => 'Thriving Garden',
-      descriptionGetter: () => 'Earn 3,000 points from gardening',
-      icon: Icons.savings_outlined,
-      pointsReward: 50,
-      category: AchievementCategory.garden,
-    ),
-    Achievement(
-      id: 'garden_points_6000',
-      titleGetter: () => 'Bountiful Farm',
-      descriptionGetter: () => 'Earn 6,000 points from gardening',
-      icon: Icons.yard,
       pointsReward: 100,
       category: AchievementCategory.garden,
     ),
 
     // === AQUARIUM (4) ===
-    // Note: claim count is NOT tracked as an achievement because the per-fish
-    // partial-claim mechanic (lastClaimed) makes count trivially inflateable.
-    // Points achievements are self-limiting (capped at ~400 pts/cycle).
     Achievement(
-      id: 'first_aquarium_claim',
-      titleGetter: () => 'First Coins',
-      descriptionGetter: () => 'Claim coins from your aquarium for the first time',
-      icon: Icons.paid_outlined,
+      id: 'first_fish_fed',
+      titleGetter: () => 'First Feeding',
+      descriptionGetter: () => 'Feed your fish for the first time',
+      icon: Icons.water_drop_outlined,
       pointsReward: 15,
       category: AchievementCategory.aquarium,
     ),
     Achievement(
-      id: 'aquarium_points_1000',
-      titleGetter: () => 'Profitable Tank',
-      descriptionGetter: () => 'Earn 1,000 points from your aquarium',
+      id: 'fish_fed_15',
+      titleGetter: () => 'Fish Friend',
+      descriptionGetter: () => 'Feed your fish 15 times',
       icon: Icons.water_outlined,
-      pointsReward: 15,
+      pointsReward: 25,
       category: AchievementCategory.aquarium,
     ),
     Achievement(
-      id: 'aquarium_points_5000',
-      titleGetter: () => 'Ocean Keeper',
-      descriptionGetter: () => 'Earn 5,000 points from your aquarium',
+      id: 'fish_fed_150',
+      titleGetter: () => 'Fish Keeper',
+      descriptionGetter: () => 'Feed your fish 150 times',
       icon: Icons.waves_outlined,
-      pointsReward: 50,
+      pointsReward: 40,
       category: AchievementCategory.aquarium,
     ),
     Achievement(
-      id: 'aquarium_points_10000',
-      titleGetter: () => 'Ocean Fortune',
-      descriptionGetter: () => 'Earn 10,000 points from your aquarium',
+      id: 'fish_fed_300',
+      titleGetter: () => 'Fish Master',
+      descriptionGetter: () => 'Feed your fish 300 times',
       icon: Icons.water,
       pointsReward: 100,
       category: AchievementCategory.aquarium,
@@ -552,7 +561,8 @@ class AchievementService {
 
     final candidates = <String>[
       if (count >= 1) 'first_diary',
-      if (count >= 20) 'diary_20',
+      if (count >= 5) 'diary_5',
+      if (count >= 15) 'diary_15',
       if (count >= 30) 'diary_30',
       ..._appExplorerCandidates(p),
     ];
@@ -570,7 +580,8 @@ class AchievementService {
 
     final candidates = <String>[
       if (total >= 1) 'first_breath',
-      if (total >= 20) 'breathing_20',
+      if (total >= 5) 'breathing_5',
+      if (total >= 15) 'breathing_15',
       if (total >= 30) 'breathing_30',
       ..._appExplorerCandidates(p),
     ];
@@ -588,7 +599,8 @@ class AchievementService {
 
     final candidates = <String>[
       if (count >= 1) 'first_sleep_log',
-      if (count >= 10) 'sleep_log_10',
+      if (count >= 5) 'sleep_log_5',
+      if (count >= 15) 'sleep_log_15',
       if (count >= 30) 'sleep_log_30',
       ..._appExplorerCandidates(p),
     ];
@@ -598,20 +610,28 @@ class AchievementService {
     return newly;
   }
 
-  /// Call after a plant is harvested. [pointsGained] is the harvest reward.
+  /// Call after a plant is harvested. Tracks garden_points stat only — no achievement candidates.
   Future<List<String>> onHarvest({required int pointsGained}) async {
     final p = _load();
     _markFeatureUsed(p, _kGardenBit);
-    final count = _increment(p, kHarvestCount);
-    final gardenPts = _increment(p, kGardenPoints, pointsGained);
+    _increment(p, kGardenPoints, pointsGained);
+    final candidates = _appExplorerCandidates(p);
+    final newly = _tryUnlock(p, candidates);
+    await _save(p);
+    return newly;
+  }
+
+  /// Call after a seed is planted.
+  Future<List<String>> onPlanted() async {
+    final p = _load();
+    _markFeatureUsed(p, _kGardenBit);
+    final count = _increment(p, kPlantCount);
 
     final candidates = <String>[
-      if (count >= 1) 'first_harvest',
-      if (count >= 80) 'harvest_80',
-      if (count >= 160) 'harvest_160',
-      if (gardenPts >= 1000) 'garden_points_1000',
-      if (gardenPts >= 3000) 'garden_points_3000',
-      if (gardenPts >= 6000) 'garden_points_6000',
+      if (count >= 1) 'first_plant',
+      if (count >= 30) 'plant_30',
+      if (count >= 80) 'plant_80',
+      if (count >= 160) 'plant_160',
       ..._appExplorerCandidates(p),
     ];
 
@@ -620,18 +640,28 @@ class AchievementService {
     return newly;
   }
 
-  /// Call after coins are claimed from the aquarium.
+  /// Call after coins are claimed from the aquarium. Tracks aquarium_points stat only — no achievement candidates.
   Future<List<String>> onAquariumClaimed(int pointsClaimed) async {
     final p = _load();
     _markFeatureUsed(p, _kAquariumBit);
-    final claimCount = _increment(p, 'aquarium_claim_count');
-    final totalPts = _increment(p, kAquariumPoints, pointsClaimed);
+    _increment(p, kAquariumPoints, pointsClaimed);
+    final candidates = _appExplorerCandidates(p);
+    final newly = _tryUnlock(p, candidates);
+    await _save(p);
+    return newly;
+  }
+
+  /// Call after a fish is fed.
+  Future<List<String>> onFishFed() async {
+    final p = _load();
+    _markFeatureUsed(p, _kAquariumBit);
+    final count = _increment(p, kFishFedCount);
 
     final candidates = <String>[
-      if (claimCount >= 1) 'first_aquarium_claim',
-      if (totalPts >= 1000) 'aquarium_points_1000',
-      if (totalPts >= 5000) 'aquarium_points_5000',
-      if (totalPts >= 10000) 'aquarium_points_10000',
+      if (count >= 1) 'first_fish_fed',
+      if (count >= 15) 'fish_fed_15',
+      if (count >= 150) 'fish_fed_150',
+      if (count >= 300) 'fish_fed_300',
       ..._appExplorerCandidates(p),
     ];
 
@@ -675,6 +705,15 @@ class AchievementService {
     if (delta <= 0) return;
     final p = _load();
     _increment(p, kNotesChanged, delta);
+    await _save(p);
+  }
+
+  /// Persist [delta] pixel paints without checking thresholds.
+  /// Used for fire-and-forget flush on modal dispose.
+  Future<void> addPixelsOnly(int delta) async {
+    if (delta <= 0) return;
+    final p = _load();
+    _increment(p, kPixelsPainted, delta);
     await _save(p);
   }
 
@@ -726,11 +765,15 @@ class AchievementService {
     required int diaryCount,
     required int breathingCount,
     required int sleepLogCount,
-    required int harvestCount,
     required int scheduleTaskCount,
     required int totalPoints,
   }) async {
     final p = _load();
+
+    // Only run once per install — prevents silently re-locking achievements
+    // that users should earn via normal play with a popup.
+    if ((p.counters[_kRetroactiveDone] ?? 0) == 1) return [];
+    p.counters[_kRetroactiveDone] = 1;
 
     // Ensure counters reflect reality (only increase, never decrease)
     if ((p.counters[kDiaryCount] ?? 0) < diaryCount) {
@@ -742,9 +785,6 @@ class AchievementService {
     if ((p.counters[kSleepLogCount] ?? 0) < sleepLogCount) {
       p.counters[kSleepLogCount] = sleepLogCount;
     }
-    if ((p.counters[kHarvestCount] ?? 0) < harvestCount) {
-      p.counters[kHarvestCount] = harvestCount;
-    }
     if ((p.counters[kScheduleTaskCount] ?? 0) < scheduleTaskCount) {
       p.counters[kScheduleTaskCount] = scheduleTaskCount;
     }
@@ -754,36 +794,36 @@ class AchievementService {
     if (diaryCount > 0) _markFeatureUsed(p, _kDiaryBit);
     if (breathingCount > 0) _markFeatureUsed(p, _kBreathingBit);
     if (sleepLogCount > 0) _markFeatureUsed(p, _kSleepBit);
-    if (harvestCount > 0) _markFeatureUsed(p, _kGardenBit);
 
     final featuresUsed = _countBits(p.counters[kFeaturesUsed] ?? 0);
 
-    // Read stored counters for features not passed as parameters
-    final gardenPts = p.counters[kGardenPoints] ?? 0;
-    final aquariumClaimCount = p.counters['aquarium_claim_count'] ?? 0;
-    final aquariumPts = p.counters[kAquariumPoints] ?? 0;
+    // Garden and aquarium achievements are based on in-session counters (plant_count, fish_fed_count)
+    final plantCount = p.counters[kPlantCount] ?? 0;
+    final fishFedCount = p.counters[kFishFedCount] ?? 0;
+    if (plantCount > 0) _markFeatureUsed(p, _kGardenBit);
+    if (fishFedCount > 0) _markFeatureUsed(p, _kAquariumBit);
 
     final candidates = <String>[
-      'first_steps',
       if (diaryCount >= 1) 'first_diary',
-      if (diaryCount >= 20) 'diary_20',
+      if (diaryCount >= 5) 'diary_5',
+      if (diaryCount >= 15) 'diary_15',
       if (diaryCount >= 30) 'diary_30',
       if (breathingCount >= 1) 'first_breath',
-      if (breathingCount >= 20) 'breathing_20',
+      if (breathingCount >= 5) 'breathing_5',
+      if (breathingCount >= 15) 'breathing_15',
       if (breathingCount >= 30) 'breathing_30',
       if (sleepLogCount >= 1) 'first_sleep_log',
-      if (sleepLogCount >= 10) 'sleep_log_10',
+      if (sleepLogCount >= 5) 'sleep_log_5',
+      if (sleepLogCount >= 15) 'sleep_log_15',
       if (sleepLogCount >= 30) 'sleep_log_30',
-      if (harvestCount >= 1) 'first_harvest',
-      if (harvestCount >= 80) 'harvest_80',
-      if (harvestCount >= 160) 'harvest_160',
-      if (gardenPts >= 1000) 'garden_points_1000',
-      if (gardenPts >= 3000) 'garden_points_3000',
-      if (gardenPts >= 6000) 'garden_points_6000',
-      if (aquariumClaimCount >= 1) 'first_aquarium_claim',
-      if (aquariumPts >= 1000) 'aquarium_points_1000',
-      if (aquariumPts >= 5000) 'aquarium_points_5000',
-      if (aquariumPts >= 10000) 'aquarium_points_10000',
+      if (plantCount >= 1) 'first_plant',
+      if (plantCount >= 30) 'plant_30',
+      if (plantCount >= 80) 'plant_80',
+      if (plantCount >= 160) 'plant_160',
+      if (fishFedCount >= 1) 'first_fish_fed',
+      if (fishFedCount >= 15) 'fish_fed_15',
+      if (fishFedCount >= 150) 'fish_fed_150',
+      if (fishFedCount >= 300) 'fish_fed_300',
       if (scheduleTaskCount >= 1) 'first_schedule_task',
       if (scheduleTaskCount >= 15) 'schedule_task_15',
       if (scheduleTaskCount >= 75) 'schedule_task_75',

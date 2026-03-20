@@ -16,6 +16,7 @@ import '../core/widgets/speech_bubble.dart';
 import '../core/providers/scene_provider.dart';
 import '../core/providers/score_provider.dart';
 import '../core/providers/achievement_provider.dart';
+import '../core/widgets/achievement_popup.dart';
 import 'modals/scene_shop_modal.dart';
 import 'modals/schedule_task_modal.dart';
 import 'modals/emotion_diary_modal.dart';
@@ -88,9 +89,21 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   Future<void> _runRetroactiveCheck() async {
     if (!mounted) return;
     final score = context.read<ScoreProvider>();
-    await context.read<AchievementProvider>().retroactiveCheck(score);
-    if (mounted) {
-      await context.read<AchievementProvider>().onAppOpened(score);
+    final achProvider = context.read<AchievementProvider>();
+    await achProvider.retroactiveCheck(score);
+    if (!mounted) return;
+
+    // First ever launch: unlock first_steps with popup
+    final progress = achProvider.progress;
+    if (!progress.isUnlocked('first_steps')) {
+      final newly = await achProvider.onFirstLaunch(score);
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
+    }
+
+    if (!mounted) return;
+    final appOpenedAchs = await achProvider.onAppOpened(score);
+    if (appOpenedAchs.isNotEmpty && mounted) {
+      AchievementPopup.show(context, appOpenedAchs);
     }
   }
 

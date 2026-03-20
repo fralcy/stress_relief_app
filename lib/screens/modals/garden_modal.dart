@@ -289,6 +289,11 @@ class _GardenModalState extends State<GardenModal>
     _playCellAnimation(row, col, 'plant');
     SfxService().buttonClick();
     _lastAction = 'plant';
+    if (mounted) {
+      final score = context.read<ScoreProvider>();
+      final newly = await context.read<AchievementProvider>().onPlanted(score);
+      if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
+    }
   }
 
   Future<void> _doWater(int row, int col) async {

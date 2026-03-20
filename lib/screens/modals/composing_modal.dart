@@ -195,6 +195,7 @@ class _ComposingModalState extends State<ComposingModal> {
 
     // Auto-save
     _saveTrack();
+    if (_noteChangeCount > 0) _flushNoteAchievement();
   }
 
   Future<void> _saveTrack() async {

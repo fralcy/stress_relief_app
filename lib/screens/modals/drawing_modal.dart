@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
+import '../../core/utils/achievement_service.dart';
 
 /// Modal vẽ tranh
 class DrawingModal extends StatefulWidget {
@@ -75,7 +76,19 @@ class _DrawingModalState extends State<DrawingModal> {
   @override
   void dispose() {
     _nameController.dispose();
+    if (_pixelChangeCount > 0) {
+      AchievementService().addPixelsOnly(_pixelChangeCount);
+    }
     super.dispose();
+  }
+
+  Future<void> _flushPixelAchievement() async {
+    if (_pixelChangeCount <= 0 || !mounted) return;
+    final score = context.read<ScoreProvider>();
+    final delta = _pixelChangeCount;
+    _pixelChangeCount = 0;
+    final newly = await context.read<AchievementProvider>().onPixelsPainted(delta, score);
+    if (newly.isNotEmpty && mounted) AchievementPopup.show(context, newly);
   }
 
   void _loadPainting() {
@@ -122,6 +135,7 @@ class _DrawingModalState extends State<DrawingModal> {
 
     // Auto-save
     _paintingService.savePainting(_pixels, name: _drawingName);
+    _flushPixelAchievement();
   }
   
   void _onUndo() {
