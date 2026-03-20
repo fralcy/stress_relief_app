@@ -89,9 +89,12 @@ class GameMessage {
   static LanMessage lobbyState(String senderId, GameRoom room) =>
       LanMessage.data(senderId, _wrap(GameEvent.lobbyState, room.toJson()));
 
-  static LanMessage playerJoin(String senderId, String displayName) =>
+  static LanMessage playerJoin(
+          String senderId, String displayName, int avatarIndex) =>
       LanMessage.data(
-          senderId, _wrap(GameEvent.playerJoin, {'displayName': displayName}));
+          senderId,
+          _wrap(GameEvent.playerJoin,
+              {'displayName': displayName, 'avatarIndex': avatarIndex}));
 
   static LanMessage playerLeave(String senderId) =>
       LanMessage.data(senderId, _wrap(GameEvent.playerLeave, {}));

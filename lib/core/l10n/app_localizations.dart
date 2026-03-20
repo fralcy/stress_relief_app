@@ -413,6 +413,11 @@ abstract class AppLocalizations {
   String get hoursUnit;
   String get noSleepData;
 
+  // ==================== PROFILE ====================
+  String get menuProfile;
+  String get editProfile;
+  String get chooseAvatar;
+
   // ==================== ACHIEVEMENTS ====================
 
   // UI labels

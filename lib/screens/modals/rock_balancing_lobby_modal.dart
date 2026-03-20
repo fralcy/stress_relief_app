@@ -11,6 +11,7 @@ import '../../core/utils/lan/lan_service.dart';
 import '../../core/utils/lan/lan_host_info.dart';
 import '../../core/utils/lan/game_room.dart';
 import '../../core/utils/sfx_service.dart';
+import '../../core/constants/avatar_presets.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_modal.dart';
@@ -57,6 +58,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
   bool get _isHost => LanService().role == LanRole.host;
   String get _localUid => DataManager().userProfile.id;
   String get _localName => DataManager().userProfile.name;
+  int get _localAvatarIndex => DataManager().userProfile.resolvedAvatarIndex;
 
   @override
   void initState() {
@@ -130,7 +132,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   void _enterReadyPhase() {
     final room = context.read<GameRoomProvider>();
-    room.init(_localUid, _localName);
+    room.init(_localUid, _localName, _localAvatarIndex);
     if (_isHost) {
       room.createRoom(GameType.rockBalancing);
     } else {
@@ -433,18 +435,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
       child: Row(
         children: [
           // Avatar
-          Container(
+          SizedBox(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              p.displayName.isNotEmpty ? p.displayName[0].toUpperCase() : '?',
-              style: AppTypography.bodyLarge(context,
-                  color: theme.primary, fontWeight: FontWeight.bold),
+            child: Center(
+              child: Text(
+                kAvatarPresets[p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+                style: const TextStyle(fontSize: 22),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -503,20 +501,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
               ),
               child: Row(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(
-                      color: theme.text.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      p.displayName.isNotEmpty
-                          ? p.displayName[0].toUpperCase()
-                          : '?',
-                      style: AppTypography.bodyMedium(context,
-                          color: theme.text.withValues(alpha: 0.5)),
+                    child: Center(
+                      child: Text(
+                        kAvatarPresets[p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+                        style: const TextStyle(fontSize: 22),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

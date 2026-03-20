@@ -38,6 +38,7 @@ class GameRoomProvider extends ChangeNotifier {
   Map<String, dynamic>? _gameResults;
   String _localPlayerId = '';
   String _localDisplayName = '';
+  int _localAvatarIndex = 0;
 
   /// Map từ player user ID → server-internal socket clientId.
   /// Host dùng để gửi targeted message đến client cụ thể.
@@ -82,10 +83,11 @@ class GameRoomProvider extends ChangeNotifier {
   // Init / dispose
   // ----------------------------------------------------------
 
-  /// Khởi tạo provider với ID và tên hiển thị của người chơi cục bộ.
-  void init(String playerId, String displayName) {
+  /// Khởi tạo provider với ID, tên hiển thị và avatar của người chơi cục bộ.
+  void init(String playerId, String displayName, int avatarIndex) {
     _localPlayerId = playerId;
     _localDisplayName = displayName;
+    _localAvatarIndex = avatarIndex;
     _lanSub?.cancel();
     _lanSub = LanService().incomingEvents.listen(_handleIncoming);
   }
@@ -107,6 +109,7 @@ class GameRoomProvider extends ChangeNotifier {
     final host = GamePlayer(
       id: _localPlayerId,
       displayName: _localDisplayName,
+      avatarIndex: _localAvatarIndex,
       isReady: true,
       isHost: true,
     );
@@ -199,7 +202,7 @@ class GameRoomProvider extends ChangeNotifier {
   /// Gửi yêu cầu vào phòng (client only). Gọi sau [init] và sau khi LAN connected.
   void joinRoom() {
     LanService().sendMessage(
-      GameMessage.playerJoin(_localPlayerId, _localDisplayName),
+      GameMessage.playerJoin(_localPlayerId, _localDisplayName, _localAvatarIndex),
     );
   }
 
@@ -265,10 +268,12 @@ class GameRoomProvider extends ChangeNotifier {
         if (_room!.isFull) return; // phòng đầy, bỏ qua
         _playerSocketIds[fromId] = socketId;
         final name = gm.data['displayName'] as String? ?? fromId;
+        final avatarIdx = gm.data['avatarIndex'] as int? ?? 0;
         final isPending = _room!.requireApproval;
         final newPlayer = GamePlayer(
           id: fromId,
           displayName: name,
+          avatarIndex: avatarIdx,
           isPending: isPending,
         );
         _room = _room!.copyWith(players: [..._room!.players, newPlayer]);

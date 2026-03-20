@@ -1052,6 +1052,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noSleepData => 'No sleep data yet';
 
+  // ==================== PROFILE ====================
+
+  @override
+  String get menuProfile => 'Profile';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get chooseAvatar => 'Choose Avatar';
+
   // ==================== ACHIEVEMENTS ====================
 
   @override

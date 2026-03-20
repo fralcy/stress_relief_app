@@ -29,13 +29,14 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       currentPoints: fields[8] as int,
       totalPoints: fields[9] as int,
       lastPointsClaimDate: fields[10] as DateTime?,
+      avatarIndex: fields[12] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(9)
       ..write(obj.totalPoints)
       ..writeByte(10)
-      ..write(obj.lastPointsClaimDate);
+      ..write(obj.lastPointsClaimDate)
+      ..writeByte(12)
+      ..write(obj.avatarIndex);
   }
 
   @override

@@ -1055,6 +1055,17 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get noSleepData => 'Chưa có dữ liệu giấc ngủ';
 
+  // ==================== PROFILE ====================
+
+  @override
+  String get menuProfile => 'Hồ sơ';
+
+  @override
+  String get editProfile => 'Chỉnh sửa hồ sơ';
+
+  @override
+  String get chooseAvatar => 'Chọn avatar';
+
   // ==================== ACHIEVEMENTS ====================
 
   @override

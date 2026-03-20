@@ -6,6 +6,7 @@ import '../constants/app_typography.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/score_provider.dart';
 import '../utils/data_manager.dart';
+import '../../screens/modals/profile_modal.dart';
 import '../../screens/modals/settings_modal.dart';
 
 /// Header cố định ở top màn hình
@@ -62,7 +63,9 @@ class _AppHeaderState extends State<AppHeader> {
       enabled: true,
       child: PopupMenuButton<String>(
         onSelected: (value) {
-          if (value == 'guide') {
+          if (value == 'profile') {
+            ProfileModal.show(context);
+          } else if (value == 'guide') {
             widget.onHelpPressed!();
           } else if (value == 'settings') {
             SettingsModal.show(context);
@@ -72,6 +75,16 @@ class _AppHeaderState extends State<AppHeader> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         offset: const Offset(0, 52),
         itemBuilder: (context) => [
+          PopupMenuItem<String>(
+            value: 'profile',
+            child: Row(
+              children: [
+                Icon(Icons.account_circle_outlined, color: theme.primary, size: 20),
+                const SizedBox(width: 12),
+                Text(l10n.menuProfile, style: AppTypography.bodyLarge(context, color: theme.text)),
+              ],
+            ),
+          ),
           if (widget.onHelpPressed != null)
             PopupMenuItem<String>(
               value: 'guide',

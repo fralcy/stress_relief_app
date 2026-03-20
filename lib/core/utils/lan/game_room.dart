@@ -28,6 +28,7 @@ enum GameRoomStatus {
 class GamePlayer {
   final String id;
   final String displayName;
+  final int avatarIndex;
   final bool isReady;
   final bool isHost;
   final bool isPending; // chờ host xác nhận khi requireApproval = true
@@ -35,6 +36,7 @@ class GamePlayer {
   const GamePlayer({
     required this.id,
     required this.displayName,
+    this.avatarIndex = 0,
     this.isReady = false,
     this.isHost = false,
     this.isPending = false,
@@ -48,6 +50,7 @@ class GamePlayer {
       GamePlayer(
         id: id,
         displayName: displayName,
+        avatarIndex: avatarIndex,
         isReady: isReady ?? this.isReady,
         isHost: isHost ?? this.isHost,
         isPending: isPending ?? this.isPending,
@@ -56,6 +59,7 @@ class GamePlayer {
   factory GamePlayer.fromJson(Map<String, dynamic> json) => GamePlayer(
         id: json['id'] as String,
         displayName: json['displayName'] as String,
+        avatarIndex: json['avatarIndex'] as int? ?? 0,
         isReady: json['isReady'] as bool? ?? false,
         isHost: json['isHost'] as bool? ?? false,
         isPending: json['isPending'] as bool? ?? false,
@@ -64,6 +68,7 @@ class GamePlayer {
   Map<String, dynamic> toJson() => {
         'id': id,
         'displayName': displayName,
+        'avatarIndex': avatarIndex,
         'isReady': isReady,
         'isHost': isHost,
         'isPending': isPending,

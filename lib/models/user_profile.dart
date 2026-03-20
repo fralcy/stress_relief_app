@@ -44,6 +44,11 @@ class UserProfile {
   @HiveField(10)
   final DateTime? lastPointsClaimDate;  // Ngày cuối cùng nhận điểm thưởng
 
+  @HiveField(12)
+  final int? avatarIndex;               // Index vào kAvatarPresets (null → 0)
+
+  int get resolvedAvatarIndex => avatarIndex ?? 0;
+
   UserProfile({
     required this.id,
     required this.username,
@@ -57,6 +62,7 @@ class UserProfile {
     required this.currentPoints,
     required this.totalPoints,
     this.lastPointsClaimDate,
+    this.avatarIndex,
   });
   
   // Constructor mặc định cho người dùng mới
@@ -104,6 +110,7 @@ class UserProfile {
     int? currentPoints,
     int? totalPoints,
     DateTime? lastPointsClaimDate,
+    int? avatarIndex,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -118,6 +125,7 @@ class UserProfile {
       currentPoints: currentPoints ?? this.currentPoints,
       totalPoints: totalPoints ?? this.totalPoints,
       lastPointsClaimDate: lastPointsClaimDate ?? this.lastPointsClaimDate,
+      avatarIndex: avatarIndex ?? this.avatarIndex,
     );
   }
 }
