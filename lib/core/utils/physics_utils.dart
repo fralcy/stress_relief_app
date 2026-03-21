@@ -105,62 +105,6 @@ List<Offset> _makeConvexHull(List<Offset> points) {
 double _cross(Offset o, Offset a, Offset b) =>
     (a.dx - o.dx) * (b.dy - o.dy) - (a.dy - o.dy) * (b.dx - o.dx);
 
-// ── SAT Collision ────────────────────────────────────────────
-
-/// Kiểm tra hai đa giác lồi có chồng lấn nhau không.
-bool satOverlap(List<Offset> a, List<Offset> b) => satContact(a, b) != null;
-
-/// Trả về contact normal, penetration depth và contact point nếu hai polygon
-/// chồng lấn, hoặc null nếu không chạm. Normal hướng từ b sang a.
-({Offset normal, double depth, Offset point})? satContact(
-    List<Offset> a, List<Offset> b) {
-  double minDepth = double.infinity;
-  Offset minNormal = Offset.zero;
-
-  for (final poly in [a, b]) {
-    for (int i = 0; i < poly.length; i++) {
-      final edge = poly[(i + 1) % poly.length] - poly[i];
-      final axis = Offset(-edge.dy, edge.dx);
-      final len = axis.distance;
-      if (len < 1e-6) continue;
-      final normal = axis / len;
-
-      final projA = _project(a, normal);
-      final projB = _project(b, normal);
-      final overlap =
-          math.min(projA.$2, projB.$2) - math.max(projA.$1, projB.$1);
-
-      if (overlap <= 0) return null;
-      if (overlap < minDepth) {
-        minDepth = overlap;
-        minNormal = normal;
-      }
-    }
-  }
-
-  // Đảm bảo normal hướng từ b sang a
-  final centerA = _centroid(a);
-  final centerB = _centroid(b);
-  if ((centerA - centerB).dot(minNormal) < 0) minNormal = -minNormal;
-
-  // Contact point: đỉnh của A nằm sâu nhất vào B (theo -normal)
-  double bestProj = double.negativeInfinity;
-  Offset support = a.first;
-  for (final v in a) {
-    final p = v.dot(-minNormal);
-    if (p > bestProj) {
-      bestProj = p;
-      support = v;
-    }
-  }
-
-  return (normal: minNormal, depth: minDepth, point: support);
-}
-
-extension OffsetExt on Offset {
-  double dot(Offset other) => dx * other.dx + dy * other.dy;
-}
-
 // ── Helpers ──────────────────────────────────────────────────
 
 /// Nội suy tuyến tính
@@ -169,20 +113,3 @@ double lerpDouble(double a, double b, double t) => a + (b - a) * t;
 /// Clamp giá trị trong khoảng [lo, hi]
 double clamp(double v, double lo, double hi) => v < lo ? lo : (v > hi ? hi : v);
 
-// ── Private helpers ───────────────────────────────────────────
-
-(double, double) _project(List<Offset> poly, Offset axis) {
-  double mn = double.infinity, mx = double.negativeInfinity;
-  for (final v in poly) {
-    final p = v.dot(axis);
-    if (p < mn) mn = p;
-    if (p > mx) mx = p;
-  }
-  return (mn, mx);
-}
-
-Offset _centroid(List<Offset> poly) {
-  Offset sum = Offset.zero;
-  for (final v in poly) sum += v;
-  return sum / poly.length.toDouble();
-}

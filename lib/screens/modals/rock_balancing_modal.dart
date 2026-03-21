@@ -12,55 +12,11 @@ import '../../core/utils/lan/lan_service.dart';
 import '../../core/utils/lan/lan_message.dart';
 import '../../core/utils/lan/game_message.dart';
 import '../../core/utils/physics_utils.dart';
+import '../../core/utils/rock_physics_world.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/floating_label_anim.dart';
 import '../../core/widgets/sparkle_burst.dart';
-
-// ──────────────────────────────────────────────────────────────
-// Rock body — mutable physics state
-// ──────────────────────────────────────────────────────────────
-
-class _RockBody {
-  final int id;
-  final List<Offset> localVerts; // vertices centered at origin
-  final double mass;
-  final double inertia;
-  final Color color;
-
-  Offset pos;
-  double angle;
-  Offset vel = Offset.zero;
-  double omega = 0; // angular velocity (rad/s)
-  bool isKinematic = false; // true while dragged by local player
-  bool isSleeping = false;
-  double sleepTimer = 0;
-  String? lockedBy; // playerId of peer currently holding this rock
-
-  // Lerp targets for smooth peer position updates
-  Offset? lerpPos;
-  double? lerpAngle;
-
-  _RockBody({
-    required this.id,
-    required this.localVerts,
-    required this.pos,
-    required this.mass,
-    required this.inertia,
-    required this.color,
-    this.angle = 0,
-  });
-
-  List<Offset> get worldVerts {
-    final c = math.cos(angle), s = math.sin(angle);
-    return localVerts
-        .map((v) => Offset(
-              pos.dx + v.dx * c - v.dy * s,
-              pos.dy + v.dx * s + v.dy * c,
-            ))
-        .toList();
-  }
-}
 
 // ──────────────────────────────────────────────────────────────
 // Celebration animation bundle
@@ -140,34 +96,30 @@ class RockBalancingModal extends StatefulWidget {
 
 class _RockBalancingModalState extends State<RockBalancingModal>
     with TickerProviderStateMixin {
-  // ── Physics constants (Gamey — feel over realism) ────────────
-  static const double _gravity          = 1800;
-  static const double _linearDamping    = 0.85; // heavy drag → no endless sliding
-  static const double _angularDamping   = 0.80;
-  static const double _staticFriction   = 0.9;  // very sticky
-  static const double _velThreshold     = 4.0;  // px/s — zero out below this
-  static const double _omegaThreshold   = 0.1;  // rad/s
-  static const double _groundThickness  = 20;
-  static const int    _solverIterations = 10;
-  static const double _slop      = 0.2;
-  static const double _baumgarte = 0.5;  // aggressive push-out per iteration
-  // Fixed timestep: identical dt on every device → deterministic → LAN sync
+  // ── Physics constants ─────────────────────────────────────────
+  static const double _groundThickness = 20.0;
   static const double _fixedDt = 1.0 / 60.0;
 
-  // ── Physics state ────────────────────────────────────────────
-  final List<_RockBody> _rocks = [];
+  // ── Physics world ─────────────────────────────────────────────
+  bool _physicsReady = false;
+  late RockPhysicsWorld _physicsWorld;
+
+  // ── Ticker ───────────────────────────────────────────────────
   late Ticker _ticker;
   DateTime? _lastTick;
   double _accumulator = 0.0;
 
-
-
   // ── Canvas ───────────────────────────────────────────────────
-  double _canvasWidth = 0;
+  double _canvasWidth = 0;   // physics canvas width (may exceed viewport)
   double _canvasHeight = 0;
+  double _viewportWidth = 0; // visible width
   double get _groundY => _canvasHeight - _groundThickness;
   double get _rockRadius =>
       math.min(45.0, 260.0 / widget.rockCount).toDouble();
+
+  // ── Viewport pan ─────────────────────────────────────────────
+  Offset _viewOffset = Offset.zero; // canvas translation (x ≤ 0)
+  bool _isPanningViewport = false;
 
   // ── Drag ─────────────────────────────────────────────────────
   int? _draggedId;
@@ -242,6 +194,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       c.labelCtrl.dispose();
       c.cleanup?.cancel();
     }
+    if (_physicsReady) _physicsWorld.dispose();
     super.dispose();
   }
 
@@ -250,30 +203,45 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ─────────────────────────────────────────────────────────────
 
   void _generateRocks() {
+    _physicsWorld = RockPhysicsWorld(
+      canvasWidth: _canvasWidth,
+      canvasHeight: _canvasHeight,
+    );
+    _physicsWorld.onRockHit = () {
+      final now = DateTime.now();
+      if (now.difference(_lastRockHitSfx).inMilliseconds > 250) {
+        _lastRockHitSfx = now;
+        SfxService().rockHit();
+      }
+    };
+    _physicsWorld.onRockLand = () {
+      final now = DateTime.now();
+      if (now.difference(_lastRockLandSfx).inMilliseconds > 300) {
+        _lastRockLandSfx = now;
+        SfxService().rockLand();
+      }
+    };
+
     final rng = math.Random(widget.rockSeed);
     final r = _rockRadius;
     final spacing = _canvasWidth / (widget.rockCount + 1);
 
     for (int i = 0; i < widget.rockCount; i++) {
-      final verts =
-          randomConvexPolygon(seed: widget.rockSeed, index: i, radius: r);
-      final area = polygonArea(verts);
-      final mass = (area / 1000).clamp(0.5, 5.0);
-      final inertia = momentOfInertia(verts, mass);
-      final x = spacing * (i + 1) +
-          (rng.nextDouble() - 0.5) * spacing * 0.3;
+      final verts = randomConvexPolygon(seed: widget.rockSeed, index: i, radius: r);
+      final x = spacing * (i + 1) + (rng.nextDouble() - 0.5) * spacing * 0.3;
       final y = _groundY - r - 2;
+      final spawnAngle = (rng.nextDouble() - 0.5) * 0.4;
 
-      _rocks.add(_RockBody(
+      _physicsWorld.addRock(
         id: i,
-        localVerts: verts,
-        pos: Offset(x.clamp(r, _canvasWidth - r), y),
-        mass: mass,
-        inertia: inertia,
+        localVertsPixels: verts,
         color: _rockColors[i % _rockColors.length],
-        angle: (rng.nextDouble() - 0.5) * 0.4,
-      ));
+        spawnPosPixels: Offset(x.clamp(r, _canvasWidth - r), y),
+        spawnAngle: spawnAngle,
+      );
     }
+
+    _physicsReady = true;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -286,7 +254,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       if (gm == null) return;
 
       if (gm.event == GameEvent.playerAction) {
-        // Host receives action from client → relay to all, then apply locally
         if (_isHost) {
           LanService().broadcastMessage(
             GameMessage.gameState(_localId, gm.data),
@@ -294,7 +261,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         }
         _applyPeerMessage(gm.data, event.message.senderId);
       } else if (gm.event == GameEvent.gameState && !_isHost) {
-        // Client receives relayed action from host
         final fromId = gm.data['fromId'] as String? ?? '';
         _applyPeerMessage(gm.data, fromId);
       } else if (gm.event == GameEvent.gameEnd) {
@@ -304,62 +270,67 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   }
 
   void _applyPeerMessage(Map<String, dynamic> data, String fromId) {
-    // Skip our own echoed messages
     if (fromId == _localId) return;
-    if (!mounted || _rocks.isEmpty) return;
+    if (!mounted || !_physicsReady) return;
 
     final type = data['type'] as String?;
+    final id = data['rockId'] as int? ?? -1;
+
     switch (type) {
       case 'lockRock':
-        final rock = _rockById(data['rockId'] as int? ?? -1);
-        if (rock == null) return;
+        if (!_physicsWorld.rockIds.contains(id)) return;
         setState(() {
-          rock.lockedBy = fromId;
-          rock.isKinematic = true;
-          rock.isSleeping = false;
+          _physicsWorld.setRockLockedBy(id, fromId);
+          _physicsWorld.grabByPeer(id);
         });
 
       case 'dragUpdate':
-        final rock = _rockById(data['rockId'] as int? ?? -1);
-        if (rock == null || rock.id == _draggedId) return;
-        // Lerp targets — smooth interpolation happens in _onTick
-        rock.lerpPos = Offset(
-          (data['x'] as num).toDouble(),
-          (data['y'] as num).toDouble(),
-        );
-        rock.lerpAngle = (data['angle'] as num? ?? 0).toDouble();
-
-      case 'releaseRock':
-        final rock = _rockById(data['rockId'] as int? ?? -1);
-        if (rock == null) return;
-        setState(() {
-          rock.pos = Offset(
+        if (!_physicsWorld.rockIds.contains(id)) return;
+        if (id == _draggedId) return; // don't overwrite our own drag
+        _physicsWorld.setLerpTarget(
+          id,
+          Offset(
             (data['x'] as num).toDouble(),
             (data['y'] as num).toDouble(),
+          ),
+          (data['angle'] as num? ?? 0).toDouble(),
+        );
+
+      case 'releaseRock':
+        if (!_physicsWorld.rockIds.contains(id)) return;
+        setState(() {
+          _physicsWorld.teleportRock(
+            id,
+            Offset(
+              (data['x'] as num).toDouble(),
+              (data['y'] as num).toDouble(),
+            ),
+            (data['angle'] as num? ?? 0).toDouble(),
           );
-          rock.vel = Offset(
-            (data['vx'] as num? ?? 0).toDouble(),
-            (data['vy'] as num? ?? 0).toDouble(),
+          _physicsWorld.releaseRock(
+            id,
+            Offset(
+              (data['vx'] as num? ?? 0).toDouble(),
+              (data['vy'] as num? ?? 0).toDouble(),
+            ),
+            (data['omega'] as num? ?? 0).toDouble(),
           );
-          rock.omega = (data['omega'] as num? ?? 0).toDouble();
-          rock.isKinematic = false;
-          rock.lockedBy = null;
-          rock.isSleeping = false;
-          rock.sleepTimer = 0;
-          rock.lerpPos = null;
-          rock.lerpAngle = null;
+          _physicsWorld.setRockLockedBy(id, null);
         });
 
       case 'snapshot':
         final list = data['rocks'] as List<dynamic>? ?? [];
         for (final rs in list) {
-          final rock = _rockById(rs['id'] as int? ?? -1);
-          if (rock == null) continue;
-          rock.lerpPos = Offset(
-            (rs['x'] as num).toDouble(),
-            (rs['y'] as num).toDouble(),
+          final rid = rs['id'] as int? ?? -1;
+          if (!_physicsWorld.rockIds.contains(rid)) continue;
+          _physicsWorld.setLerpTarget(
+            rid,
+            Offset(
+              (rs['x'] as num).toDouble(),
+              (rs['y'] as num).toDouble(),
+            ),
+            (rs['angle'] as num? ?? 0).toDouble(),
           );
-          rock.lerpAngle = (rs['angle'] as num? ?? 0).toDouble();
         }
 
       case 'newRecord':
@@ -371,13 +342,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     }
   }
 
-  _RockBody? _rockById(int id) {
-    for (final r in _rocks) {
-      if (r.id == id) return r;
-    }
-    return null;
-  }
-
   // ─────────────────────────────────────────────────────────────
   // Send helpers
   // ─────────────────────────────────────────────────────────────
@@ -385,13 +349,9 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   void _sendAction(Map<String, dynamic> data) {
     final payload = {...data, 'fromId': _localId};
     if (_isHost) {
-      // Host: broadcast directly as gameState (client listens for gameState)
-      LanService()
-          .broadcastMessage(GameMessage.gameState(_localId, payload));
+      LanService().broadcastMessage(GameMessage.gameState(_localId, payload));
     } else {
-      // Client: send to host as playerAction (host relays as gameState)
-      LanService()
-          .sendMessage(GameMessage.playerAction(_localId, payload));
+      LanService().sendMessage(GameMessage.playerAction(_localId, payload));
     }
   }
 
@@ -417,12 +377,18 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         'omega': omega,
       });
 
-  void _sendSnapshot() => _sendAction({
-        'type': 'snapshot',
-        'rocks': _rocks
-            .map((r) => {'id': r.id, 'x': r.pos.dx, 'y': r.pos.dy, 'angle': r.angle})
-            .toList(),
-      });
+  void _sendSnapshot() {
+    if (!_physicsReady) return;
+    _sendAction({
+      'type': 'snapshot',
+      'rocks': _physicsWorld.rockIds.map((id) => {
+            'id': id,
+            'x': _physicsWorld.getRockScreenPos(id).dx,
+            'y': _physicsWorld.getRockScreenPos(id).dy,
+            'angle': _physicsWorld.getRockScreenAngle(id),
+          }).toList(),
+    });
+  }
 
   void _sendNewRecord(double height) =>
       _sendAction({'type': 'newRecord', 'bestHeight': height});
@@ -432,7 +398,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ─────────────────────────────────────────────────────────────
 
   void _onTick(Duration _) {
-    if (!mounted || _rocks.isEmpty) return;
+    if (!mounted || !_physicsReady) return;
 
     final now = DateTime.now();
     if (_lastTick == null) {
@@ -443,218 +409,14 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(0.0, 0.25);
     _lastTick = now;
 
-    // ── Fixed-timestep accumulator ─────────────────────────────────
-    // Runs physics in exact _fixedDt steps regardless of frame rate.
-    // Every device uses the same dt → deterministic → LAN in sync.
     _accumulator += elapsed;
     bool dirty = false;
     while (_accumulator >= _fixedDt) {
-      dirty = _stepPhysics() || dirty;
+      dirty = _physicsWorld.step(_fixedDt) || dirty;
       _accumulator -= _fixedDt;
     }
 
     if (dirty) setState(() {});
-  }
-
-  /// One fixed-timestep physics step. Returns true if any rock moved.
-  bool _stepPhysics() {
-    const dt = _fixedDt;
-    bool dirty = false;
-
-    // ── Lerp peer (remote) rocks ──────────────────────────────
-    for (final rock in _rocks) {
-      if (rock.lerpPos != null) {
-        rock.pos = Offset(
-          lerpDouble(rock.pos.dx, rock.lerpPos!.dx, 0.2),
-          lerpDouble(rock.pos.dy, rock.lerpPos!.dy, 0.2),
-        );
-        if ((rock.pos - rock.lerpPos!).distance < 0.8) {
-          rock.pos = rock.lerpPos!;
-          if (rock.lockedBy == null) rock.lerpPos = null;
-        }
-        dirty = true;
-      }
-      if (rock.lerpAngle != null) {
-        rock.angle = lerpDouble(rock.angle, rock.lerpAngle!, 0.2);
-        if ((rock.angle - rock.lerpAngle!).abs() < 0.005) {
-          rock.angle = rock.lerpAngle!;
-          if (rock.lockedBy == null) rock.lerpAngle = null;
-        }
-        dirty = true;
-      }
-    }
-
-    // ── PHASE 1: Velocity integration ────────────────────────
-    for (final rock in _rocks) {
-      if (rock.isKinematic || rock.isSleeping) continue;
-      rock.vel += Offset(0, _gravity * dt);
-      rock.vel *= _linearDamping;
-      rock.omega *= _angularDamping;
-      // Velocity snapping — zeroes micro-motion immediately (no drift)
-      if (rock.vel.distance < _velThreshold) rock.vel = Offset.zero;
-      if (rock.omega.abs() < _omegaThreshold) rock.omega = 0;
-    }
-
-    // ── PHASE 2: Sticky constraint solver ────────────────────
-    for (int iter = 0; iter < _solverIterations; iter++) {
-      for (int i = 0; i < _rocks.length; i++) {
-        for (int j = i + 1; j < _rocks.length; j++) {
-          final a = _rocks[i], b = _rocks[j];
-          if (a.isKinematic && b.isKinematic) continue;
-          if (a.isSleeping && b.isSleeping) continue;
-          final contact = satContact(a.worldVerts, b.worldVerts);
-          if (contact != null) {
-            _solveStickyContact(a, b, contact);
-            dirty = true;
-          }
-        }
-      }
-      for (final rock in _rocks) {
-        if (rock.isKinematic || rock.isSleeping) continue;
-        _solveStickyGround(rock);
-        _solveWall(rock);
-      }
-    }
-
-    // ── PHASE 3: Position update + sleep ─────────────────────
-    for (final rock in _rocks) {
-      if (rock.isKinematic || rock.isSleeping) continue;
-      rock.pos += rock.vel * dt;
-      rock.angle += rock.omega * dt;
-      dirty = true;
-
-      // Sleep immediately once velocity is fully zeroed by snapping
-      if (rock.vel == Offset.zero && rock.omega == 0) {
-        rock.isSleeping = true;
-      }
-    }
-
-    // ── PHASE 4: Position correction (Baumgarte) ─────────────
-    // Directly push overlapping bodies apart by a fraction of penetration.
-    // Separated from velocity solving to avoid injecting energy (jitter).
-    // Ground: push rock up by (penetration − slop) × baumgarte.
-    for (final rock in _rocks) {
-      if (rock.isKinematic || rock.isSleeping) continue;
-      double maxPen = 0;
-      for (final v in rock.worldVerts) {
-        final pen = v.dy - _groundY;
-        if (pen > maxPen) maxPen = pen;
-      }
-      if (maxPen > _slop) {
-        rock.pos = Offset(rock.pos.dx, rock.pos.dy - (maxPen - _slop) * _baumgarte);
-      }
-    }
-    // Rock–rock: split correction proportional to inverse mass.
-    for (int i = 0; i < _rocks.length; i++) {
-      for (int j = i + 1; j < _rocks.length; j++) {
-        final a = _rocks[i], b = _rocks[j];
-        if (a.isKinematic && b.isKinematic) continue;
-        if (a.isSleeping && b.isSleeping) continue;
-        final c = satContact(a.worldVerts, b.worldVerts);
-        if (c == null || c.depth <= _slop) continue;
-        final invMA = (a.isKinematic || a.isSleeping) ? 0.0 : 1.0 / a.mass;
-        final invMB = (b.isKinematic || b.isSleeping) ? 0.0 : 1.0 / b.mass;
-        final total = invMA + invMB;
-        if (total == 0) continue;
-        final corrVec = c.normal * ((c.depth - _slop) * _baumgarte / total);
-        if (!a.isKinematic && !a.isSleeping) a.pos += corrVec * invMA;
-        if (!b.isKinematic && !b.isSleeping) b.pos -= corrVec * invMB;
-      }
-    }
-
-    return dirty;
-  }
-
-  // Sticky rock–rock contact: position correction + velocity zeroing.
-  // "Gamey" approach — rocks lock together on contact instead of bouncing.
-  void _solveStickyContact(
-    _RockBody a,
-    _RockBody b,
-    ({Offset normal, double depth, Offset point}) c,
-  ) {
-    final invMA = (a.isKinematic || a.isSleeping) ? 0.0 : 1.0 / a.mass;
-    final invMB = (b.isKinematic || b.isSleeping) ? 0.0 : 1.0 / b.mass;
-    final total = invMA + invMB;
-    if (total == 0) return;
-
-    // ── Position correction (50% per iteration → resolves in ~2 iters) ──
-    final corrMag = math.max(0.0, c.depth - _slop) * _baumgarte;
-    if (corrMag > 0) {
-      final corrVec = c.normal * (corrMag / total);
-      if (!a.isKinematic && !a.isSleeping) a.pos += corrVec * invMA;
-      if (!b.isKinematic && !b.isSleeping) b.pos -= corrVec * invMB;
-    }
-
-    // ── Velocity: zero approaching component (sticky, no bounce) ────────
-    final rA = c.point - a.pos;
-    final rB = c.point - b.pos;
-    final vA = a.vel + Offset(-a.omega * rA.dy, a.omega * rA.dx);
-    final vB = b.vel + Offset(-b.omega * rB.dy, b.omega * rB.dx);
-    final sepV = (vA - vB).dot(c.normal);
-    if (sepV < 0) {
-      // Bodies approaching — zero out velocity entirely for both
-      if (!a.isKinematic && !a.isSleeping) { a.vel = Offset.zero; a.omega = 0; }
-      if (!b.isKinematic && !b.isSleeping) { b.vel = Offset.zero; b.omega = 0; }
-    }
-
-    // Wake sleeping rocks hit by a moving body
-    if (!a.isSleeping && b.isSleeping && a.vel != Offset.zero) {
-      b.isSleeping = false; b.sleepTimer = 0;
-    }
-    if (!b.isSleeping && a.isSleeping && b.vel != Offset.zero) {
-      a.isSleeping = false; a.sleepTimer = 0;
-    }
-
-    // SFX
-    final now = DateTime.now();
-    if (sepV < -30 && now.difference(_lastRockHitSfx).inMilliseconds > 250) {
-      _lastRockHitSfx = now;
-      SfxService().rockHit();
-    }
-  }
-
-  // Sticky ground contact: per-vertex correction + velocity zeroing.
-  void _solveStickyGround(_RockBody rock) {
-    bool landed = false;
-    for (final v in rock.worldVerts) {
-      final depth = v.dy - _groundY;
-      if (depth <= 0) continue;
-
-      // Direct position push — no slop, instant correction
-      rock.pos = Offset(rock.pos.dx, rock.pos.dy - depth * _baumgarte);
-
-      // If falling into ground, zero downward velocity (sticky landing)
-      if (rock.vel.dy > 0) {
-        rock.vel = Offset(rock.vel.dx * (1 - _staticFriction), 0);
-        rock.omega *= 0.3;
-        landed = true;
-      }
-    }
-
-    if (landed) {
-      final now = DateTime.now();
-      if (now.difference(_lastRockLandSfx).inMilliseconds > 300) {
-        _lastRockLandSfx = now;
-        SfxService().rockLand();
-      }
-    }
-  }
-
-  // Wall constraint — direct position correction + velocity zeroing.
-  void _solveWall(_RockBody rock) {
-    double leftPen = 0, rightPen = 0;
-    for (final v in rock.worldVerts) {
-      if (-v.dx > leftPen) leftPen = -v.dx;
-      if (v.dx - _canvasWidth > rightPen) rightPen = v.dx - _canvasWidth;
-    }
-    if (leftPen > 0) {
-      rock.pos = Offset(rock.pos.dx + leftPen, rock.pos.dy);
-      if (rock.vel.dx < 0) rock.vel = Offset(0, rock.vel.dy);
-    }
-    if (rightPen > 0) {
-      rock.pos = Offset(rock.pos.dx - rightPen, rock.pos.dy);
-      if (rock.vel.dx > 0) rock.vel = Offset(0, rock.vel.dy);
-    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -662,46 +424,62 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ─────────────────────────────────────────────────────────────
 
   void _onPanStart(DragStartDetails d) {
-    if (_gameEnded || _rocks.isEmpty) return;
-    final touch = d.localPosition;
+    if (_gameEnded || !_physicsReady) return;
+    // Convert viewport touch to canvas space
+    final touch = d.localPosition - _viewOffset;
 
-    for (final rock in _rocks) {
-      if (rock.lockedBy != null) continue; // held by peer
-      if ((touch - rock.pos).distance > _rockRadius * 1.3) continue;
+    for (final id in _physicsWorld.rockIds) {
+      if (_physicsWorld.getRockLockedBy(id) != null) continue;
+      final rockPos = _physicsWorld.getRockScreenPos(id);
+      if ((touch - rockPos).distance > _rockRadius * 1.3) continue;
 
       setState(() {
-        _draggedId = rock.id;
-        rock.isKinematic = true;
-        rock.isSleeping = false;
-        rock.vel = Offset.zero;
-        rock.omega = 0;
-        _dragTouchOffset = touch - rock.pos;
-        _prevDragPos = rock.pos;
+        _draggedId = id;
+        _dragTouchOffset = touch - rockPos;
+        _prevDragPos = rockPos;
         _prevDragTime = DateTime.now();
         _dragVel = Offset.zero;
       });
 
-      _sendLockRock(rock.id);
+      _physicsWorld.grabRock(id);
+      _sendLockRock(id);
 
       _dragSyncTimer?.cancel();
       _dragSyncTimer = Timer.periodic(
         const Duration(milliseconds: 100),
         (_) {
-          if (_draggedId == rock.id) {
-            _sendDragUpdate(rock.id, rock.pos, rock.angle);
+          if (_draggedId == id && _physicsReady) {
+            _sendDragUpdate(
+              id,
+              _physicsWorld.getRockScreenPos(id),
+              _physicsWorld.getRockScreenAngle(id),
+            );
           }
         },
       );
       return;
     }
+
+    // No rock hit — pan the viewport
+    setState(() => _isPanningViewport = true);
   }
 
   void _onPanUpdate(DragUpdateDetails d) {
-    if (_draggedId == null) return;
-    final rock = _rockById(_draggedId!);
-    if (rock == null) return;
+    if (_isPanningViewport) {
+      setState(() {
+        final minX = math.min(0.0, _viewportWidth - _canvasWidth);
+        _viewOffset = Offset(
+          (_viewOffset.dx + d.delta.dx).clamp(minX, 0.0),
+          0.0,
+        );
+      });
+      return;
+    }
 
-    final raw = d.localPosition - _dragTouchOffset;
+    if (_draggedId == null || !_physicsReady) return;
+
+    // Convert viewport to canvas, then subtract touch offset
+    final raw = (d.localPosition - _viewOffset) - _dragTouchOffset;
     final clamped = Offset(
       raw.dx.clamp(_rockRadius, _canvasWidth - _rockRadius),
       raw.dy.clamp(_rockRadius, _groundY - _rockRadius * 0.5),
@@ -715,45 +493,41 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     _prevDragPos = clamped;
     _prevDragTime = now;
 
-    setState(() => rock.pos = clamped);
+    _physicsWorld.moveRock(_draggedId!, clamped);
   }
 
   void _onPanEnd(DragEndDetails _) {
-    if (_draggedId == null) return;
-    final rock = _rockById(_draggedId!);
-    if (rock == null) return;
+    if (_isPanningViewport) {
+      setState(() => _isPanningViewport = false);
+      return;
+    }
+
+    if (_draggedId == null || !_physicsReady) return;
 
     _dragSyncTimer?.cancel();
 
-    // Cap release velocity to avoid rocks flying off screen
     final speed = _dragVel.distance;
-    final releaseVel =
-        speed > 1200 ? _dragVel / speed * 1200 : _dragVel;
+    final releaseVel = speed > 1200 ? _dragVel / speed * 1200 : _dragVel;
+    final screenOmega = (releaseVel.dx * 0.04).clamp(-6.0, 6.0);
 
-    setState(() {
-      rock.isKinematic = false;
-      rock.vel = releaseVel;
-      rock.omega = (releaseVel.dx * 0.04).clamp(-6.0, 6.0);
-      rock.isSleeping = false;
-      rock.sleepTimer = 0;
-      _draggedId = null;
-    });
+    final releasePos = _physicsWorld.getRockScreenPos(_draggedId!);
+    final id = _draggedId!;
 
-    _sendReleaseRock(rock.id, rock.pos, releaseVel, rock.omega);
+    setState(() => _draggedId = null);
 
-    // Schedule snapshot after physics settles
+    _physicsWorld.releaseRock(id, releaseVel, screenOmega);
+    _sendReleaseRock(id, releasePos, releaseVel, screenOmega);
+
     _snapshotTimer?.cancel();
     _snapshotTimer =
         Timer(const Duration(milliseconds: 1500), _checkAndSnapshot);
   }
 
   void _checkAndSnapshot() {
-    if (!mounted || _rocks.isEmpty) return;
-    final allSleeping =
-        _rocks.every((r) => r.isSleeping || r.isKinematic);
-    if (!allSleeping) {
+    if (!mounted || !_physicsReady) return;
+    if (!_physicsWorld.allSleeping) {
       _snapshotTimer =
-          Timer(const Duration(milliseconds: 600), _checkAndSnapshot);
+          Timer(const Duration(milliseconds: 800), _checkAndSnapshot);
       return;
     }
     _sendSnapshot();
@@ -765,17 +539,8 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ─────────────────────────────────────────────────────────────
 
   void _checkBestHeight() {
-    if (_rocks.isEmpty) return;
-    double topY = _groundY;
-    // Anti-cheat: only count rocks that have settled (sleeping).
-    // Kinematic (held) rocks must NOT contribute to the height record.
-    for (final rock in _rocks) {
-      if (!rock.isSleeping) continue;
-      for (final v in rock.worldVerts) {
-        if (v.dy < topY) topY = v.dy;
-      }
-    }
-    final height = _groundY - topY;
+    if (!_physicsReady) return;
+    final height = _physicsWorld.computeStackHeight();
     if (height > _bestHeight + 2) {
       setState(() => _bestHeight = height);
       _triggerCelebration();
@@ -784,7 +549,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   }
 
   void _triggerCelebration() {
-    // Flash border
     setState(() => _borderFlash = true);
     _borderFlashTimer?.cancel();
     _borderFlashTimer = Timer(const Duration(milliseconds: 500),
@@ -793,11 +557,13 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     // Find top of stack for sparkle origin
     double topY = _groundY;
     double topX = _canvasWidth / 2;
-    for (final rock in _rocks) {
-      for (final v in rock.worldVerts) {
-        if (v.dy < topY) {
-          topY = v.dy;
-          topX = rock.pos.dx;
+    if (_physicsReady) {
+      for (final id in _physicsWorld.rockIds) {
+        for (final v in _physicsWorld.getRockWorldVerts(id)) {
+          if (v.dy < topY) {
+            topY = v.dy;
+            topX = _physicsWorld.getRockScreenPos(id).dx;
+          }
         }
       }
     }
@@ -810,10 +576,11 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
+    // Convert canvas coords to viewport coords for overlay positioning
     final celeb = _CelebAnim(
       sparkleCtrl: sparkleCtrl,
       labelCtrl: labelCtrl,
-      origin: Offset(topX, topY),
+      origin: Offset(topX + _viewOffset.dx, topY),
       label: '↑ ${(_bestHeight / 10).toStringAsFixed(1)} cm',
     );
 
@@ -847,10 +614,8 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   Widget _buildResultDialog() {
     final l10n = AppLocalizations.of(context);
     final theme = context.theme;
-    final rocksAboveGround = _rocks.where((rock) {
-      final minY = rock.worldVerts.map((v) => v.dy).reduce(math.min);
-      return minY < _groundY - 5;
-    }).length;
+    final rocksAboveGround =
+        _physicsReady ? _physicsWorld.countRocksAboveGround() : 0;
 
     return AlertDialog(
       backgroundColor: theme.background,
@@ -876,8 +641,8 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context)
-            ..pop() // close dialog
-            ..pop(), // close game modal
+            ..pop()
+            ..pop(),
           child: Text(l10n.ok, style: TextStyle(color: theme.primary)),
         ),
       ],
@@ -892,7 +657,11 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
-    context.watch<GameRoomProvider>(); // rebuild on game end signal
+    context.watch<GameRoomProvider>();
+
+    final renderData = _physicsReady
+        ? _physicsWorld.buildRenderData(_draggedId)
+        : const <RockRenderData>[];
 
     return Column(
       children: [
@@ -926,12 +695,13 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // One-time init after layout
               if (_canvasWidth == 0) {
-                _canvasWidth = constraints.maxWidth;
+                _viewportWidth = constraints.maxWidth;
+                _canvasWidth = math.max(
+                    constraints.maxWidth, widget.rockCount * 120.0);
                 _canvasHeight = constraints.maxHeight;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && _rocks.isEmpty) setState(_generateRocks);
+                  if (mounted && !_physicsReady) setState(_generateRocks);
                 });
               }
 
@@ -941,23 +711,27 @@ class _RockBalancingModalState extends State<RockBalancingModal>
                 onPanEnd: _onPanEnd,
                 child: Stack(
                   children: [
-                    // Physics canvas
-                    CustomPaint(
-                      size: Size(constraints.maxWidth, constraints.maxHeight),
-                      painter: _RockPainter(
-                        rocks: _rocks,
-                        groundY: _groundY,
-                        groundThickness: _groundThickness,
-                        bestHeight: _bestHeight,
-                        borderFlash: _borderFlash,
-                        draggedId: _draggedId,
-                        primaryColor: theme.primary,
-                        borderColor: theme.border,
-                        recordLabel: l10n.record,
+                    // Canvas — clipped to viewport, translated by pan offset
+                    ClipRect(
+                      child: Transform.translate(
+                        offset: _viewOffset,
+                        child: CustomPaint(
+                          size: Size(_canvasWidth, constraints.maxHeight),
+                          painter: _RockPainter(
+                            rocks: renderData,
+                            groundY: _groundY,
+                            groundThickness: _groundThickness,
+                            bestHeight: _bestHeight,
+                            borderFlash: _borderFlash,
+                            primaryColor: theme.primary,
+                            borderColor: theme.border,
+                            recordLabel: l10n.record,
+                            canvasWidth: _canvasWidth,
+                          ),
+                        ),
                       ),
                     ),
-
-                    // Celebration animations
+                    // Celebration overlays — already in viewport space
                     for (final c in _celebs) ...[
                       SparkleBurst(
                         origin: c.origin,
@@ -990,15 +764,15 @@ class _RockBalancingModalState extends State<RockBalancingModal>
 // ──────────────────────────────────────────────────────────────
 
 class _RockPainter extends CustomPainter {
-  final List<_RockBody> rocks;
+  final List<RockRenderData> rocks;
   final double groundY;
   final double groundThickness;
   final double bestHeight;
   final bool borderFlash;
-  final int? draggedId;
   final Color primaryColor;
   final Color borderColor;
   final String recordLabel;
+  final double canvasWidth;
 
   _RockPainter({
     required this.rocks,
@@ -1006,17 +780,17 @@ class _RockPainter extends CustomPainter {
     required this.groundThickness,
     required this.bestHeight,
     required this.borderFlash,
-    required this.draggedId,
     required this.primaryColor,
     required this.borderColor,
     required this.recordLabel,
+    required this.canvasWidth,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     // ── Ground ───────────────────────────────────────────────
     canvas.drawRect(
-      Rect.fromLTWH(0, groundY, size.width, groundThickness),
+      Rect.fromLTWH(0, groundY, canvasWidth, groundThickness),
       Paint()..color = borderColor.withValues(alpha: 0.4),
     );
 
@@ -1027,16 +801,14 @@ class _RockPainter extends CustomPainter {
         ..color = primaryColor.withValues(alpha: 0.4)
         ..strokeWidth = 1.5;
 
-      // Dashed line
       double x = 0;
       const dashLen = 8.0;
-      while (x < size.width) {
+      while (x < canvasWidth) {
         canvas.drawLine(
             Offset(x, lineY), Offset(x + dashLen, lineY), linePaint);
         x += dashLen * 2;
       }
 
-      // Record label
       final tp = TextPainter(
         text: TextSpan(
           text: '↑ $recordLabel',
@@ -1053,7 +825,7 @@ class _RockPainter extends CustomPainter {
 
     // ── Rocks ────────────────────────────────────────────────
     for (final rock in rocks) {
-      final verts = rock.worldVerts;
+      final verts = rock.screenVerts;
       if (verts.isEmpty) continue;
 
       final path = Path()..moveTo(verts.first.dx, verts.first.dy);
@@ -1064,16 +836,14 @@ class _RockPainter extends CustomPainter {
       canvas.drawPath(path, Paint()..color = rock.color);
 
       // Stroke
-      final isDraggedByMe =
-          rock.id == draggedId && rock.lockedBy == null;
       canvas.drawPath(
         path,
         Paint()
-          ..color = isDraggedByMe
+          ..color = rock.isGrabbedByMe
               ? primaryColor
               : Colors.black.withValues(alpha: 0.22)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = isDraggedByMe ? 2.5 : 1.0,
+          ..strokeWidth = rock.isGrabbedByMe ? 2.5 : 1.0,
       );
 
       // Peer lock overlay
@@ -1089,21 +859,20 @@ class _RockPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2.0,
         );
-        // 🤝 emoji at rock center
         final tp = TextPainter(
           text: const TextSpan(
               text: '🤝', style: TextStyle(fontSize: 13)),
           textDirection: TextDirection.ltr,
         )..layout();
         tp.paint(canvas,
-            rock.pos - Offset(tp.width / 2, tp.height / 2));
+            rock.screenPos - Offset(tp.width / 2, tp.height / 2));
       }
     }
 
     // ── Border flash (celebration) ────────────────────────────
     if (borderFlash) {
       canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height),
+        Rect.fromLTWH(0, 0, canvasWidth, size.height),
         Paint()
           ..color = primaryColor.withValues(alpha: 0.18)
           ..style = PaintingStyle.stroke
