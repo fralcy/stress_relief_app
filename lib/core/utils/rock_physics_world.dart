@@ -139,17 +139,20 @@ class RockPhysicsWorld {
     final bodyDef = BodyDef()..type = BodyType.static;
     final staticBody = _world.createBody(bodyDef);
 
-    // Ground edge (horizontal)
-    staticBody.createFixtureFromShape(
-      EdgeShape()..set(Vector2(0, groundYM), Vector2(canvasWM, groundYM)),
+    // Ground edge with high friction so rocks don't slide
+    staticBody.createFixture(
+      FixtureDef(EdgeShape()..set(Vector2(0, groundYM), Vector2(canvasWM, groundYM)))
+        ..friction = 1.0,
     );
-    // Left wall (vertical)
-    staticBody.createFixtureFromShape(
-      EdgeShape()..set(Vector2(0, 0), Vector2(0, canvasHM)),
+    // Left wall
+    staticBody.createFixture(
+      FixtureDef(EdgeShape()..set(Vector2(0, 0), Vector2(0, canvasHM)))
+        ..friction = 1.0,
     );
-    // Right wall (vertical)
-    staticBody.createFixtureFromShape(
-      EdgeShape()..set(Vector2(canvasWM, 0), Vector2(canvasWM, canvasHM)),
+    // Right wall
+    staticBody.createFixture(
+      FixtureDef(EdgeShape()..set(Vector2(canvasWM, 0), Vector2(canvasWM, canvasHM)))
+        ..friction = 1.0,
     );
 
     _staticBodies.add(staticBody);

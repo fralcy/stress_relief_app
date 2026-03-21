@@ -221,6 +221,19 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   // ==================== PHASE: SETUP ====================
 
+  void _onStartSolo() {
+    if (_gameStarted) return;
+    _gameStarted = true;
+    final seed = DateTime.now().millisecondsSinceEpoch;
+    final rockCount = _rockCount;
+    SfxService().buttonClick();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      RockBalancingModal.show(context, rockCount: rockCount, rockSeed: seed);
+    });
+  }
+
   Widget _buildSetupPhase(AppTheme theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,14 +244,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
               color: theme.text, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.waitingForPlayers,
-          style: AppTypography.bodySmall(context,
-              color: theme.text.withValues(alpha: 0.5)),
-          textAlign: TextAlign.center,
+        const SizedBox(height: 20),
+        _buildRockCountConfig(theme, l10n),
+        const SizedBox(height: 20),
+        AppButton(label: '🧘  Solo', onPressed: _onStartSolo),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Divider(),
         ),
-        const SizedBox(height: 24),
         AppButton(label: '📡  ${l10n.lobbyHost}', onPressed: _startHosting),
         const SizedBox(height: 12),
         AppButton(label: '🔍  ${l10n.joinGame}', onPressed: _scanForHosts),
@@ -566,14 +579,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
               child: Slider(
                 value: _rockCount.toDouble(),
                 min: 4,
-                max: 10,
-                divisions: 6,
+                max: 20,
+                divisions: 16,
                 activeColor: theme.primary,
                 inactiveColor: theme.border,
                 onChanged: (v) => setState(() => _rockCount = v.round()),
               ),
             ),
-            Text('10',
+            Text('20',
                 style: AppTypography.bodySmall(context,
                     color: theme.text.withValues(alpha: 0.5))),
           ],

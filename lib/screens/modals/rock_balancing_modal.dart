@@ -109,17 +109,20 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   DateTime? _lastTick;
   double _accumulator = 0.0;
 
-  // ── Canvas ───────────────────────────────────────────────────
-  double _canvasWidth = 0;   // physics canvas width (may exceed viewport)
+  // ── Canvas (9:16 aspect, fitted to modal content area) ───────
+  double _canvasWidth = 0;
   double _canvasHeight = 0;
-  double _viewportWidth = 0; // visible width
   double get _groundY => _canvasHeight - _groundThickness;
-  double get _rockRadius =>
-      math.min(45.0, 260.0 / widget.rockCount).toDouble();
-
-  // ── Viewport pan ─────────────────────────────────────────────
-  Offset _viewOffset = Offset.zero; // canvas translation (x ≤ 0)
-  bool _isPanningViewport = false;
+  // Area-coverage model: estimate pyramid layers = sqrt(n) × 1.5,
+  // add 2 safety layers, then derive radius from canvas height.
+  // Also cap at canvasW/6 so rocks never exceed 1/3 of canvas width.
+  double get _rockRadius {
+    if (_canvasHeight == 0) return 20.0;
+    final layers = math.sqrt(widget.rockCount.toDouble()) * 1.5 + 2;
+    final fromHeight = _canvasHeight / (layers * 2);
+    final fromWidth = _canvasWidth / 6;
+    return math.min(fromHeight, fromWidth);
+  }
 
   // ── Drag ─────────────────────────────────────────────────────
   int? _draggedId;
@@ -140,7 +143,8 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     }
   }
 
-  bool get _isHost => LanService().role == LanRole.host;
+  bool get _isSolo => !LanService().isActive;
+  bool get _isHost => _isSolo || LanService().role == LanRole.host;
 
   // ── SFX debounce ─────────────────────────────────────────────
   DateTime _lastRockHitSfx = DateTime(0);
@@ -249,6 +253,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ─────────────────────────────────────────────────────────────
 
   void _setupLan() {
+    if (_isSolo) return;
     _lanSub = LanService().incomingEvents.listen((event) {
       final gm = GameMessage.tryExtract(event.message);
       if (gm == null) return;
@@ -347,6 +352,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ─────────────────────────────────────────────────────────────
 
   void _sendAction(Map<String, dynamic> data) {
+    if (_isSolo) return;
     final payload = {...data, 'fromId': _localId};
     if (_isHost) {
       LanService().broadcastMessage(GameMessage.gameState(_localId, payload));
@@ -425,8 +431,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
 
   void _onPanStart(DragStartDetails d) {
     if (_gameEnded || !_physicsReady) return;
-    // Convert viewport touch to canvas space
-    final touch = d.localPosition - _viewOffset;
+    final touch = d.localPosition;
 
     for (final id in _physicsWorld.rockIds) {
       if (_physicsWorld.getRockLockedBy(id) != null) continue;
@@ -459,27 +464,13 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       );
       return;
     }
-
-    // No rock hit — pan the viewport
-    setState(() => _isPanningViewport = true);
+    // Touch missed all rocks — do nothing (no viewport panning needed)
   }
 
   void _onPanUpdate(DragUpdateDetails d) {
-    if (_isPanningViewport) {
-      setState(() {
-        final minX = math.min(0.0, _viewportWidth - _canvasWidth);
-        _viewOffset = Offset(
-          (_viewOffset.dx + d.delta.dx).clamp(minX, 0.0),
-          0.0,
-        );
-      });
-      return;
-    }
-
     if (_draggedId == null || !_physicsReady) return;
 
-    // Convert viewport to canvas, then subtract touch offset
-    final raw = (d.localPosition - _viewOffset) - _dragTouchOffset;
+    final raw = d.localPosition - _dragTouchOffset;
     final clamped = Offset(
       raw.dx.clamp(_rockRadius, _canvasWidth - _rockRadius),
       raw.dy.clamp(_rockRadius, _groundY - _rockRadius * 0.5),
@@ -497,11 +488,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   }
 
   void _onPanEnd(DragEndDetails _) {
-    if (_isPanningViewport) {
-      setState(() => _isPanningViewport = false);
-      return;
-    }
-
     if (_draggedId == null || !_physicsReady) return;
 
     _dragSyncTimer?.cancel();
@@ -576,11 +562,10 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    // Convert canvas coords to viewport coords for overlay positioning
     final celeb = _CelebAnim(
       sparkleCtrl: sparkleCtrl,
       labelCtrl: labelCtrl,
-      origin: Offset(topX + _viewOffset.dx, topY),
+      origin: Offset(topX, topY),
       label: '↑ ${(_bestHeight / 10).toStringAsFixed(1)} cm',
     );
 
@@ -691,32 +676,35 @@ class _RockBalancingModalState extends State<RockBalancingModal>
           ),
         ),
 
-        // ── Canvas ─────────────────────────────────────────────
+        // ── Canvas — 9:16, fitted and centred in modal content ──
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              // Fit a 9:16 canvas into available space, centred both axes
+              final fitW = math.min(
+                  constraints.maxWidth, constraints.maxHeight * 9 / 16);
+              final fitH = fitW * 16 / 9;
+
               if (_canvasWidth == 0) {
-                _viewportWidth = constraints.maxWidth;
-                _canvasWidth = math.max(
-                    constraints.maxWidth, widget.rockCount * 120.0);
-                _canvasHeight = constraints.maxHeight;
+                _canvasWidth = fitW;
+                _canvasHeight = fitH;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted && !_physicsReady) setState(_generateRocks);
                 });
               }
 
-              return GestureDetector(
-                onPanStart: _onPanStart,
-                onPanUpdate: _onPanUpdate,
-                onPanEnd: _onPanEnd,
-                child: Stack(
-                  children: [
-                    // Canvas — clipped to viewport, translated by pan offset
-                    ClipRect(
-                      child: Transform.translate(
-                        offset: _viewOffset,
-                        child: CustomPaint(
-                          size: Size(_canvasWidth, constraints.maxHeight),
+              return Center(
+                child: SizedBox(
+                  width: fitW,
+                  height: fitH,
+                  child: GestureDetector(
+                    onPanStart: _onPanStart,
+                    onPanUpdate: _onPanUpdate,
+                    onPanEnd: _onPanEnd,
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          size: Size(fitW, fitH),
                           painter: _RockPainter(
                             rocks: renderData,
                             groundY: _groundY,
@@ -726,29 +714,28 @@ class _RockBalancingModalState extends State<RockBalancingModal>
                             primaryColor: theme.primary,
                             borderColor: theme.border,
                             recordLabel: l10n.record,
-                            canvasWidth: _canvasWidth,
+                            canvasWidth: fitW,
                           ),
                         ),
-                      ),
+                        for (final c in _celebs) ...[
+                          SparkleBurst(
+                            origin: c.origin,
+                            controller: c.sparkleCtrl,
+                            color: theme.primary,
+                            radius: 50,
+                          ),
+                          FloatingLabelAnim(
+                            x: c.origin.dx,
+                            y: c.origin.dy,
+                            label: c.label,
+                            controller: c.labelCtrl,
+                            backgroundColor: theme.primary,
+                            floatDistance: 60,
+                          ),
+                        ],
+                      ],
                     ),
-                    // Celebration overlays — already in viewport space
-                    for (final c in _celebs) ...[
-                      SparkleBurst(
-                        origin: c.origin,
-                        controller: c.sparkleCtrl,
-                        color: theme.primary,
-                        radius: 50,
-                      ),
-                      FloatingLabelAnim(
-                        x: c.origin.dx,
-                        y: c.origin.dy,
-                        label: c.label,
-                        controller: c.labelCtrl,
-                        backgroundColor: theme.primary,
-                        floatDistance: 60,
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               );
             },
