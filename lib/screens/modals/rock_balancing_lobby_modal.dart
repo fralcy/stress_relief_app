@@ -8,6 +8,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
 import '../../core/providers/lan_provider.dart';
 import '../../core/utils/lan/lan_service.dart';
+import '../../core/utils/lan/game_message.dart';
 import '../../core/utils/lan/lan_host_info.dart';
 import '../../core/utils/lan/game_room.dart';
 import '../../core/utils/sfx_service.dart';
@@ -126,7 +127,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     if (lan.role == LanRole.host) {
       final status = room.currentRoom?.status;
       if (status == GameRoomStatus.playing) {
-        _openGame(room.gameState);
+        _openGame(room.initialGameParams);
       } else {
         setState(() => _state = _LobbyState.hostLobby);
       }
@@ -135,7 +136,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
       _subscribeToLobbyErrors(room);
       final status = room.currentRoom?.status;
       if (status == GameRoomStatus.playing) {
-        _openGame(room.gameState);
+        _openGame(room.initialGameParams);
       } else if (room.localPlayer?.isPending ?? false) {
         setState(() => _state = _LobbyState.clientPending);
       } else if (room.currentRoom != null) {
@@ -227,7 +228,6 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   void _onStartGame() {
     if (_gameStarted) return;
-    _gameStarted = true;
     final seed = DateTime.now().millisecondsSinceEpoch;
     context.read<GameRoomProvider>().startGame({
       'rockCount': _rockCount,
@@ -372,6 +372,9 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         .snapshotAckReceived
         .listen((_) {
       _syncTimeoutTimer?.cancel();
+      _snapshotAckSub?.cancel(); // one-shot — prevent re-firing on host's reply ack
+      // Request full snapshot so host sends current rock positions.
+      LanService().sendMessage(GameMessage.snapshotRequest(_localUid));
       // Phase 2: wait for fullSnapshot within 5 s
       _syncTimeoutTimer = Timer(const Duration(seconds: 5), () {
         if (!mounted || _state != _LobbyState.syncing) return;
@@ -386,12 +389,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     _fullSnapshotSub = context
         .read<GameRoomProvider>()
         .fullSnapshotReceived
-        .listen((data) {
+        .listen((_) {
       _syncTimeoutTimer?.cancel();
       _snapshotAckSub?.cancel();
       _fullSnapshotSub?.cancel();
       if (!mounted || _state != _LobbyState.syncing) return;
-      _openGame(data);
+      // Open game with init params (seed/rockCount). Rock positions will be
+      // immediately snapped via the snapshot message inside the game modal.
+      _openGame(context.read<GameRoomProvider>().initialGameParams);
     });
   }
 
@@ -447,7 +452,6 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   void _onStartSolo() {
     if (_gameStarted) return;
-    _gameStarted = true;
     SfxService().buttonClick();
     final seed = DateTime.now().millisecondsSinceEpoch;
     _openGame({'rockCount': _rockCount, 'rockSeed': seed});
@@ -469,7 +473,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
             _state == _LobbyState.clientPending) &&
         room.currentRoom?.status == GameRoomStatus.playing) {
       WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _openGame(room.gameState));
+          (_) => _openGame(room.initialGameParams));
     }
 
     // Client: pending → lobby once approved
@@ -918,8 +922,8 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
             child: Slider(
               value: _rockCount.toDouble(),
               min: 4,
-              max: 16,
-              divisions: 12,
+              max: 20,
+              divisions: 16,
               activeColor: theme.primary,
               inactiveColor: theme.border,
               onChanged: (v) => setState(() => _rockCount = v.round()),

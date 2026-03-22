@@ -6,13 +6,17 @@ import 'package:forge2d/forge2d.dart';
 // Forge2D: Y-up, meters (MKS). Screen: Y-down, pixels.
 // kPixelsPerMeter is the scale factor between the two spaces.
 
+// kPixelsPerMeter is kept as a public constant for external callers that still
+// reference it (e.g. velocity de-normalisation in the modal). Inside
+// RockPhysicsWorld, the adaptive _ppm field is used instead so that all
+// devices share the same canonical 9×16 m world regardless of screen size.
 const double kPixelsPerMeter = 50.0;
 
-Vector2 screenToWorld(double px, double py, double canvasHeight) =>
-    Vector2(px / kPixelsPerMeter, (canvasHeight - py) / kPixelsPerMeter);
+Vector2 screenToWorld(double px, double py, double canvasHeight, double ppm) =>
+    Vector2(px / ppm, (canvasHeight - py) / ppm);
 
-Offset worldToScreen(Vector2 pos, double canvasHeight) =>
-    Offset(pos.x * kPixelsPerMeter, canvasHeight - pos.y * kPixelsPerMeter);
+Offset worldToScreen(Vector2 pos, double canvasHeight, double ppm) =>
+    Offset(pos.x * ppm, canvasHeight - pos.y * ppm);
 
 // Angles: screen uses CW-positive, Forge2D uses CCW-positive → negate.
 double screenAngleToWorld(double a) => -a;
@@ -48,6 +52,11 @@ class _RockData {
 
   String? lockedBy;          // peer playerId holding this rock
   bool isGrabbedLocally = false; // grabbed by local player
+
+  // Target position for the local drag — updated by moveRock each pan event.
+  // _applyLerps re-derives velocity from this before every physics step so
+  // multi-step frames don't overshoot and cause oscillation.
+  Vector2? dragTarget;
 
   // Lerp targets used for smooth peer interpolation (dragUpdate / snapshot)
   Vector2? lerpTargetPos;
@@ -104,6 +113,7 @@ class RockPhysicsWorld {
 
   final double _cw; // canvas width in pixels
   final double _ch; // canvas height in pixels
+  late final double _ppm; // pixels per meter — adaptive so world is always 9×16 m
 
   late final World _world;
   final Map<int, _RockData> _rocks = {};
@@ -115,9 +125,15 @@ class RockPhysicsWorld {
 
   double get groundYPixels => _ch - _groundThickness;
 
+  /// Expose adaptive PPM so the modal can use it for velocity de-normalisation.
+  double get pixelsPerMeter => _ppm;
+
   RockPhysicsWorld({required double canvasWidth, required double canvasHeight})
       : _cw = canvasWidth,
         _ch = canvasHeight {
+    // Adaptive scale: world is always 9×16 m regardless of screen size.
+    // This makes physics body sizes identical on all devices.
+    _ppm = _ch / 16.0;
     _world = World(Vector2(0, -9.8));
     _setupStaticBodies();
     _world.setContactListener(_RockContactListener(
@@ -130,11 +146,11 @@ class RockPhysicsWorld {
   // ── Static body setup (ground + walls) ─────────────────────────────────
 
   void _setupStaticBodies() {
-    final canvasWM = _cw / kPixelsPerMeter;
-    final canvasHM = _ch / kPixelsPerMeter;
+    final canvasWM = _cw / _ppm;
+    final canvasHM = _ch / _ppm;
     // Ground is at _groundThickness pixels from the bottom in screen coords.
-    // In Forge2D Y-up: groundY_world = groundThickness / kPPM
-    final groundYM = _groundThickness / kPixelsPerMeter;
+    // In Forge2D Y-up: groundY_world = groundThickness / _ppm
+    final groundYM = _groundThickness / _ppm;
 
     final bodyDef = BodyDef()..type = BodyType.static;
     final staticBody = _world.createBody(bodyDef);
@@ -144,14 +160,14 @@ class RockPhysicsWorld {
       FixtureDef(EdgeShape()..set(Vector2(0, groundYM), Vector2(canvasWM, groundYM)))
         ..friction = 1.0,
     );
-    // Left wall
+    // Left wall — extended 4× canvas height so fast rocks can't escape upward
     staticBody.createFixture(
-      FixtureDef(EdgeShape()..set(Vector2(0, 0), Vector2(0, canvasHM)))
+      FixtureDef(EdgeShape()..set(Vector2(0, 0), Vector2(0, canvasHM * 4)))
         ..friction = 1.0,
     );
     // Right wall
     staticBody.createFixture(
-      FixtureDef(EdgeShape()..set(Vector2(canvasWM, 0), Vector2(canvasWM, canvasHM)))
+      FixtureDef(EdgeShape()..set(Vector2(canvasWM, 0), Vector2(canvasWM, canvasHM * 4)))
         ..friction = 1.0,
     );
 
@@ -172,7 +188,7 @@ class RockPhysicsWorld {
     required double spawnAngle,
   }) {
     final vertsMeters = _prepareVerts(localVertsPixels);
-    final spawnPosWorld = screenToWorld(spawnPosPixels.dx, spawnPosPixels.dy, _ch);
+    final spawnPosWorld = screenToWorld(spawnPosPixels.dx, spawnPosPixels.dy, _ch, _ppm);
     final spawnAngleWorld = screenAngleToWorld(spawnAngle);
 
     final bodyDef = BodyDef()
@@ -214,7 +230,7 @@ class RockPhysicsWorld {
     // The input hull from randomConvexPolygon is CCW in screen-Y-down space,
     // which is CW in Y-up body frame → reverse the list for CCW.
     return v
-        .map((o) => Vector2(o.dx / kPixelsPerMeter, o.dy / kPixelsPerMeter))
+        .map((o) => Vector2(o.dx / _ppm, o.dy / _ppm))
         .toList()
         .reversed
         .toList();
@@ -231,6 +247,16 @@ class RockPhysicsWorld {
 
   void _applyLerps() {
     for (final rock in _rocks.values) {
+      // Locally dragged rock: re-derive velocity each step so multi-step frames
+      // don't overshoot (the previous velocity-in-moveRock approach set vel once
+      // per pan event, causing overshoot + oscillation on frame drops).
+      if (rock.isGrabbedLocally) {
+        final target = rock.dragTarget ?? rock.body.position;
+        rock.body.linearVelocity = (target - rock.body.position) * (1 / _fixedDt);
+        rock.body.angularVelocity = 0;
+        continue;
+      }
+
       final tp = rock.lerpTargetPos;
       if (tp == null) continue;
 
@@ -271,6 +297,7 @@ class RockPhysicsWorld {
     final rock = _rocks[id];
     if (rock == null) return;
     rock.isGrabbedLocally = true;
+    rock.dragTarget = rock.body.position.clone();
     rock.lerpTargetPos = null;
     rock.lerpTargetAngle = null;
     rock.body.setType(BodyType.kinematic);
@@ -278,15 +305,13 @@ class RockPhysicsWorld {
     rock.body.angularVelocity = 0;
   }
 
-  /// Drive rock toward [screenPos] via kinematic velocity (called each pan update).
+  /// Update the drag target (called each pan update).
+  /// Velocity is derived from this in _applyLerps before every physics step,
+  /// so multi-step frames stay stable and stationary holds don't drift.
   void moveRock(int id, Offset screenPos) {
     final rock = _rocks[id];
     if (rock == null) return;
-    final targetWorld = screenToWorld(screenPos.dx, screenPos.dy, _ch);
-    // Velocity-driven: body reaches target in exactly one physics step.
-    final vel = (targetWorld - rock.body.position) * (1 / _fixedDt);
-    rock.body.linearVelocity = vel;
-    rock.body.angularVelocity = 0;
+    rock.dragTarget = screenToWorld(screenPos.dx, screenPos.dy, _ch, _ppm);
   }
 
   /// Called when local player releases a rock.
@@ -296,12 +321,13 @@ class RockPhysicsWorld {
     final rock = _rocks[id];
     if (rock == null) return;
     rock.isGrabbedLocally = false;
+    rock.dragTarget = null;
     rock.body.setType(BodyType.dynamic);
     rock.body.setAwake(true); // setType alone does not wake the body
     // Flip Y for velocity (screen Y-down → world Y-up)
     rock.body.linearVelocity = Vector2(
-      releaseVelPixels.dx / kPixelsPerMeter,
-      -releaseVelPixels.dy / kPixelsPerMeter,
+      releaseVelPixels.dx / _ppm,
+      -releaseVelPixels.dy / _ppm,
     );
     // Flip sign for angular velocity (screen CW → world CCW)
     rock.body.angularVelocity = (-screenOmega).clamp(-6.0, 6.0);
@@ -327,24 +353,63 @@ class RockPhysicsWorld {
     rock.lockedBy = peerId;
   }
 
-  /// Set a smooth lerp target (used for dragUpdate and snapshot messages).
-  void setLerpTarget(int id, Offset pixelPos, double screenAngle) {
+  /// Apply a gentle drift correction lerp for one settled rock.
+  /// Only acts on sleeping dynamic bodies (not kinematic, not awake).
+  /// This lets the host periodically nudge clients back into sync without
+  /// fighting physics on rocks that are actively flying or being held.
+  void applyDriftCorrection(int id, double normX, double normY, double worldAngle) {
     final rock = _rocks[id];
     if (rock == null) return;
-    rock.lerpTargetPos = screenToWorld(pixelPos.dx, pixelPos.dy, _ch);
-    rock.lerpTargetAngle = screenAngleToWorld(screenAngle);
+    if (rock.isGrabbedLocally) return;             // local player holds it
+    if (rock.body.bodyType == BodyType.kinematic) return; // peer holds it
+    rock.lerpTargetPos = Vector2(
+      normX * _cw / _ppm,
+      (1.0 - normY) * _ch / _ppm,
+    );
+    rock.lerpTargetAngle = worldAngle;
   }
 
-  /// Teleport rock to exact position (used for releaseRock peer message).
-  void teleportRock(int id, Offset pixelPos, double screenAngle) {
+  /// Set a smooth lerp target from normalised canvas coords (0–1) and world angle.
+  /// normX = screenX / canvasWidth, normY = screenY / canvasHeight (screen Y-down).
+  void setLerpTarget(int id, double normX, double normY, double worldAngle) {
     final rock = _rocks[id];
     if (rock == null) return;
-    final worldPos = screenToWorld(pixelPos.dx, pixelPos.dy, _ch);
-    final worldAngle = screenAngleToWorld(screenAngle);
+    rock.lerpTargetPos = Vector2(
+      normX * _cw / _ppm,
+      (1.0 - normY) * _ch / _ppm,
+    );
+    rock.lerpTargetAngle = worldAngle;
+  }
+
+  /// Teleport rock to normalised position and world angle (used for peer release and snapshot).
+  /// Switches body to dynamic + sleeping so physics resumes correctly.
+  void teleportRock(int id, double normX, double normY, double worldAngle) {
+    final rock = _rocks[id];
+    if (rock == null) return;
+    final worldPos = Vector2(
+      normX * _cw / _ppm,
+      (1.0 - normY) * _ch / _ppm,
+    );
+    // Clear any stale lerp target so _applyLerps doesn't pull the rock back
+    // to the old drag position after this teleport.
+    rock.lerpTargetPos = null;
+    rock.lerpTargetAngle = null;
+    rock.body.setType(BodyType.dynamic);
     rock.body.setTransform(worldPos, worldAngle);
     rock.body.linearVelocity = Vector2.zero();
     rock.body.angularVelocity = 0;
     rock.body.setAwake(false);
+  }
+
+  /// Apply peer release velocity in world-space m/s (used after teleportRock for a peer throw).
+  /// Does not touch isGrabbedLocally / dragTarget which are local-player-only fields.
+  void releaseRockDirect(int id, double worldVx, double worldVy, double worldOmega) {
+    final rock = _rocks[id];
+    if (rock == null) return;
+    rock.body.setType(BodyType.dynamic);
+    rock.body.setAwake(true);
+    rock.body.linearVelocity = Vector2(worldVx, worldVy);
+    rock.body.angularVelocity = worldOmega.clamp(-6.0, 6.0);
   }
 
   // ── Read-only accessors ───────────────────────────────────────────────
@@ -352,16 +417,27 @@ class RockPhysicsWorld {
   List<int> get rockIds => _rocks.keys.toList();
 
   Offset getRockScreenPos(int id) =>
-      worldToScreen(_rocks[id]!.body.position, _ch);
+      worldToScreen(_rocks[id]!.body.position, _ch, _ppm);
 
   double getRockScreenAngle(int id) =>
       worldAngleToScreen(_rocks[id]!.body.angle);
+
+  /// Rock position as normalised canvas fractions (0–1), screen Y-down convention.
+  Offset getRockNormPos(int id) {
+    final s = getRockScreenPos(id);
+    return Offset(s.dx / _cw, s.dy / _ch);
+  }
+
+  /// Rock angle in world space (CCW radians, Forge2D convention).
+  double getRockWorldAngle(int id) => _rocks[id]!.body.angle;
 
   Color getRockColor(int id) => _rocks[id]!.color;
 
   String? getRockLockedBy(int id) => _rocks[id]?.lockedBy;
 
   bool isRockGrabbed(int id) => _rocks[id]?.isGrabbedLocally ?? false;
+  bool isRockAwake(int id) => _rocks[id]?.body.isAwake ?? false;
+  bool isRockKinematic(int id) => _rocks[id]?.body.bodyType == BodyType.kinematic;
 
   /// Returns the rock's vertices in absolute screen coordinates.
   List<Offset> getRockWorldVerts(int id) {
@@ -372,7 +448,7 @@ class RockPhysicsWorld {
     return rock.localVertsMeters.map((v) {
       final wx = pos.x + v.x * cosA - v.y * sinA;
       final wy = pos.y + v.x * sinA + v.y * cosA;
-      return worldToScreen(Vector2(wx, wy), _ch);
+      return worldToScreen(Vector2(wx, wy), _ch, _ppm);
     }).toList();
   }
 

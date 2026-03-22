@@ -80,7 +80,7 @@ class GamePlayer {
 // ============================================================
 
 /// Số người chơi tối đa trong một phòng.
-const int kMaxRoomPlayers = 8;
+const int kMaxRoomPlayers = 4;
 
 @immutable
 class GameRoom {

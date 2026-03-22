@@ -135,6 +135,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ── LAN ──────────────────────────────────────────────────────
   StreamSubscription<LanIncomingEvent>? _lanSub;
   Timer? _snapshotTimer;
+  Timer? _periodicSyncTimer;
   String get _localId {
     try {
       return DataManager().userProfile.id;
@@ -192,6 +193,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     _lanSub?.cancel();
     _dragSyncTimer?.cancel();
     _snapshotTimer?.cancel();
+    _periodicSyncTimer?.cancel();
     _borderFlashTimer?.cancel();
     for (final c in _celebs) {
       c.sparkleCtrl.dispose();
@@ -231,7 +233,13 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     final spacing = _canvasWidth / (widget.rockCount + 1);
 
     for (int i = 0; i < widget.rockCount; i++) {
-      final verts = randomConvexPolygon(seed: widget.rockSeed, index: i, radius: r);
+      // Generate hull at a fixed canonical radius so the convex hull computation
+      // is identical on all devices (floating-point rounding in _cross is
+      // deterministic regardless of screen size). Scale to local pixel radius after.
+      const canonicalRadius = 100.0;
+      final unitVerts = randomConvexPolygon(seed: widget.rockSeed, index: i, radius: canonicalRadius);
+      final scale = r / canonicalRadius;
+      final verts = unitVerts.map((v) => v * scale).toList();
       final x = spacing * (i + 1) + (rng.nextDouble() - 0.5) * spacing * 0.3;
       final y = _groundY - r - 2;
       final spawnAngle = (rng.nextDouble() - 0.5) * 0.4;
@@ -254,6 +262,12 @@ class _RockBalancingModalState extends State<RockBalancingModal>
 
   void _setupLan() {
     if (_isSolo) return;
+    if (_isHost) {
+      _periodicSyncTimer = Timer.periodic(
+        const Duration(milliseconds: 50),
+        (_) { if (_physicsReady) _sendPeriodicSync(); },
+      );
+    }
     _lanSub = LanService().incomingEvents.listen((event) {
       final gm = GameMessage.tryExtract(event.message);
       if (gm == null) return;
@@ -284,9 +298,15 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     switch (type) {
       case 'lockRock':
         if (!_physicsWorld.rockIds.contains(id)) return;
+        final lockNormX = (data['x'] as num?)?.toDouble();
+        final lockNormY = (data['y'] as num?)?.toDouble();
+        final lockAngle = (data['angle'] as num? ?? 0).toDouble();
         setState(() {
           _physicsWorld.setRockLockedBy(id, fromId);
           _physicsWorld.grabByPeer(id);
+          if (lockNormX != null && lockNormY != null) {
+            _physicsWorld.setLerpTarget(id, lockNormX, lockNormY, lockAngle);
+          }
         });
 
       case 'dragUpdate':
@@ -294,31 +314,27 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         if (id == _draggedId) return; // don't overwrite our own drag
         _physicsWorld.setLerpTarget(
           id,
-          Offset(
-            (data['x'] as num).toDouble(),
-            (data['y'] as num).toDouble(),
-          ),
-          (data['angle'] as num? ?? 0).toDouble(),
+          (data['x'] as num).toDouble(),   // normX
+          (data['y'] as num).toDouble(),   // normY
+          (data['angle'] as num? ?? 0).toDouble(), // world angle
         );
 
       case 'releaseRock':
         if (!_physicsWorld.rockIds.contains(id)) return;
+        final normX = (data['x'] as num).toDouble();
+        final normY = (data['y'] as num).toDouble();
+        final worldAngle = (data['angle'] as num? ?? 0).toDouble();
+        final normVx = (data['vx'] as num? ?? 0).toDouble();
+        final normVy = (data['vy'] as num? ?? 0).toDouble();
+        final worldOmega = (data['omega'] as num? ?? 0).toDouble();
         setState(() {
-          _physicsWorld.teleportRock(
+          _physicsWorld.teleportRock(id, normX, normY, worldAngle);
+          // normVx * cw / ppm = normVx * cw / (ch/16) = normVx * 9.0 m/s (device-independent)
+          _physicsWorld.releaseRockDirect(
             id,
-            Offset(
-              (data['x'] as num).toDouble(),
-              (data['y'] as num).toDouble(),
-            ),
-            (data['angle'] as num? ?? 0).toDouble(),
-          );
-          _physicsWorld.releaseRock(
-            id,
-            Offset(
-              (data['vx'] as num? ?? 0).toDouble(),
-              (data['vy'] as num? ?? 0).toDouble(),
-            ),
-            (data['omega'] as num? ?? 0).toDouble(),
+            normVx * 9.0,
+            -normVy * 16.0, // flip Y; normVy * ch / (ch/16) = normVy * 16.0
+            worldOmega,
           );
           _physicsWorld.setRockLockedBy(id, null);
         });
@@ -328,18 +344,30 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         for (final rs in list) {
           final rid = rs['id'] as int? ?? -1;
           if (!_physicsWorld.rockIds.contains(rid)) continue;
-          _physicsWorld.setLerpTarget(
+          // Teleport directly — rocks are already settled, no lerp needed.
+          _physicsWorld.teleportRock(
             rid,
-            Offset(
-              (rs['x'] as num).toDouble(),
-              (rs['y'] as num).toDouble(),
-            ),
+            (rs['x'] as num).toDouble(),
+            (rs['y'] as num).toDouble(),
+            (rs['angle'] as num? ?? 0).toDouble(),
+          );
+        }
+
+      case 'periodicSync':
+        final syncList = data['rocks'] as List<dynamic>? ?? [];
+        for (final rs in syncList) {
+          final rid = rs['id'] as int? ?? -1;
+          if (!_physicsWorld.rockIds.contains(rid)) continue;
+          _physicsWorld.applyDriftCorrection(
+            rid,
+            (rs['x'] as num).toDouble(),
+            (rs['y'] as num).toDouble(),
             (rs['angle'] as num? ?? 0).toDouble(),
           );
         }
 
       case 'newRecord':
-        final bh = (data['bestHeight'] as num? ?? 0).toDouble();
+        final bh = (data['bestHeight'] as num? ?? 0).toDouble() * _canvasHeight;
         if (bh > _bestHeight) {
           setState(() => _bestHeight = bh);
           _triggerCelebration();
@@ -361,43 +389,83 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     }
   }
 
-  void _sendLockRock(int id) =>
-      _sendAction({'type': 'lockRock', 'rockId': id});
+  void _sendLockRock(int id) {
+    final norm = _physicsWorld.getRockNormPos(id);
+    _sendAction({
+      'type': 'lockRock',
+      'rockId': id,
+      'x': norm.dx,
+      'y': norm.dy,
+      'angle': _physicsWorld.getRockWorldAngle(id),
+    });
+  }
 
-  void _sendDragUpdate(int id, Offset pos, double angle) => _sendAction({
-        'type': 'dragUpdate',
-        'rockId': id,
-        'x': pos.dx,
-        'y': pos.dy,
-        'angle': angle,
-      });
+  // Positions sent as normalised canvas fractions (0–1) so they are
+  // device-independent. Angles sent in world-space CCW radians.
+  void _sendDragUpdate(int id) {
+    final norm = _physicsWorld.getRockNormPos(id);
+    _sendAction({
+      'type': 'dragUpdate',
+      'rockId': id,
+      'x': norm.dx,
+      'y': norm.dy,
+      'angle': _physicsWorld.getRockWorldAngle(id),
+    });
+  }
 
-  void _sendReleaseRock(int id, Offset pos, Offset vel, double omega) =>
-      _sendAction({
-        'type': 'releaseRock',
-        'rockId': id,
-        'x': pos.dx,
-        'y': pos.dy,
-        'vx': vel.dx,
-        'vy': vel.dy,
-        'omega': omega,
-      });
+  void _sendReleaseRock(int id, Offset vel, double screenOmega) {
+    final norm = _physicsWorld.getRockNormPos(id);
+    _sendAction({
+      'type': 'releaseRock',
+      'rockId': id,
+      'x': norm.dx,
+      'y': norm.dy,
+      'angle': _physicsWorld.getRockWorldAngle(id), // góc tại thời điểm thả
+      'vx': vel.dx / _canvasWidth,   // normalised
+      'vy': vel.dy / _canvasHeight,  // normalised
+      'omega': -screenOmega,         // screen CW → world CCW
+    });
+  }
+
+  // Host-only: broadcast settled rock positions so clients can correct drift.
+  // Skips rocks that are awake (flying) or kinematic (held) — those are
+  // handled by releaseRock / dragUpdate respectively.
+  // Host-only: broadcast all rock positions at 20Hz so clients correct drift.
+  // Kinematic (held) rocks are excluded — their positions come via dragUpdate.
+  void _sendPeriodicSync() {
+    final rocks = _physicsWorld.rockIds
+        .where((id) => !_physicsWorld.isRockKinematic(id))
+        .map((id) {
+          final norm = _physicsWorld.getRockNormPos(id);
+          return {
+            'id': id,
+            'x': norm.dx,
+            'y': norm.dy,
+            'angle': _physicsWorld.getRockWorldAngle(id),
+          };
+        }).toList();
+    if (rocks.isEmpty) return;
+    _sendAction({'type': 'periodicSync', 'rocks': rocks});
+  }
 
   void _sendSnapshot() {
     if (!_physicsReady) return;
     _sendAction({
       'type': 'snapshot',
-      'rocks': _physicsWorld.rockIds.map((id) => {
-            'id': id,
-            'x': _physicsWorld.getRockScreenPos(id).dx,
-            'y': _physicsWorld.getRockScreenPos(id).dy,
-            'angle': _physicsWorld.getRockScreenAngle(id),
-          }).toList(),
+      'rocks': _physicsWorld.rockIds.map((id) {
+        final norm = _physicsWorld.getRockNormPos(id);
+        return {
+          'id': id,
+          'x': norm.dx,
+          'y': norm.dy,
+          'angle': _physicsWorld.getRockWorldAngle(id),
+        };
+      }).toList(),
     });
   }
 
   void _sendNewRecord(double height) =>
-      _sendAction({'type': 'newRecord', 'bestHeight': height});
+      _sendAction({'type': 'newRecord', 'bestHeight': height / _canvasHeight});
 
   // ─────────────────────────────────────────────────────────────
   // Physics tick
@@ -454,11 +522,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         const Duration(milliseconds: 100),
         (_) {
           if (_draggedId == id && _physicsReady) {
-            _sendDragUpdate(
-              id,
-              _physicsWorld.getRockScreenPos(id),
-              _physicsWorld.getRockScreenAngle(id),
-            );
+            _sendDragUpdate(id);
           }
         },
       );
@@ -496,13 +560,12 @@ class _RockBalancingModalState extends State<RockBalancingModal>
     final releaseVel = speed > 1200 ? _dragVel / speed * 1200 : _dragVel;
     final screenOmega = (releaseVel.dx * 0.04).clamp(-6.0, 6.0);
 
-    final releasePos = _physicsWorld.getRockScreenPos(_draggedId!);
     final id = _draggedId!;
 
     setState(() => _draggedId = null);
 
     _physicsWorld.releaseRock(id, releaseVel, screenOmega);
-    _sendReleaseRock(id, releasePos, releaseVel, screenOmega);
+    _sendReleaseRock(id, releaseVel, screenOmega);
 
     _snapshotTimer?.cancel();
     _snapshotTimer =
@@ -566,7 +629,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       sparkleCtrl: sparkleCtrl,
       labelCtrl: labelCtrl,
       origin: Offset(topX, topY),
-      label: '↑ ${(_bestHeight / 10).toStringAsFixed(1)} cm',
+      label: '↑ ${(_bestHeight / _canvasHeight * 100).toStringAsFixed(1)} cm',
     );
 
     setState(() => _celebs.add(celeb));
@@ -613,7 +676,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${l10n.maxHeightLabel}: ${(_bestHeight / 10).toStringAsFixed(1)} cm',
+            '${l10n.maxHeightLabel}: ${(_bestHeight / _canvasHeight * 100).toStringAsFixed(1)} cm',
             style: AppTypography.bodyMedium(context, color: theme.text),
           ),
           const SizedBox(height: 8),
@@ -642,8 +705,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
-    context.watch<GameRoomProvider>();
-
     final renderData = _physicsReady
         ? _physicsWorld.buildRenderData(_draggedId)
         : const <RockRenderData>[];
@@ -656,7 +717,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
           child: Row(
             children: [
               Text(
-                '${l10n.record}: ${(_bestHeight / 10).toStringAsFixed(1)} cm',
+                '${l10n.record}: ${(_bestHeight / _canvasHeight * 100).toStringAsFixed(1)} cm',
                 style: AppTypography.bodySmall(context,
                     color: theme.primary, fontWeight: FontWeight.bold),
               ),

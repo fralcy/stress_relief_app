@@ -35,6 +35,7 @@ enum LobbyErrorType { denied, kicked }
 class GameRoomProvider extends ChangeNotifier {
   GameRoom? _room;
   Map<String, dynamic> _gameState = {};
+  Map<String, dynamic> _initialGameParams = {};
   Map<String, dynamic>? _gameResults;
   String _localPlayerId = '';
   String _localDisplayName = '';
@@ -69,6 +70,10 @@ class GameRoomProvider extends ChangeNotifier {
 
   /// State game hiện tại (shape tuỳ theo từng game).
   Map<String, dynamic> get gameState => _gameState;
+
+  /// Tham số khởi tạo game (rockCount, rockSeed, …). Chỉ được ghi bởi
+  /// [startGame] và gameStart event — không bao giờ bị gameplay messages ghi đè.
+  Map<String, dynamic> get initialGameParams => _initialGameParams;
 
   /// Kết quả game sau khi [GameRoomStatus.finished].
   Map<String, dynamic>? get gameResults => _gameResults;
@@ -183,6 +188,7 @@ class GameRoomProvider extends ChangeNotifier {
   /// Bắt đầu game (host only). Kèm [initialState] phù hợp với [GameType].
   void startGame(Map<String, dynamic> initialState) {
     if (!isHost) return;
+    _initialGameParams = initialState;
     _gameState = initialState;
     _room = _room?.copyWith(status: GameRoomStatus.playing);
     LanService().broadcastMessage(
@@ -251,6 +257,7 @@ class GameRoomProvider extends ChangeNotifier {
     LanService().sendMessage(GameMessage.playerLeave(_localPlayerId));
     _room = null;
     _gameState = {};
+    _initialGameParams = {};
     _gameResults = null;
     _playerSocketIds.clear();
     notifyListeners();
@@ -260,6 +267,7 @@ class GameRoomProvider extends ChangeNotifier {
   void resetRoom() {
     _room = null;
     _gameState = {};
+    _initialGameParams = {};
     _gameResults = null;
     _playerSocketIds.clear();
     notifyListeners();
@@ -306,7 +314,7 @@ class GameRoomProvider extends ChangeNotifier {
             // Mid-game rejoin: push gameStart + snapshotAck so client can
             // open the game modal and request a full snapshot.
             LanService().sendMessage(
-              GameMessage.gameStart(_localPlayerId, _gameState,
+              GameMessage.gameStart(_localPlayerId, _initialGameParams,
                   targetId: socketId),
             );
             LanService().sendMessage(
@@ -385,6 +393,7 @@ class GameRoomProvider extends ChangeNotifier {
         }
 
       case GameEvent.gameStart:
+        _initialGameParams = gm.data;
         _gameState = gm.data;
         _room = _room?.copyWith(status: GameRoomStatus.playing);
         notifyListeners();
