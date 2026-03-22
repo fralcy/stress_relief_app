@@ -61,6 +61,8 @@ class LanService {
 
   LanRole _role = LanRole.none;
   String? _localIp;
+  String? _lastHostIp;
+  int _lastHostPort = 8765;
 
   StreamSubscription? _serverSub;
   StreamSubscription? _clientSub;
@@ -87,6 +89,13 @@ class LanService {
 
   /// Địa chỉ IP WiFi của thiết bị này (được set khi startHosting).
   String? get localIp => _localIp;
+
+  /// IP and port of the last host this device connected to as a client.
+  String? get lastHostIp => _lastHostIp;
+  int get lastHostPort => _lastHostPort;
+
+  /// Fires once when the client connection drops unexpectedly.
+  Stream<void> get connectionLost => _client.onDisconnected;
 
   /// Unified stream nhận tất cả event từ server hoặc client.
   ///
@@ -158,6 +167,8 @@ class LanService {
   /// Nếu đang ở role khác, tự động dừng trước.
   Future<void> connectByAddress(String ip, int port) async {
     await _resetRole();
+    _lastHostIp = ip;
+    _lastHostPort = port;
     await _client.connect(ip, port);
 
     if (!_client.isConnected) return; // connect thất bại
@@ -205,6 +216,9 @@ class LanService {
         break;
     }
   }
+
+  /// Force-close a specific client socket by server-internal socketId (host only).
+  Future<void> closeClient(String socketId) => _server.closeClient(socketId);
 
   /// Broadcast [msg] đến tất cả client (host only).
   void broadcastMessage(LanMessage msg) {

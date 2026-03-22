@@ -107,6 +107,9 @@ class LanServer {
       return;
     }
 
+    // Detect dead clients within ~10 s without manual heartbeat code.
+    ws.pingInterval = const Duration(seconds: 5);
+
     final clientId = _generateClientId();
     _clients[clientId] = ws;
 
@@ -123,6 +126,16 @@ class LanServer {
       onError: (_) => _clients.remove(clientId),
       cancelOnError: true,
     );
+  }
+
+  /// Force-closes a specific client socket (zombie player cleanup).
+  Future<void> closeClient(String clientId) async {
+    final ws = _clients[clientId];
+    if (ws == null) return;
+    _clients.remove(clientId);
+    try {
+      await ws.close(WebSocketStatus.goingAway);
+    } catch (_) {}
   }
 
   void _safeSend(String clientId, WebSocket ws, String json) {

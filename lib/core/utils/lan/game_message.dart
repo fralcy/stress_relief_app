@@ -38,6 +38,15 @@ enum GameEvent {
 
   /// Host → broadcast: kết thúc game kèm kết quả.
   gameEnd,
+
+  /// Client → host (targeted): request a full world snapshot after mid-game rejoin.
+  snapshotRequest,
+
+  /// Host → client (targeted): ACK for snapshotRequest — sent immediately before building snapshot.
+  snapshotAck,
+
+  /// Host → client (targeted): full world state for mid-game rejoin.
+  fullSnapshot,
 }
 
 // ============================================================
@@ -131,9 +140,12 @@ class GameMessage {
         targetId: socketTargetId,
       );
 
+  /// Pass [targetId] (server socket ID) to send only to a reconnecting client.
   static LanMessage gameStart(
-          String senderId, Map<String, dynamic> initialState) =>
-      LanMessage.data(senderId, _wrap(GameEvent.gameStart, initialState));
+          String senderId, Map<String, dynamic> initialState,
+          {String? targetId}) =>
+      LanMessage.data(senderId, _wrap(GameEvent.gameStart, initialState),
+          targetId: targetId);
 
   static LanMessage playerAction(
           String senderId, Map<String, dynamic> actionData) =>
@@ -146,6 +158,18 @@ class GameMessage {
   static LanMessage gameEnd(
           String senderId, Map<String, dynamic> results) =>
       LanMessage.data(senderId, _wrap(GameEvent.gameEnd, results));
+
+  static LanMessage snapshotRequest(String senderId) =>
+      LanMessage.data(senderId, _wrap(GameEvent.snapshotRequest, {}));
+
+  static LanMessage snapshotAck(String senderId, String socketTargetId) =>
+      LanMessage.data(senderId, _wrap(GameEvent.snapshotAck, {}),
+          targetId: socketTargetId);
+
+  static LanMessage fullSnapshot(
+          String senderId, String socketTargetId, Map<String, dynamic> state) =>
+      LanMessage.data(senderId, _wrap(GameEvent.fullSnapshot, state),
+          targetId: socketTargetId);
 
   // ----------------------------------------------------------
 

@@ -36,9 +36,14 @@ class LanClient {
 
   LanClientStatus _status = LanClientStatus.disconnected;
   String? _lastError;
+  bool _intentionalDisconnect = false;
 
   final StreamController<LanMessage> _controller =
       StreamController<LanMessage>.broadcast();
+
+  /// Fires once when the connection is lost unexpectedly (not via [disconnect]).
+  final StreamController<void> _disconnectController =
+      StreamController<void>.broadcast();
 
   // ----------------------------------------------------------
   // Getters
@@ -52,6 +57,9 @@ class LanClient {
 
   /// Stream các [LanMessage] nhận được từ server (host).
   Stream<LanMessage> get messages => _controller.stream;
+
+  /// Fires once when the connection drops unexpectedly (not via [disconnect]).
+  Stream<void> get onDisconnected => _disconnectController.stream;
 
   // ----------------------------------------------------------
   // Connection
@@ -94,6 +102,7 @@ class LanClient {
 
   /// Ngắt kết nối và giải phóng resource.
   Future<void> disconnect() async {
+    _intentionalDisconnect = true;
     await _sub?.cancel();
     _sub = null;
     try {
@@ -102,6 +111,7 @@ class LanClient {
     _channel = null;
     _status = LanClientStatus.disconnected;
     _lastError = null;
+    _intentionalDisconnect = false;
   }
 
   // ----------------------------------------------------------
@@ -135,8 +145,10 @@ class LanClient {
   void _onDone() {
     _sub = null;
     _channel = null;
-    if (_status != LanClientStatus.disconnected) {
-      _status = LanClientStatus.disconnected;
+    final wasConnected = _status == LanClientStatus.connected;
+    _status = LanClientStatus.disconnected;
+    if (wasConnected && !_intentionalDisconnect && !_disconnectController.isClosed) {
+      _disconnectController.add(null);
     }
   }
 
@@ -145,6 +157,9 @@ class LanClient {
     _lastError = error.toString();
     _sub = null;
     _channel = null;
+    if (!_intentionalDisconnect && !_disconnectController.isClosed) {
+      _disconnectController.add(null);
+    }
   }
 
   // ----------------------------------------------------------
@@ -154,5 +169,6 @@ class LanClient {
   void dispose() {
     disconnect();
     _controller.close();
+    _disconnectController.close();
   }
 }

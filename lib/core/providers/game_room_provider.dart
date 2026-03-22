@@ -52,6 +52,14 @@ class GameRoomProvider extends ChangeNotifier {
   final StreamController<LobbyErrorType> _lobbyErrorController =
       StreamController.broadcast();
 
+  /// Client: fires when host sends snapshotAck (rejoin ACK received).
+  final StreamController<void> _snapshotAckController =
+      StreamController.broadcast();
+
+  /// Client: fires with full game state when host sends fullSnapshot.
+  final StreamController<Map<String, dynamic>> _fullSnapshotController =
+      StreamController.broadcast();
+
   // ----------------------------------------------------------
   // Getters
   // ----------------------------------------------------------
@@ -79,6 +87,13 @@ class GameRoomProvider extends ChangeNotifier {
   /// Client lắng nghe stream này để biết khi bị từ chối hoặc kick.
   Stream<LobbyErrorType> get lobbyErrors => _lobbyErrorController.stream;
 
+  /// Client: fires when host ACKs a snapshotRequest (rejoin handshake step 1).
+  Stream<void> get snapshotAckReceived => _snapshotAckController.stream;
+
+  /// Client: fires with full game state when host sends fullSnapshot (rejoin step 2).
+  Stream<Map<String, dynamic>> get fullSnapshotReceived =>
+      _fullSnapshotController.stream;
+
   // ----------------------------------------------------------
   // Init / dispose
   // ----------------------------------------------------------
@@ -97,6 +112,8 @@ class GameRoomProvider extends ChangeNotifier {
     _lanSub?.cancel();
     _actionController.close();
     _lobbyErrorController.close();
+    _snapshotAckController.close();
+    _fullSnapshotController.close();
     super.dispose();
   }
 
@@ -239,6 +256,15 @@ class GameRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reset room state without sending a leave message (for error/disconnect cleanup).
+  void resetRoom() {
+    _room = null;
+    _gameState = {};
+    _gameResults = null;
+    _playerSocketIds.clear();
+    notifyListeners();
+  }
+
   // ----------------------------------------------------------
   // Incoming event handler
   // ----------------------------------------------------------
@@ -265,7 +291,35 @@ class GameRoomProvider extends ChangeNotifier {
     switch (gm.event) {
       case GameEvent.playerJoin:
         if (_room == null) return;
-        if (_room!.isFull) return; // phòng đầy, bỏ qua
+        final existingIdx =
+            _room!.players.indexWhere((p) => p.id == fromId);
+
+        if (existingIdx >= 0) {
+          // Returning player (reconnect). Close zombie socket if different.
+          final oldSocket = _playerSocketIds[fromId];
+          if (oldSocket != null && oldSocket != socketId) {
+            LanService().closeClient(oldSocket); // fire-and-forget
+          }
+          _playerSocketIds[fromId] = socketId;
+
+          if (_room!.status == GameRoomStatus.playing) {
+            // Mid-game rejoin: push gameStart + snapshotAck so client can
+            // open the game modal and request a full snapshot.
+            LanService().sendMessage(
+              GameMessage.gameStart(_localPlayerId, _gameState,
+                  targetId: socketId),
+            );
+            LanService().sendMessage(
+              GameMessage.snapshotAck(_localPlayerId, socketId),
+            );
+          } else {
+            _broadcastLobbyState();
+          }
+          notifyListeners();
+          return;
+        }
+
+        if (_room!.isFull) return;
         _playerSocketIds[fromId] = socketId;
         final name = gm.data['displayName'] as String? ?? fromId;
         final avatarIdx = gm.data['avatarIndex'] as int? ?? 0;
@@ -293,6 +347,17 @@ class GameRoomProvider extends ChangeNotifier {
           _actionController
               .add(GameActionEvent(playerId: fromId, data: gm.data));
         }
+
+      case GameEvent.snapshotRequest:
+        // Immediately ACK, then send current game state as fullSnapshot.
+        final socketId2 = _playerSocketIds[fromId];
+        if (socketId2 == null) return;
+        LanService().sendMessage(
+          GameMessage.snapshotAck(_localPlayerId, socketId2),
+        );
+        LanService().sendMessage(
+          GameMessage.fullSnapshot(_localPlayerId, socketId2, _gameState),
+        );
 
       default:
         break;
@@ -332,6 +397,18 @@ class GameRoomProvider extends ChangeNotifier {
         _gameResults = gm.data;
         _room = _room?.copyWith(status: GameRoomStatus.finished);
         notifyListeners();
+
+      case GameEvent.snapshotAck:
+        if (!_snapshotAckController.isClosed) {
+          _snapshotAckController.add(null);
+        }
+
+      case GameEvent.fullSnapshot:
+        _gameState = gm.data;
+        notifyListeners();
+        if (!_fullSnapshotController.isClosed) {
+          _fullSnapshotController.add(gm.data);
+        }
 
       default:
         break;
