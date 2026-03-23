@@ -8,7 +8,7 @@ import 'lan_host_info.dart';
 ///
 /// Protocol (UTF-8 text over UDP port 8766):
 ///   Client → broadcast: `PEACPAL_DISCOVER:request`
-///   Host   → unicast:   `PEACPAL_DISCOVER:response:<ip>:<wsPort>:<displayName>`
+///   Host   → unicast:   `PEACPAL_DISCOVER:response:<ip>:<wsPort>:<avatarIndex>:<displayName>`
 ///
 /// [displayName] có thể chứa ký tự Unicode (Vietnamese, v.v.).
 class LanDiscovery {
@@ -27,7 +27,7 @@ class LanDiscovery {
   /// Khi nhận được discovery request, phản hồi với thông tin
   /// IP + [wsPort] + [displayName] của thiết bị này.
   /// No-op nếu đã đang quảng bá.
-  Future<void> startAdvertising(String displayName, int wsPort) async {
+  Future<void> startAdvertising(String displayName, int wsPort, {int avatarIndex = 0}) async {
     if (_advertisingSocket != null) return;
 
     final localIp = await getLocalIp() ?? '0.0.0.0';
@@ -46,7 +46,7 @@ class LanDiscovery {
       if (data.trim() != _requestTag) return;
 
       // Phản hồi về cổng nguồn của client
-      final response = '$_responsePrefix$localIp:$wsPort:$displayName';
+      final response = '$_responsePrefix$localIp:$wsPort:$avatarIndex:$displayName';
       _advertisingSocket?.send(
         utf8.encode(response),
         datagram.address,
@@ -93,19 +93,29 @@ class LanDiscovery {
           final data = utf8.decode(datagram.data, allowMalformed: true);
           if (!data.startsWith(_responsePrefix)) return;
 
-          // Format: <ip>:<wsPort>:<displayName>
-          // displayName có thể chứa ':', nên chỉ split 2 lần đầu
+          // Format: <ip>:<wsPort>:<avatarIndex>:<displayName>
+          // displayName có thể chứa ':', nên split tối đa 3 lần đầu
           final body = data.substring(_responsePrefix.length);
           final firstColon = body.indexOf(':');
           if (firstColon < 0) return;
           final secondColon = body.indexOf(':', firstColon + 1);
           if (secondColon < 0) return;
+          final thirdColon = body.indexOf(':', secondColon + 1);
 
           final ip = body.substring(0, firstColon);
           final wsPort = int.tryParse(
             body.substring(firstColon + 1, secondColon),
           );
-          final displayName = body.substring(secondColon + 1);
+          // avatarIndex field (new format); fall back to 0 for old-format packets
+          final int avatarIndex;
+          final String displayName;
+          if (thirdColon >= 0) {
+            avatarIndex = int.tryParse(body.substring(secondColon + 1, thirdColon)) ?? 0;
+            displayName = body.substring(thirdColon + 1);
+          } else {
+            avatarIndex = 0;
+            displayName = body.substring(secondColon + 1);
+          }
 
           if (wsPort == null || ip.isEmpty) return;
 
@@ -114,6 +124,7 @@ class LanDiscovery {
               ip: ip,
               wsPort: wsPort,
               displayName: displayName,
+              avatarIndex: avatarIndex,
             ));
           }
         },

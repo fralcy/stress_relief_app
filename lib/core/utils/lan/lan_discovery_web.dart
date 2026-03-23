@@ -7,7 +7,7 @@ import 'lan_host_info.dart';
 class LanDiscovery {
   static const int discoveryPort = 8766;
 
-  Future<void> startAdvertising(String displayName, int wsPort) async {}
+  Future<void> startAdvertising(String displayName, int wsPort, {int avatarIndex = 0}) async {}
   Future<void> stopAdvertising() async {}
 
   Future<List<LanHostInfo>> scanForHosts({

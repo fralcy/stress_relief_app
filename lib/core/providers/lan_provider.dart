@@ -80,11 +80,11 @@ class LanProvider extends ChangeNotifier {
 
   /// Khởi động host mode.
   /// No-op trên web (kIsWeb).
-  Future<void> startHosting({String? displayName}) async {
+  Future<void> startHosting({String? displayName, int avatarIndex = 0}) async {
     if (kIsWeb) return;
     _setStatus(LanConnectionStatus.hosting);
     try {
-      await LanService().startHosting(displayName: displayName);
+      await LanService().startHosting(displayName: displayName, avatarIndex: avatarIndex);
     } catch (e) {
       _setError(e.toString());
     }

@@ -52,6 +52,7 @@ class RockBalancingLobbyModal extends StatefulWidget {
     return AppModal.show(
       context: context,
       title: AppLocalizations.of(context).rockBalancing,
+      maxHeight: MediaQuery.of(context).size.height * 0.92,
       enableDrag: false,
       onClose: () => _closeRequested(context),
       content: const RockBalancingLobbyModal(),
@@ -210,7 +211,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     });
 
     final lan = context.read<LanProvider>();
-    await lan.startHosting(displayName: _localName);
+    await lan.startHosting(displayName: _localName, avatarIndex: _localAvatarIndex);
     if (!mounted) return;
 
     if (lan.isActive) {
@@ -487,22 +488,22 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return switch (_state) {
       _LobbyState.idle => _buildIdle(theme, l10n),
       _LobbyState.hostStarting => _buildSpinner(theme, l10n,
-          label: 'Starting server\u2026'),
+          label: l10n.startServer),
       _LobbyState.hostLobby => _buildHostLobby(theme, l10n, room),
       _LobbyState.clientScanning => _buildSpinner(theme, l10n,
-          label: l10n.waitingForPlayers, showCancel: true),
+          label: l10n.scanning, showCancel: true),
       _LobbyState.clientScanResults =>
         _buildScanResults(theme, l10n),
       _LobbyState.clientConnecting => _buildSpinner(theme, l10n,
-          label: 'Connecting\u2026', showCancel: true),
+          label: l10n.connecting, showCancel: true),
       _LobbyState.clientPending => _buildClientPending(theme, l10n, room),
       _LobbyState.clientLobby => _buildClientLobby(theme, l10n, room),
       _LobbyState.disconnected => _buildDisconnected(theme, l10n),
       _LobbyState.clientReconnecting => _buildSpinner(theme, l10n,
-          label: 'Reconnecting\u2026 ($_reconnectAttempt/$_maxReconnectAttempts)',
+          label: '${l10n.reconnecting} ($_reconnectAttempt/$_maxReconnectAttempts)',
           showCancel: true),
       _LobbyState.syncing => _buildSpinner(theme, l10n,
-          label: 'Syncing game state\u2026'),
+          label: l10n.syncing),
       _LobbyState.error => _buildError(theme, l10n),
     };
   }
@@ -515,29 +516,38 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          '🪨  ${l10n.rockBalancing}',
-          style: AppTypography.bodyLarge(context,
-              color: theme.text, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
+        // ── Section: Settings ──────────────────────────────────
         _buildRockCountConfig(theme, l10n),
-        const SizedBox(height: 20),
-        AppButton(label: '🧘  Solo', onPressed: _onStartSolo),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
-          child: Divider(),
-        ),
-        AppButton(label: '📡  ${l10n.lobbyHost}', onPressed: _startHosting),
-        const SizedBox(height: 12),
-        AppButton(label: '🔍  ${l10n.joinGame}', onPressed: _doScan),
+
+        const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
+
+        // ── Section: Singleplayer ──────────────────────────────
+        Text(l10n.singleplayer,
+            style: AppTypography.bodyMedium(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        AppButton(label: l10n.start, onPressed: _onStartSolo),
+
+        const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
+
+        // ── Section: Multiplayer ───────────────────────────────
+        Text(l10n.multiplayer,
+            style: AppTypography.bodyMedium(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        AppButton(label: l10n.createRoom, onPressed: _startHosting),
+        const SizedBox(height: 10),
+        AppButton(label: l10n.joinGame, onPressed: _doScan),
         if (_discoveredHosts.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          ..._discoveredHosts.map((host) => _buildHostTile(theme, host)),
+          const SizedBox(height: 14),
+          Text(l10n.hostsFound,
+              style: AppTypography.bodySmall(context,
+                  color: theme.text.withValues(alpha: 0.6))),
+          const SizedBox(height: 8),
+          ..._discoveredHosts.map((host) => _buildHostTile(theme, l10n, host)),
         ],
         if (_errorMessage != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(_errorMessage!,
               style: AppTypography.bodySmall(context, color: Colors.redAccent),
               textAlign: TextAlign.center),
@@ -559,10 +569,19 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
                 color: theme.text.withValues(alpha: 0.6))),
         if (showCancel) ...[
           const SizedBox(height: 20),
-          TextButton(
+          ElevatedButton(
             onPressed: _cancelAndGoIdle,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.border.withValues(alpha: 0.35),
+              foregroundColor: theme.text.withValues(alpha: 0.65),
+              minimumSize: const Size(160, 48),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
             child: Text(l10n.cancel,
-                style: TextStyle(color: theme.text.withValues(alpha: 0.5))),
+                style: AppTypography.labelLarge(context,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
         const SizedBox(height: 16),
@@ -574,50 +593,75 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Hosts found:',
+        Text(l10n.hostsFound,
             style: AppTypography.bodyMedium(context,
                 color: theme.text, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        ..._discoveredHosts.map((host) => _buildHostTile(theme, host)),
+        ..._discoveredHosts.map((host) => _buildHostTile(theme, l10n, host)),
         const SizedBox(height: 16),
-        AppButton(label: '🔄  Rescan', onPressed: _doScan),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _cancelAndGoIdle,
-          child: Text(l10n.cancel,
-              style: TextStyle(color: theme.text.withValues(alpha: 0.5))),
-        ),
+        _buildButtonRow(theme, l10n, actionLabel: l10n.rescan, onAction: _doScan),
       ],
     );
   }
 
-  Widget _buildHostTile(AppTheme theme, LanHostInfo host) {
-    return GestureDetector(
-      onTap: () => _connectToHost(host),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: theme.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.wifi, color: theme.primary, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                host.displayName.isNotEmpty ? host.displayName : host.ip,
-                style: AppTypography.bodyMedium(context, color: theme.text),
-              ),
+  Widget _buildHostTile(AppTheme theme, AppLocalizations l10n, LanHostInfo host) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.border),
+      ),
+      child: Row(children: [
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: Text(
+              kAvatarPresets[host.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+              style: const TextStyle(fontSize: 22),
             ),
-            Icon(Icons.chevron_right,
-                color: theme.text.withValues(alpha: 0.4), size: 18),
-          ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            host.displayName.isNotEmpty ? host.displayName : host.ip,
+            style: AppTypography.bodyMedium(context, color: theme.text),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _connectToHost(host),
+          child: _chip(theme, '>', theme.primary),
+        ),
+      ]),
+    );
+  }
+
+  /// Action button + cancel button side-by-side, same format, different colors.
+  Widget _buildButtonRow(AppTheme theme, AppLocalizations l10n,
+      {required String actionLabel, required VoidCallback? onAction}) {
+    return Row(children: [
+      Expanded(
+        child: ElevatedButton(
+          onPressed: _cancelAndGoIdle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.border.withValues(alpha: 0.35),
+            foregroundColor: theme.text.withValues(alpha: 0.65),
+            minimumSize: const Size.fromHeight(48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(l10n.cancel,
+              style: AppTypography.labelLarge(context,
+                  fontWeight: FontWeight.w600)),
         ),
       ),
-    );
+      const SizedBox(width: 8),
+      Expanded(child: AppButton(label: actionLabel, onPressed: onAction)),
+    ]);
   }
 
   Widget _buildHostLobby(
@@ -638,15 +682,9 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         const SizedBox(height: 20),
         _buildRockCountConfig(theme, l10n),
         const SizedBox(height: 16),
-        AppButton(
-          label: l10n.startGame,
-          onPressed: (room.currentRoom?.allReady ?? false) ? _onStartGame : null,
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _cancelAndGoIdle,
-          child: Text(l10n.cancel,
-              style: TextStyle(color: theme.text.withValues(alpha: 0.5))),
+        _buildButtonRow(theme, l10n,
+          actionLabel: l10n.startGame,
+          onAction: (room.currentRoom?.allReady ?? false) ? _onStartGame : null,
         ),
       ],
     );
@@ -669,10 +707,17 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         Text(l10n.pendingApproval,
             style: AppTypography.bodyMedium(context, color: theme.primary)),
         const SizedBox(height: 20),
-        TextButton(
+        ElevatedButton(
           onPressed: _cancelAndGoIdle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.border.withValues(alpha: 0.35),
+            foregroundColor: theme.text.withValues(alpha: 0.65),
+            minimumSize: const Size(160, 48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
           child: Text(l10n.cancel,
-              style: TextStyle(color: theme.text.withValues(alpha: 0.5))),
+              style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 16),
       ],
@@ -688,18 +733,12 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
       children: [
         _buildPlayerList(theme, l10n, room),
         const SizedBox(height: 20),
-        AppButton(
-          label: isReady ? l10n.notReadyLabel : l10n.readyLabel,
-          onPressed: () {
+        _buildButtonRow(theme, l10n,
+          actionLabel: isReady ? l10n.notReadyLabel : l10n.readyLabel,
+          onAction: () {
             room.setReady(!isReady);
             SfxService().buttonClick();
           },
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _cancelAndGoIdle,
-          child: Text(l10n.cancel,
-              style: TextStyle(color: theme.text.withValues(alpha: 0.5))),
         ),
       ],
     );
@@ -713,25 +752,31 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         const SizedBox(height: 16),
         Icon(Icons.wifi_off, color: Colors.redAccent, size: 40),
         const SizedBox(height: 12),
-        Text('Connection lost',
+        Text(l10n.connectionLost,
             style: AppTypography.bodyLarge(context,
                 color: theme.text, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
         if (_wasHost)
-          AppButton(
-              label: '🔄  Restart Server', onPressed: _startHosting)
+          AppButton(label: l10n.restartServer, onPressed: _startHosting)
         else ...[
-          if (hasIp)
-            AppButton(
-                label: '🔄  Reconnect', onPressed: _startReconnecting),
-          const SizedBox(height: 8),
-          AppButton(label: '🔍  ${l10n.joinGame}', onPressed: _doScan),
+          if (hasIp) ...[
+            AppButton(label: l10n.reconnect, onPressed: _startReconnecting),
+            const SizedBox(height: 8),
+          ],
+          AppButton(label: l10n.joinGame, onPressed: _doScan),
         ],
-        const SizedBox(height: 8),
-        TextButton(
+        const SizedBox(height: 16),
+        ElevatedButton(
           onPressed: _cancelAndGoIdle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.border.withValues(alpha: 0.35),
+            foregroundColor: theme.text.withValues(alpha: 0.65),
+            minimumSize: const Size.fromHeight(48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
           child: Text(l10n.cancel,
-              style: TextStyle(color: theme.text.withValues(alpha: 0.5))),
+              style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 16),
       ],
@@ -746,7 +791,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         const Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
         const SizedBox(height: 12),
         Text(
-          _errorMessage ?? 'An error occurred',
+          _errorMessage ?? l10n.syncError,
           style: AppTypography.bodyMedium(context, color: theme.text),
           textAlign: TextAlign.center,
         ),
@@ -769,7 +814,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Row(
       children: [
         Expanded(
-          child: Text(l10n.requireApproval,
+          child: Text(l10n.approveJoin,
               style: AppTypography.bodyMedium(context, color: theme.text)),
         ),
         Switch(
@@ -822,35 +867,34 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         border: Border.all(color: theme.border),
       ),
       child: Row(children: [
-        SizedBox(
-          width: 36,
-          height: 36,
-          child: Center(
-            child: Text(
-              kAvatarPresets[
-                  p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
-              style: const TextStyle(fontSize: 22),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-            child: Text(p.displayName,
-                style: AppTypography.bodyMedium(context, color: theme.text))),
-        if (p.isHost) _chip(theme, l10n.lobbyHost, theme.primary),
-        const SizedBox(width: 8),
+        // Ready indicator — always present, left-aligned for consistent layout
         Icon(
           p.isReady ? Icons.check_circle : Icons.radio_button_unchecked,
           color: p.isReady ? Colors.green : theme.border,
           size: 20,
         ),
-        if (isHost && !p.isHost) ...[
-          const SizedBox(width: 6),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: Text(
+              kAvatarPresets[p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+              style: const TextStyle(fontSize: 22),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+            child: Text(p.displayName,
+                style: AppTypography.bodyMedium(context, color: theme.text))),
+        if (p.isHost)
+          _chip(theme, l10n.lobbyHost, theme.primary)
+        else if (isHost)
           GestureDetector(
             onTap: () => room.kickPlayer(p.id),
-            child: _chip(theme, l10n.kickLabel, Colors.red),
+            child: _chip(theme, l10n.remove, Colors.red),
           ),
-        ],
       ]),
     );
   }
@@ -860,7 +904,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('⏳  ${l10n.pendingApproval}',
+        Text(l10n.pendingApproval,
             style: AppTypography.bodyMedium(context,
                 color: theme.text, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
@@ -898,7 +942,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
                 const SizedBox(width: 6),
                 GestureDetector(
                   onTap: () => room.kickPlayer(p.id),
-                  child: _chip(theme, l10n.kickLabel, Colors.red),
+                  child: _chip(theme, l10n.remove, Colors.red),
                 ),
               ]),
             )),
@@ -929,7 +973,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
               onChanged: (v) => setState(() => _rockCount = v.round()),
             ),
           ),
-          Text('16',
+          Text('20',
               style: AppTypography.bodySmall(context,
                   color: theme.text.withValues(alpha: 0.5))),
         ]),

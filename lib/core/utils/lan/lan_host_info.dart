@@ -3,11 +3,13 @@ class LanHostInfo {
   final String ip;
   final int wsPort;
   final String displayName;
+  final int avatarIndex;
 
   const LanHostInfo({
     required this.ip,
     required this.wsPort,
     required this.displayName,
+    this.avatarIndex = 0,
   });
 
   @override

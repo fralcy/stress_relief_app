@@ -113,6 +113,7 @@ class LanService {
   /// No-op trên web (kIsWeb).
   Future<void> startHosting({
     String? displayName,
+    int avatarIndex = 0,
     int port = 8765,
   }) async {
     if (kIsWeb) return;
@@ -122,7 +123,7 @@ class LanService {
     final name = displayName ?? _localIp ?? 'PeacePal Host';
 
     await _server.start(port: port);
-    await _discovery.startAdvertising(name, port);
+    await _discovery.startAdvertising(name, port, avatarIndex: avatarIndex);
     _role = LanRole.host;
 
     // Pipe server events vào unified stream
