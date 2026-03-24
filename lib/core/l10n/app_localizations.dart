@@ -202,6 +202,18 @@ abstract class AppLocalizations {
   String get maxHeightLabel;
   String get maxFish;
 
+  // Firefly Catching
+  String get fireflyCatching;
+  String get jar;
+  String get lamp;
+  String get caught;
+  String get attractMode;
+  String get repelMode;
+  String get maxFireflyCount;
+  String get roleJar;
+  String get roleLamp;
+  String get switchTool;
+
   // Painting Room
   String get art;
   String get canvasName;

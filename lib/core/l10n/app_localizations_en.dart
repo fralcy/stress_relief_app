@@ -426,6 +426,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get maxFish => 'Max 10 fish';
 
+  // Firefly Catching
+  @override String get fireflyCatching => 'Firefly Catching';
+  @override String get jar => 'Jar';
+  @override String get lamp => 'Lamp';
+  @override String get caught => 'Caught';
+  @override String get attractMode => 'Attract';
+  @override String get repelMode => 'Repel';
+  @override String get maxFireflyCount => 'Max fireflies on screen';
+  @override String get roleJar => 'Jar holder';
+  @override String get roleLamp => 'Lamp holder';
+  @override String get switchTool => 'Switch';
+
   // Painting Room
   @override
   String get art => 'Art';

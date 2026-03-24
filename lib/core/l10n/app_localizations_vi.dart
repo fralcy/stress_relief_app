@@ -429,6 +429,18 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get maxFish => 'Tối đa 10 con';
 
+  // Firefly Catching
+  @override String get fireflyCatching => 'Hứng Đom Đóm';
+  @override String get jar => 'Lọ';
+  @override String get lamp => 'Đèn';
+  @override String get caught => 'Đã bắt';
+  @override String get attractMode => 'Thu hút';
+  @override String get repelMode => 'Xua đuổi';
+  @override String get maxFireflyCount => 'Số đom đóm tối đa trên màn hình';
+  @override String get roleJar => 'Người cầm lọ';
+  @override String get roleLamp => 'Người cầm đèn';
+  @override String get switchTool => 'Đổi';
+
   // Painting Room
   @override
   String get art => 'Vẽ tranh';
