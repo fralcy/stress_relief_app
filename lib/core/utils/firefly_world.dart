@@ -1,39 +1,57 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart' show Color, Offset;
 
+enum FireflyRole { lamp, jar }
+
 // ── Render data passed to CustomPainter ──────────────────────────────────
 
 class FireflyRenderData {
   final int id;
   final Offset position;
   final double glowPhase; // 0..2π — drives size, opacity, colour pulsing
+  final bool isLit;       // true when inside a lamp radius → can be caught
 
   const FireflyRenderData({
     required this.id,
     required this.position,
     required this.glowPhase,
+    required this.isLit,
+  });
+}
+
+class ToolRenderData {
+  final int id;
+  final Offset position;
+  final FireflyRole type;
+  final double brightness;  // lamp only: 0 = attract/dim, 1 = repel/bright
+  final Color lampColor;    // lerped; only meaningful for lamp
+
+  const ToolRenderData({
+    required this.id,
+    required this.position,
+    required this.type,
+    required this.brightness,
+    required this.lampColor,
   });
 }
 
 class FireflyWorldRenderSnapshot {
   final List<FireflyRenderData> fireflies; // only active (visible) fireflies
-  final Offset lampPos;
-  final double lampBrightness;  // 0..1 (0 = attract/dim, 1 = repel/bright)
-  final Color lampColor;        // lerped between attract/repel colours
-  final Offset jarPos;
-  final int totalCaught;        // cumulative score (increases forever)
+  final List<ToolRenderData> tools;
+  final int totalCaught;                   // cumulative score
+  final double lampRadius;                 // px — for painter glow zone
+  final double jarCatchRadius;             // px — for painter jar outline
 
   const FireflyWorldRenderSnapshot({
     required this.fireflies,
-    required this.lampPos,
-    required this.lampBrightness,
-    required this.lampColor,
-    required this.jarPos,
+    required this.tools,
     required this.totalCaught,
+    required this.lampRadius,
+    required this.jarCatchRadius,
   });
 }
 
-// ── Internal per-firefly state ────────────────────────────────────────────
+// ── Internal state ────────────────────────────────────────────────────────
 
 class _FireflyData {
   final int id;
@@ -54,21 +72,32 @@ class _FireflyData {
   });
 }
 
+class _ToolState {
+  Offset position;
+  FireflyRole type;
+  double brightness = 0.0;  // lamp: 0 = attract/dim, 1 = repel/bright
+  double colorT = 0.0;      // animated lerp value for colour transition
+
+  _ToolState({required this.position, required this.type});
+}
+
 // ── FireflyWorld ──────────────────────────────────────────────────────────
 
 class FireflyWorld {
-  // ── Tunables ────────────────────────────────────────────────────────────
+  // ── Fixed tunables ──────────────────────────────────────────────────────
   static const double _maxSpeed = 160.0;         // px/s
   static const double _maxTurnRate = 1.8;        // rad/s (wander)
   static const double _dampingBase = 0.96;       // per-frame factor at 60Hz
-  static const double _lampRadius = 220.0;       // px — influence zone
-  static const double _lampStrength = 18000.0;   // force magnitude
-  static const double _epsilon = 200.0;          // softened gravity ε
-  static const double _jarCatchRadius = 44.0;    // px — catch hitbox
-  static const double _boundaryMargin = 40.0;    // px — soft boundary zone
+  static const double _lampStrength = 300.0;     // px/s² at lamp centre (linear falloff)
   static const double _boundaryForce = 280.0;    // px/s² — push back to centre
+
+  // ── Canvas-relative tunables (computed in constructor) ───────────────────
+  late final double _lampRadius;      // _cw * 0.20 — influence zone
+  late final double _jarCatchRadius;  // _cw * 0.07 — catch hitbox
+  late final double _boundaryMargin;  // _cw * 0.09 — soft boundary zone
   static const double _glowSpeed = 1.3;          // rad/s — pulse rate
   static const double _respawnDelay = 2.0;       // seconds before respawn
+  static const double _colorTransitionSpeed = 2.0; // s to full transition
 
   // Lamp colour constants
   static const Color _attractColor = Color(0xFF5BA3FF); // cool blue — dim/attract
@@ -80,15 +109,12 @@ class FireflyWorld {
 
   // ── Mutable state ───────────────────────────────────────────────────────
   final List<_FireflyData> _fireflies = [];
+  final Map<int, _ToolState> _tools = {};
   final math.Random _rng;
+  int _totalCaught = 0;
 
-  Offset _lampPos;
-  double _lampBrightness = 0.0;   // 0 = attract, 1 = repel
-  double _lampColorT = 0.0;       // animated lerp value for colour transition
-  static const double _colorTransitionSpeed = 2.0; // seconds to full transition
-
-  Offset _jarPos;
-  int _totalCaught = 0;           // cumulative score
+  // Client-side lerp targets (set by setLerpTarget, applied in stepClient)
+  final Map<int, Offset> _lerpTargets = {};
 
   void Function()? onFireflyCaught;
 
@@ -103,11 +129,15 @@ class FireflyWorld {
     required int seed,
   })  : _cw = canvasWidth,
         _ch = canvasHeight,
-        _rng = math.Random(seed),
-        _lampPos = Offset(canvasWidth * 0.35, canvasHeight * 0.5),
-        _jarPos  = Offset(canvasWidth * 0.65, canvasHeight * 0.5) {
+        _rng = math.Random(seed) {
+    _lampRadius     = _cw * 0.20;
+    _jarCatchRadius = _cw * 0.07;
+    _boundaryMargin = _cw * 0.09;
     _spawnFireflies(maxOnScreen, seed);
   }
+
+  double get lampRadius     => _lampRadius;
+  double get jarCatchRadius => _jarCatchRadius;
 
   void _spawnFireflies(int count, int seed) {
     final rng = math.Random(seed);
@@ -143,32 +173,86 @@ class FireflyWorld {
     f.respawnTimer = 0.0;
   }
 
-  // ── Public controls ──────────────────────────────────────────────────────
+  // ── Tool management ──────────────────────────────────────────────────────
 
-  void setLampPos(Offset screenPos) => _lampPos = screenPos;
+  /// Register a player's tool. Call once per player on game start.
+  void addTool(int id, FireflyRole type, Offset pos) {
+    _tools[id] = _ToolState(position: pos, type: type);
+  }
 
-  /// [brightness] 0.0 = dim/attract, 1.0 = bright/repel.
-  void setLampBrightness(double brightness) =>
-      _lampBrightness = brightness.clamp(0.0, 1.0);
+  /// Remove a tool (e.g. player disconnected mid-game).
+  void removeTool(int id) => _tools.remove(id);
 
-  void setJarPos(Offset screenPos) => _jarPos = screenPos;
+  void updateToolPos(int id, Offset pos) { _tools[id]?.position = pos; }
+  void switchToolType(int id, FireflyRole type) { _tools[id]?.type = type; }
+
+  /// [brightness] 0.0 = dim/attract, 1.0 = bright/repel. Lamp only.
+  void setToolBrightness(int id, double brightness) {
+    final t = _tools[id];
+    if (t != null) t.brightness = brightness.clamp(0.0, 1.0);
+  }
+
+  // ── Lit check ────────────────────────────────────────────────────────────
+
+  bool _isLit(Offset pos) => _tools.values.any(
+      (t) => t.type == FireflyRole.lamp && (pos - t.position).distance < _lampRadius);
+
+  // ── Client-side lerp ─────────────────────────────────────────────────────
+
+  /// Called by client when a fireflySync packet arrives.
+  /// Also revives a firefly that was caught locally (host has respawned it).
+  void setLerpTarget(int id, Offset pos, double phase) {
+    _lerpTargets[id] = pos;
+    final idx = _fireflies.indexWhere((f) => f.id == id);
+    if (idx >= 0 && _fireflies[idx].caught) {
+      _fireflies[idx].caught = false;
+      _fireflies[idx].respawnTimer = 0;
+      _fireflies[idx].glowPhase = phase;
+    }
+  }
+
+  /// Client-only physics step: lerp firefly positions toward host targets
+  /// and advance glow phases. Does NOT run wander/force physics.
+  bool stepClient(double dt) {
+    for (final t in _tools.values) {
+      if (t.type != FireflyRole.lamp) continue;
+      final target = t.brightness;
+      if ((t.colorT - target).abs() > 0.005) {
+        final s = _colorTransitionSpeed * dt;
+        t.colorT = (t.colorT + (target - t.colorT).sign * s).clamp(0.0, 1.0);
+      } else {
+        t.colorT = target;
+      }
+    }
+    for (final f in _fireflies) {
+      if (f.caught) continue;
+      final target = _lerpTargets[f.id];
+      if (target != null) {
+        f.position = Offset.lerp(f.position, target, 0.18)!;
+      }
+      f.glowPhase = (f.glowPhase + _glowSpeed * dt) % (2 * math.pi);
+    }
+    return true;
+  }
 
   // ── Simulation step ──────────────────────────────────────────────────────
 
-  /// Advance simulation by [dt] seconds. Returns true if any firefly moved.
   bool step(double dt) {
-    // Animate lamp colour transition
-    final targetT = _lampBrightness;
-    if ((_lampColorT - targetT).abs() > 0.005) {
-      final step = _colorTransitionSpeed * dt;
-      _lampColorT = (_lampColorT + (targetT - _lampColorT).sign * step)
-          .clamp(0.0, 1.0);
-    } else {
-      _lampColorT = targetT;
+    // Animate colour transition for each lamp tool
+    for (final t in _tools.values) {
+      if (t.type != FireflyRole.lamp) continue;
+      final target = t.brightness;
+      if ((t.colorT - target).abs() > 0.005) {
+        final step = _colorTransitionSpeed * dt;
+        t.colorT = (t.colorT + (target - t.colorT).sign * step).clamp(0.0, 1.0);
+      } else {
+        t.colorT = target;
+      }
     }
 
     bool moved = false;
     final damping = math.pow(_dampingBase, dt * 60).toDouble();
+    final cx = _cw / 2, cy = _ch / 2;
 
     for (final f in _fireflies) {
       // Respawn countdown
@@ -181,33 +265,30 @@ class FireflyWorld {
 
       // 1. Wander — gentle random steering
       f.wanderAngle += (_rng.nextDouble() - 0.5) * 2 * _maxTurnRate * dt;
-      final wanderForce = Offset(
-        math.cos(f.wanderAngle) * 60.0,
-        math.sin(f.wanderAngle) * 60.0,
-      );
       f.velocity = Offset(
-        f.velocity.dx + wanderForce.dx * dt,
-        f.velocity.dy + wanderForce.dy * dt,
+        f.velocity.dx + math.cos(f.wanderAngle) * 60.0 * dt,
+        f.velocity.dy + math.sin(f.wanderAngle) * 60.0 * dt,
       );
 
-      // 2. Lamp influence (softened gravity, avoids singularity)
-      final toFirefly = f.position - _lampPos;
-      final dist = toFirefly.distance;
-      if (dist < _lampRadius) {
-        final force = _lampStrength / (dist * dist + _epsilon);
-        final dir = dist > 0.01
-            ? Offset(toFirefly.dx / dist, toFirefly.dy / dist)
-            : Offset.zero;
-        // Dim (attract): pull toward lamp. Bright (repel): push away.
-        final sign = _lampBrightness >= 0.5 ? 1.0 : -1.0;
-        f.velocity = Offset(
-          f.velocity.dx + dir.dx * force * sign * dt,
-          f.velocity.dy + dir.dy * force * sign * dt,
-        );
+      // 2. Lamp influence — linear falloff, much stronger than wander
+      for (final tool in _tools.values) {
+        if (tool.type != FireflyRole.lamp) continue;
+        final toFirefly = f.position - tool.position;
+        final dist = toFirefly.distance;
+        if (dist < _lampRadius && dist > 0.01) {
+          final t = 1.0 - (dist / _lampRadius); // 1 at centre, 0 at edge
+          final force = _lampStrength * t;
+          final dir = Offset(toFirefly.dx / dist, toFirefly.dy / dist);
+          // Dim (attract): pull toward lamp. Bright (repel): push away.
+          final sign = tool.brightness >= 0.5 ? 1.0 : -1.0;
+          f.velocity = Offset(
+            f.velocity.dx + dir.dx * force * sign * dt,
+            f.velocity.dy + dir.dy * force * sign * dt,
+          );
+        }
       }
 
       // 3. Soft boundary — push toward centre when near edge
-      final cx = _cw / 2, cy = _ch / 2;
       if (f.position.dx < _boundaryMargin) {
         f.velocity = Offset(f.velocity.dx + _boundaryForce * dt, f.velocity.dy);
       } else if (f.position.dx > _cw - _boundaryMargin) {
@@ -218,7 +299,6 @@ class FireflyWorld {
       } else if (f.position.dy > _ch - _boundaryMargin) {
         f.velocity = Offset(f.velocity.dx, f.velocity.dy - _boundaryForce * dt);
       }
-      // Gentle nudge toward centre (prevents corner clumping)
       f.velocity = Offset(
         f.velocity.dx + (cx - f.position.dx) * 0.02 * dt,
         f.velocity.dy + (cy - f.position.dy) * 0.02 * dt,
@@ -229,9 +309,7 @@ class FireflyWorld {
 
       // 5. Speed clamp
       final speed = f.velocity.distance;
-      if (speed > _maxSpeed) {
-        f.velocity = f.velocity / speed * _maxSpeed;
-      }
+      if (speed > _maxSpeed) f.velocity = f.velocity / speed * _maxSpeed;
 
       // 6. Integrate position
       f.position = Offset(
@@ -250,14 +328,19 @@ class FireflyWorld {
 
   // ── Catch check ──────────────────────────────────────────────────────────
 
-  /// Check if jar overlaps any active firefly. Returns ids of newly caught.
+  /// Check if any jar overlaps an active, lit firefly. Returns caught ids.
   List<int> checkCatch() {
     final caught = <int>[];
     for (final f in _fireflies) {
       if (f.caught) continue;
-      if ((f.position - _jarPos).distance < _jarCatchRadius) {
-        _markCaught(f);
-        caught.add(f.id);
+      if (!_isLit(f.position)) continue; // must be illuminated to catch
+      for (final tool in _tools.values) {
+        if (tool.type != FireflyRole.jar) continue;
+        if ((f.position - tool.position).distance < _jarCatchRadius) {
+          _markCaught(f);
+          caught.add(f.id);
+          break;
+        }
       }
     }
     return caught;
@@ -265,8 +348,8 @@ class FireflyWorld {
 
   /// Mark a specific firefly as caught (used by LAN catchEvent from host).
   void catchFireflyById(int id) {
-    final f = _fireflies.firstWhere((x) => x.id == id, orElse: () => _fireflies.first);
-    if (!f.caught) _markCaught(f);
+    final idx = _fireflies.indexWhere((x) => x.id == id);
+    if (idx >= 0 && !_fireflies[idx].caught) _markCaught(_fireflies[idx]);
   }
 
   void _markCaught(_FireflyData f) {
@@ -279,41 +362,60 @@ class FireflyWorld {
   // ── Render snapshot ──────────────────────────────────────────────────────
 
   FireflyWorldRenderSnapshot buildRenderData() {
-    final lampColor = Color.lerp(_attractColor, _repelColor, _lampColorT)!;
+    final toolRender = _tools.entries.map((e) {
+      final t = e.value;
+      final lampColor = Color.lerp(_attractColor, _repelColor, t.colorT)!;
+      return ToolRenderData(
+        id: e.key,
+        position: t.position,
+        type: t.type,
+        brightness: t.brightness,
+        lampColor: lampColor,
+      );
+    }).toList();
+
+    final fireflies = _fireflies
+        .where((f) => !f.caught)
+        .map((f) => FireflyRenderData(
+              id: f.id,
+              position: f.position,
+              glowPhase: f.glowPhase,
+              isLit: _isLit(f.position),
+            ))
+        .toList();
+
     return FireflyWorldRenderSnapshot(
-      fireflies: _fireflies
-          .where((f) => !f.caught)
-          .map((f) => FireflyRenderData(
-                id: f.id,
-                position: f.position,
-                glowPhase: f.glowPhase,
-              ))
-          .toList(),
-      lampPos: _lampPos,
-      lampBrightness: _lampBrightness,
-      lampColor: lampColor,
-      jarPos: _jarPos,
+      fireflies: fireflies,
+      tools: toolRender,
       totalCaught: _totalCaught,
+      lampRadius: _lampRadius,
+      jarCatchRadius: _jarCatchRadius,
     );
   }
 
   // ── LAN sync helpers ─────────────────────────────────────────────────────
 
-  /// Build a compact list for the 20Hz host→client sync packet.
-  /// Only includes active (visible) fireflies; caught ones are hidden.
-  List<Map<String, dynamic>> buildSyncPayload() {
-    return _fireflies
-        .where((f) => !f.caught)
-        .map((f) => {
-              'id': f.id,
-              'nx': f.position.dx / _cw,
-              'ny': f.position.dy / _ch,
-              'phase': f.glowPhase,
-            })
-        .toList();
+  /// Build a compact payload for the 20Hz host→client sync packet.
+  Map<String, dynamic> buildSyncPayload() {
+    return {
+      'fireflies': _fireflies
+          .where((f) => !f.caught)
+          .map((f) => {
+                'id': f.id,
+                'nx': f.position.dx / _cw,
+                'ny': f.position.dy / _ch,
+                'phase': f.glowPhase,
+              })
+          .toList(),
+      'tools': _tools.entries
+          .map((e) => {
+                'id': e.key,
+                'nx': e.value.position.dx / _cw,
+                'ny': e.value.position.dy / _ch,
+                'role': e.value.type.name,
+                'brightness': e.value.brightness,
+              })
+          .toList(),
+    };
   }
-
-  /// Apply a sync payload received from host.
-  List<Map<String, dynamic>> parseSyncPayload(List<dynamic> raw) =>
-      raw.cast<Map<String, dynamic>>();
 }

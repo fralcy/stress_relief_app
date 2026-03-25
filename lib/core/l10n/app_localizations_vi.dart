@@ -440,6 +440,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get roleJar => 'Người cầm lọ';
   @override String get roleLamp => 'Người cầm đèn';
   @override String get switchTool => 'Đổi';
+  @override String get selectStartingRole => 'Chọn vai trò khởi đầu';
 
   // Painting Room
   @override

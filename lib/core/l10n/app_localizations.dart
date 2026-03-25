@@ -213,6 +213,7 @@ abstract class AppLocalizations {
   String get roleJar;
   String get roleLamp;
   String get switchTool;
+  String get selectStartingRole;
 
   // Painting Room
   String get art;

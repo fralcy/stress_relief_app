@@ -437,6 +437,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get roleJar => 'Jar holder';
   @override String get roleLamp => 'Lamp holder';
   @override String get switchTool => 'Switch';
+  @override String get selectStartingRole => 'Choose starting role';
 
   // Painting Room
   @override

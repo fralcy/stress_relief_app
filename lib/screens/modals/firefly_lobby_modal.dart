@@ -8,6 +8,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
 import '../../core/providers/lan_provider.dart';
 import '../../core/utils/lan/lan_service.dart';
+import '../../core/utils/lan/lan_message.dart';
 import '../../core/utils/lan/game_message.dart';
 import '../../core/utils/lan/lan_host_info.dart';
 import '../../core/utils/lan/game_room.dart';
@@ -16,6 +17,7 @@ import '../../core/constants/avatar_presets.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_modal.dart';
+import '../../core/utils/firefly_world.dart' show FireflyRole;
 import 'firefly_modal.dart';
 
 // ──────────────────────────────────────────────────────────────
@@ -66,7 +68,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   // ── Config ───────────────────────────────────────────────
   int _fireflyCount = 10;
-  FireflyRole _hostRole = FireflyRole.lamp; // host's chosen role
+  FireflyRole _hostRole = FireflyRole.lamp;
+  FireflyRole _clientRole = FireflyRole.jar; // client's chosen role
   bool _gameStarted = false;
 
   // ── Discovery ────────────────────────────────────────────
@@ -76,11 +79,16 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
   int _reconnectAttempt = 0;
   static const int _maxReconnectAttempts = 3;
 
+  // ── Role tracking (synced across lobby) ──────────────────
+  // uid → chosen role; populated by host selection + clientRoleChange messages
+  final Map<String, FireflyRole> _playerRoles = {};
+
   // ── Subscriptions ────────────────────────────────────────
   StreamSubscription<LobbyErrorType>? _errorSub;
   StreamSubscription<void>? _disconnectSub;
   StreamSubscription<void>? _snapshotAckSub;
   StreamSubscription<Map<String, dynamic>>? _fullSnapshotSub;
+  StreamSubscription<LanIncomingEvent>? _roleSub;
   Timer? _syncTimeoutTimer;
 
   // ── Local player ─────────────────────────────────────────
@@ -98,7 +106,10 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _resumeState());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resumeState();
+      _subscribeRoleChanges();
+    });
   }
 
   @override
@@ -107,8 +118,59 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     _disconnectSub?.cancel();
     _snapshotAckSub?.cancel();
     _fullSnapshotSub?.cancel();
+    _roleSub?.cancel();
     _syncTimeoutTimer?.cancel();
     super.dispose();
+  }
+
+  void _subscribeRoleChanges() {
+    _roleSub = LanService().incomingEvents.listen((event) {
+      if (!mounted) return;
+      final gm = GameMessage.tryExtract(event.message);
+      if (gm == null) return;
+
+      if (_isHost) {
+        final uid = event.message.senderId;
+        bool changed = false;
+        // New player first message → assign default jar
+        if (!_playerRoles.containsKey(uid)) {
+          _playerRoles[uid] = FireflyRole.jar;
+          changed = true;
+        }
+        // Client explicitly changed role
+        if (gm.event == GameEvent.playerAction &&
+            gm.data['type'] == 'clientRoleChange') {
+          final roleStr = gm.data['role'] as String? ?? '';
+          _playerRoles[uid] = FireflyRole.values.firstWhere(
+              (r) => r.name == roleStr, orElse: () => FireflyRole.jar);
+          changed = true;
+        }
+        if (changed) {
+          setState(() {});
+          _broadcastRoles();
+        }
+      } else {
+        // Client receives host broadcast of full role map
+        if (gm.event == GameEvent.gameState &&
+            gm.data['type'] == 'roleUpdate') {
+          final rolesRaw = gm.data['roles'] as Map<String, dynamic>? ?? {};
+          setState(() {
+            for (final e in rolesRaw.entries) {
+              _playerRoles[e.key] = FireflyRole.values.firstWhere(
+                  (r) => r.name == e.value, orElse: () => FireflyRole.jar);
+            }
+          });
+        }
+      }
+    });
+  }
+
+  void _broadcastRoles() {
+    if (!LanService().isActive) return;
+    LanService().broadcastMessage(GameMessage.gameState(_localUid, {
+      'type': 'roleUpdate',
+      'roles': {for (final e in _playerRoles.entries) e.key: e.value.name},
+    }));
   }
 
   void _resumeState() {
@@ -203,6 +265,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       final room = context.read<GameRoomProvider>();
       room.init(_localUid, _localName, _localAvatarIndex);
       room.createRoom(GameType.catchFirefly);
+      _playerRoles[_localUid] = _hostRole;
       setState(() => _state = _LobbyState.hostLobby);
     } else {
       setState(() {
@@ -214,22 +277,26 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   void _onStartGame() {
     if (_gameStarted) return;
+    final room = context.read<GameRoomProvider>();
+    final playerOrder = (room.currentRoom?.players ?? []).map((p) => p.id).toList();
     final seed = DateTime.now().millisecondsSinceEpoch;
-    final clientRole = _hostRole == FireflyRole.lamp
-        ? FireflyRole.jar
-        : FireflyRole.lamp;
-    context.read<GameRoomProvider>().startGame({
-      'fireflyCount': _fireflyCount,
+    // Build roles map: host knows their own role, clients sent theirs via clientRoleChange
+    _playerRoles[_localUid] = _hostRole;
+    final roles = {for (final uid in playerOrder)
+      uid: (_playerRoles[uid] ??
+            (uid == _localUid ? FireflyRole.lamp : FireflyRole.jar)).name};
+    room.startGame({
+      'maxOnScreen': _fireflyCount,
       'fireflySeed': seed,
-      'hostRole': _hostRole.name,
-      'clientRole': clientRole.name,
+      'playerOrder': playerOrder,
+      'roles': roles,
     });
     SfxService().buttonClick();
     _openGame({
-      'fireflyCount': _fireflyCount,
+      'maxOnScreen': _fireflyCount,
       'fireflySeed': seed,
-      'hostRole': _hostRole.name,
-      'clientRole': clientRole.name,
+      'playerOrder': playerOrder,
+      'roles': roles,
     });
   }
 
@@ -385,20 +452,52 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
   void _openGame(Map<String, dynamic> gs) {
     if (_gameStarted) return;
     _gameStarted = true;
-    final count = gs['fireflyCount'] as int? ?? _fireflyCount;
+    final count = gs['maxOnScreen'] as int? ?? _fireflyCount;
     final seed = gs['fireflySeed'] as int? ?? 0;
-    final roleStr = _isHost
-        ? (gs['hostRole'] as String? ?? FireflyRole.lamp.name)
-        : (gs['clientRole'] as String? ?? FireflyRole.jar.name);
-    final role = FireflyRole.values.firstWhere(
-      (r) => r.name == roleStr,
-      orElse: () => FireflyRole.jar,
-    );
+    final playerOrder = (gs['playerOrder'] as List<dynamic>? ?? []).cast<String>();
+
+    final rolesRaw = gs['roles'] as Map<String, dynamic>? ?? {};
+    final int localToolId;
+    final FireflyRole role;
+    if (_isSolo) {
+      localToolId = 1;
+      role = FireflyRole.lamp;
+    } else {
+      final idx = playerOrder.indexOf(_localUid);
+      localToolId = idx >= 0 ? idx + 1 : 1;
+      // Prefer authoritative roles map from host; fall back to local selection
+      final roleStr = rolesRaw[_localUid] as String?;
+      role = roleStr != null
+          ? FireflyRole.values.firstWhere((r) => r.name == roleStr,
+              orElse: () => _isHost ? _hostRole : _clientRole)
+          : (_isHost ? _hostRole : _clientRole);
+    }
+
+    // Build allRoles map: toolId (1-based) → FireflyRole
+    final allRoles = <int, FireflyRole>{};
+    for (int i = 0; i < playerOrder.length; i++) {
+      final toolId = i + 1;
+      final uid = playerOrder[i];
+      final roleStr = rolesRaw[uid] as String?;
+      final defaultRole = uid == _localUid
+          ? (_isHost ? _hostRole : _clientRole)
+          : (i == 0 ? FireflyRole.lamp : FireflyRole.jar);
+      allRoles[toolId] = roleStr != null
+          ? FireflyRole.values.firstWhere(
+              (r) => r.name == roleStr, orElse: () => defaultRole)
+          : defaultRole;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Navigator.of(context).pop();
       FireflyModal.show(context,
-          fireflyCount: count, fireflySeed: seed, role: role);
+          maxOnScreen: count,
+          fireflySeed: seed,
+          role: role,
+          localToolId: localToolId,
+          playerOrder: playerOrder,
+          allRoles: allRoles);
     });
   }
 
@@ -406,8 +505,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     if (_gameStarted) return;
     SfxService().buttonClick();
     final seed = DateTime.now().millisecondsSinceEpoch;
-    _openGame({'fireflyCount': _fireflyCount, 'fireflySeed': seed,
-               'hostRole': FireflyRole.lamp.name});
+    _openGame({'maxOnScreen': _fireflyCount, 'fireflySeed': seed, 'playerOrder': <String>[]});
   }
 
   // ─────────────────────────────────────────────────────────
@@ -595,6 +693,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       children: [
         _buildPlayerList(theme, l10n, room),
         const SizedBox(height: 20),
+        _buildClientRoleSelector(theme, l10n),
+        const SizedBox(height: 16),
         _buildButtonRow(theme, l10n,
             actionLabel: isReady ? l10n.notReadyLabel : l10n.readyLabel,
             onAction: () {
@@ -686,27 +786,87 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     );
   }
 
-  Widget _buildRoleSelector(AppTheme theme, AppLocalizations l10n) {
-    return Row(children: [
-      Expanded(
-        child: GestureDetector(
-          onTap: () => setState(() => _hostRole = FireflyRole.lamp),
-          child: _roleCard(theme, l10n.roleLamp, Icons.flashlight_on,
-              _hostRole == FireflyRole.lamp),
-        ),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: GestureDetector(
-          onTap: () => setState(() => _hostRole = FireflyRole.jar),
-          child: _roleCard(theme, l10n.roleJar, Icons.science_outlined,
-              _hostRole == FireflyRole.jar),
-        ),
-      ),
-    ]);
+  Widget _buildClientRoleSelector(AppTheme theme, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.selectStartingRole,
+            style: AppTypography.bodySmall(context,
+                color: theme.text.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _clientRole = FireflyRole.lamp);
+                _sendClientRole(FireflyRole.lamp);
+              },
+              child: _roleCard(theme, l10n.roleLamp, Icons.flashlight_on,
+                  _clientRole == FireflyRole.lamp),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _clientRole = FireflyRole.jar);
+                _sendClientRole(FireflyRole.jar);
+              },
+              child: _roleCard(theme, l10n.roleJar, Icons.science_outlined,
+                  _clientRole == FireflyRole.jar),
+            ),
+          ),
+        ]),
+      ],
+    );
   }
 
-  Widget _roleCard(theme, String label, IconData icon, bool selected) {
+  void _sendClientRole(FireflyRole role) {
+    if (!LanService().isActive) return;
+    LanService().sendMessage(GameMessage.playerAction(_localUid, {
+      'type': 'clientRoleChange',
+      'role': role.name,
+    }));
+  }
+
+  Widget _buildRoleSelector(AppTheme theme, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.selectStartingRole,
+            style: AppTypography.bodySmall(context,
+                color: theme.text.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() { _hostRole = FireflyRole.lamp; _playerRoles[_localUid] = FireflyRole.lamp; });
+                _broadcastRoles();
+              },
+              child: _roleCard(theme, l10n.roleLamp, Icons.flashlight_on,
+                  _hostRole == FireflyRole.lamp),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() { _hostRole = FireflyRole.jar; _playerRoles[_localUid] = FireflyRole.jar; });
+                _broadcastRoles();
+              },
+              child: _roleCard(theme, l10n.roleJar, Icons.science_outlined,
+                  _hostRole == FireflyRole.jar),
+            ),
+          ),
+        ]),
+      ],
+    );
+  }
+
+  Widget _roleCard(AppTheme theme, String label, IconData icon, bool selected) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
@@ -761,7 +921,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
               style: AppTypography.bodyLarge(context,
                   color: theme.text, fontWeight: FontWeight.bold)),
           const SizedBox(width: 6),
-          Text('${players.length}/2',
+          Text('${players.length}/4',
               style: AppTypography.bodySmall(context,
                   color: theme.text.withValues(alpha: 0.5))),
         ]),
@@ -776,34 +936,65 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: theme.border),
             ),
-            child: Row(children: [
-              Icon(
-                p.isReady || isPlayerHost
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
-                color: p.isReady || isPlayerHost ? Colors.green : theme.border,
-                size: 18,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                kAvatarPresets[
-                    p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
-                style: const TextStyle(fontSize: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(p.displayName,
-                    style: AppTypography.bodyMedium(context, color: theme.text)),
-              ),
-              if (isPlayerHost) _chip(theme, l10n.lobbyHost, theme.primary),
-              if (isHost && !isPlayerHost) ...[
-                const SizedBox(width: 6),
-                GestureDetector(
-                  onTap: () => room.kickPlayer(p.id),
-                  child: _chip(theme, l10n.remove, Colors.red),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Ready icon — spans both lines
+                Icon(
+                  p.isReady || isPlayerHost
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: p.isReady || isPlayerHost ? Colors.green : theme.border,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                // Avatar
+                Text(
+                  kAvatarPresets[p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(width: 10),
+                // Name + role on two lines
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Line 1: name + host chip + remove
+                      Row(children: [
+                        Expanded(
+                          child: Text(p.displayName,
+                              style: AppTypography.bodyMedium(context, color: theme.text),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        if (isPlayerHost) ...[
+                          const SizedBox(width: 4),
+                          _chip(theme, l10n.lobbyHost, theme.primary),
+                        ],
+                        if (isHost && !isPlayerHost) ...[
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () => room.kickPlayer(p.id),
+                            child: _chip(theme, l10n.remove, Colors.red),
+                          ),
+                        ],
+                      ]),
+                      const SizedBox(height: 3),
+                      // Line 2: role chip
+                      Builder(builder: (_) {
+                        final role = _playerRoles[p.id] ??
+                            (isPlayerHost ? FireflyRole.lamp : FireflyRole.jar);
+                        return _chip(theme,
+                          role == FireflyRole.lamp ? l10n.roleLamp : l10n.roleJar,
+                          role == FireflyRole.lamp
+                              ? const Color(0xFF5BA3FF)
+                              : const Color(0xFF66BB6A));
+                      }),
+                    ],
+                  ),
                 ),
               ],
-            ]),
+            ),
           );
         }),
         if (players.length < 2)
@@ -835,11 +1026,27 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
         ),
       ),
       const SizedBox(width: 8),
-      Expanded(child: AppButton(label: actionLabel, onPressed: onAction)),
+      Expanded(
+        child: ElevatedButton(
+          onPressed: onAction,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: onAction != null ? theme.primary : theme.border.withValues(alpha: 0.35),
+            foregroundColor: onAction != null ? context.onPrimary : theme.text.withValues(alpha: 0.38),
+            minimumSize: const Size.fromHeight(48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(actionLabel,
+                style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ),
     ]);
   }
 
-  Widget _cancelButton(theme, AppLocalizations l10n) {
+  Widget _cancelButton(AppTheme theme, AppLocalizations l10n) {
     return ElevatedButton(
       onPressed: _cancelAndGoIdle,
       style: ElevatedButton.styleFrom(
