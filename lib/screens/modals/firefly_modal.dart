@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
+import '../../core/utils/asset_loader.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/lan/lan_service.dart';
 import '../../core/utils/lan/lan_message.dart';
@@ -576,13 +577,26 @@ class _FireflyModalState extends State<FireflyModal>
                 });
               }
 
-              Widget canvas = CustomPaint(
-                size: Size(constraints.maxWidth, constraints.maxHeight),
-                painter: _FireflyPainter(
-                  snapshot: snap,
-                  primaryColor: theme.primary,
-                  backgroundColor: theme.background,
-                ),
+              Widget canvas = Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      AssetLoader.getFireflyBgAsset(
+                        DataManager().userSettings.currentScenes[0].sceneSet,
+                      ),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, e, s) => ColoredBox(color: theme.background),
+                    ),
+                  ),
+                  CustomPaint(
+                    size: Size(constraints.maxWidth, constraints.maxHeight),
+                    painter: _FireflyPainter(
+                      snapshot: snap,
+                      primaryColor: theme.primary,
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
+                ],
               );
 
               if (_isSolo) {

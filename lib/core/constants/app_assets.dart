@@ -190,4 +190,34 @@ class AppAssets {
     'cory': fishCory,
     'platy': fishPlaty,
   };
+
+  // ==================== ROCK BALANCING ====================
+  static const String rockBgDefault  = 'assets/images/rock_balancing/bg_default.png';
+  static const String rockBgForest   = 'assets/images/rock_balancing/bg_forest.png';
+  static const String rockBgBeach    = 'assets/images/rock_balancing/bg_beach.png';
+  static const String rockBgJapanese = 'assets/images/rock_balancing/bg_japanese.png';
+  static const String rockBgWinter   = 'assets/images/rock_balancing/bg_winter.png';
+
+  static const Map<SceneSet, String> rockBgAssets = {
+    SceneSet.defaultSet: rockBgDefault,
+    SceneSet.forest:     rockBgForest,
+    SceneSet.beach:      rockBgBeach,
+    SceneSet.japanese:   rockBgJapanese,
+    SceneSet.winter:     rockBgWinter,
+  };
+
+  // ==================== FIREFLY ====================
+  static const String fireflyBgDefault  = 'assets/images/firefly/bg_default.png';
+  static const String fireflyBgForest   = 'assets/images/firefly/bg_forest.png';
+  static const String fireflyBgBeach    = 'assets/images/firefly/bg_beach.png';
+  static const String fireflyBgJapanese = 'assets/images/firefly/bg_japanese.png';
+  static const String fireflyBgWinter   = 'assets/images/firefly/bg_winter.png';
+
+  static const Map<SceneSet, String> fireflyBgAssets = {
+    SceneSet.defaultSet: fireflyBgDefault,
+    SceneSet.forest:     fireflyBgForest,
+    SceneSet.beach:      fireflyBgBeach,
+    SceneSet.japanese:   fireflyBgJapanese,
+    SceneSet.winter:     fireflyBgWinter,
+  };
 }

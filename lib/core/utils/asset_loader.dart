@@ -126,4 +126,12 @@ class AssetLoader {
     }
     return assetPath;
   }
+
+  static String getRockBgAsset(SceneSet sceneSet) {
+    return AppAssets.rockBgAssets[sceneSet] ?? AppAssets.rockBgDefault;
+  }
+
+  static String getFireflyBgAsset(SceneSet sceneSet) {
+    return AppAssets.fireflyBgAssets[sceneSet] ?? AppAssets.fireflyBgDefault;
+  }
 }

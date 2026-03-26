@@ -107,6 +107,8 @@ flutter:
     - assets/images/mascot/
     - assets/images/plants/
     - assets/images/aquarium/
+    - assets/images/rock_balancing/
+    - assets/images/firefly/
     - assets/images/app_icon.png
     - assets/images/
     # Audio - BGM

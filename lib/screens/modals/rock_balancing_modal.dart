@@ -7,6 +7,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
+import '../../core/constants/app_assets.dart';
+import '../../core/utils/asset_loader.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/lan/lan_service.dart';
 import '../../core/utils/lan/lan_message.dart';
@@ -764,6 +766,15 @@ class _RockBalancingModalState extends State<RockBalancingModal>
                     onPanEnd: _onPanEnd,
                     child: Stack(
                       children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            AssetLoader.getRockBgAsset(
+                              DataManager().userSettings.currentScenes[0].sceneSet,
+                            ),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, e, s) => const SizedBox.shrink(),
+                          ),
+                        ),
                         CustomPaint(
                           size: Size(fitW, fitH),
                           painter: _RockPainter(
@@ -846,8 +857,8 @@ class _RockPainter extends CustomPainter {
     if (bestHeight > 10) {
       final lineY = groundY - bestHeight;
       final linePaint = Paint()
-        ..color = primaryColor.withValues(alpha: 0.4)
-        ..strokeWidth = 1.5;
+        ..color = Colors.black.withValues(alpha: 0.6)
+        ..strokeWidth = 2.5;
 
       double x = 0;
       const dashLen = 8.0;
