@@ -109,10 +109,9 @@ class _FireflyModalState extends State<FireflyModal>
   double _canvasWidth = 0;
   double _canvasHeight = 0;
 
-  // ── Input — solo (Listener tracks 2 pointers) ────────────
-  // pointer 1 = tool slot 1 (lamp), pointer 2 = tool slot 2 (jar)
-  int? _pointer1Id;
-  int? _pointer2Id;
+  // ── Input — solo (drag & drop) ───────────────────────────
+  final Map<int, int> _pointerToTool = {};  // pointerId → toolId
+  FireflyWorldRenderSnapshot? _lastSnap;
 
   // ── Role & brightness (mutable mid-game) ─────────────────
   late FireflyRole _role;
@@ -410,26 +409,40 @@ class _FireflyModalState extends State<FireflyModal>
   // Input — solo: Listener for 2 independent pointers
   // ─────────────────────────────────────────────────────────
 
+  int? _hitTest(Offset pos) {
+    final snap = _lastSnap;
+    if (snap == null) return null;
+    int? bestTool;
+    double bestDist = double.infinity;
+    for (final tool in snap.tools) {
+      final r = tool.type == FireflyRole.lamp ? snap.lampRadius : snap.jarCatchRadius;
+      final touchR = math.max(r, _canvasWidth * 0.12);
+      final dist = (pos - tool.position).distance;
+      if (dist <= touchR && dist < bestDist) {
+        bestDist = dist;
+        bestTool = tool.id;
+      }
+    }
+    return bestTool;
+  }
+
   void _onPointerDown(PointerDownEvent e) {
     if (!_worldReady) return;
-    if (_pointer1Id == null) {
-      _pointer1Id = e.pointer;
-      _moveTool(1, e.localPosition);
-    } else if (_pointer2Id == null) {
-      _pointer2Id = e.pointer;
-      _moveTool(2, e.localPosition);
+    final toolId = _hitTest(e.localPosition);
+    if (toolId != null) {
+      _pointerToTool[e.pointer] = toolId;
+      _moveTool(toolId, e.localPosition);
     }
   }
 
   void _onPointerMove(PointerMoveEvent e) {
     if (!_worldReady) return;
-    if (e.pointer == _pointer1Id) _moveTool(1, e.localPosition);
-    if (e.pointer == _pointer2Id) _moveTool(2, e.localPosition);
+    final toolId = _pointerToTool[e.pointer];
+    if (toolId != null) _moveTool(toolId, e.localPosition);
   }
 
   void _onPointerUp(PointerUpEvent e) {
-    if (e.pointer == _pointer1Id) _pointer1Id = null;
-    if (e.pointer == _pointer2Id) _pointer2Id = null;
+    _pointerToTool.remove(e.pointer);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -489,6 +502,7 @@ class _FireflyModalState extends State<FireflyModal>
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
     final snap = _worldReady ? _world.buildRenderData() : null;
+    _lastSnap = snap;
 
     return Column(
       children: [
