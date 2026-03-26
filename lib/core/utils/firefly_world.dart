@@ -57,8 +57,10 @@ class _FireflyData {
   final int id;
   Offset position;
   Offset velocity;
-  double wanderAngle;   // current heading angle (radians)
-  double glowPhase;     // 0..2π, unique per firefly
+  double wanderAngle;        // current heading angle (radians)
+  double wanderTargetAngle;  // target angle to rotate toward
+  double wanderTimer;        // seconds until next direction pick
+  double glowPhase;          // 0..2π, unique per firefly
 
   bool caught = false;
   double respawnTimer = 0.0; // counts down after catch; 0 = active
@@ -68,6 +70,8 @@ class _FireflyData {
     required this.position,
     required this.velocity,
     required this.wanderAngle,
+    required this.wanderTargetAngle,
+    required this.wanderTimer,
     required this.glowPhase,
   });
 }
@@ -151,11 +155,14 @@ class FireflyWorld {
     final y = _boundaryMargin + rng.nextDouble() * (_ch - _boundaryMargin * 2);
     final angle = rng.nextDouble() * 2 * math.pi;
     final speed = 20.0 + rng.nextDouble() * 40.0;
+    final targetAngle = rng.nextDouble() * 2 * math.pi;
     return _FireflyData(
       id: id,
       position: Offset(x, y),
       velocity: Offset(math.cos(angle) * speed, math.sin(angle) * speed),
       wanderAngle: angle,
+      wanderTargetAngle: targetAngle,
+      wanderTimer: 0.5 + rng.nextDouble() * 2.0,
       glowPhase: rng.nextDouble() * 2 * math.pi,
     );
   }
@@ -168,6 +175,8 @@ class FireflyWorld {
     f.position = Offset(x, y);
     f.velocity = Offset(math.cos(angle) * speed, math.sin(angle) * speed);
     f.wanderAngle = angle;
+    f.wanderTargetAngle = _rng.nextDouble() * 2 * math.pi;
+    f.wanderTimer = 0.5 + _rng.nextDouble() * 2.0;
     f.glowPhase = _rng.nextDouble() * 2 * math.pi;
     f.caught = false;
     f.respawnTimer = 0.0;
@@ -208,6 +217,7 @@ class FireflyWorld {
       _fireflies[idx].caught = false;
       _fireflies[idx].respawnTimer = 0;
       _fireflies[idx].glowPhase = phase;
+      _fireflies[idx].position = pos;
     }
   }
 
@@ -263,8 +273,16 @@ class FireflyWorld {
         continue;
       }
 
-      // 1. Wander — gentle random steering
-      f.wanderAngle += (_rng.nextDouble() - 0.5) * 2 * _maxTurnRate * dt;
+      // 1. Wander — timer-based random direction changes
+      f.wanderTimer -= dt;
+      if (f.wanderTimer <= 0) {
+        f.wanderTargetAngle = _rng.nextDouble() * 2 * math.pi;
+        f.wanderTimer = 0.5 + _rng.nextDouble() * 2.0;
+      }
+      double angleDiff = f.wanderTargetAngle - f.wanderAngle;
+      if (angleDiff > math.pi) angleDiff -= 2 * math.pi;
+      if (angleDiff < -math.pi) angleDiff += 2 * math.pi;
+      f.wanderAngle += angleDiff.sign * math.min(angleDiff.abs(), _maxTurnRate * dt);
       f.velocity = Offset(
         f.velocity.dx + math.cos(f.wanderAngle) * 60.0 * dt,
         f.velocity.dy + math.sin(f.wanderAngle) * 60.0 * dt,
