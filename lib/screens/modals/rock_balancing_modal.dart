@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -63,6 +64,7 @@ class RockBalancingModal extends StatefulWidget {
   }) {
     final h = MediaQuery.of(context).size.height * 0.95;
     final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_RockBalancingModalState>();
     return AppModal.show(
       context: context,
       title: l10n.rockBalancing,
@@ -70,6 +72,7 @@ class RockBalancingModal extends StatefulWidget {
       minHeight: h,
       scrollable: false,
       enableDrag: false,
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
       onClose: () {
         showDialog(
           context: context,
@@ -91,13 +94,44 @@ class RockBalancingModal extends StatefulWidget {
           ),
         );
       },
-      content: RockBalancingModal(rockCount: rockCount, rockSeed: rockSeed),
+      content: RockBalancingModal(key: modalKey, rockCount: rockCount, rockSeed: rockSeed),
     );
   }
 }
 
 class _RockBalancingModalState extends State<RockBalancingModal>
     with TickerProviderStateMixin {
+  // ── Tutorial keys ─────────────────────────────────────────────
+  final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey _infoBarKey = GlobalKey();
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(
+          targetKey: _canvasKey,
+          title: l10n.tutorialRockGameCanvasTitle,
+          description: _isSolo
+              ? l10n.tutorialRockGameCanvasSoloDesc
+              : l10n.tutorialRockGameCanvasDesc,
+          tag: 'rock_game_canvas',
+        ),
+        TutorialStep(
+          targetKey: _infoBarKey,
+          title: l10n.tutorialRockGameInfoTitle,
+          description: l10n.tutorialRockGameInfoDesc,
+          tag: 'rock_game_info',
+        ),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   // ── Physics constants ─────────────────────────────────────────
   static const double _groundThickness = 20.0;
   static const double _fixedDt = 1.0 / 60.0;
@@ -715,6 +749,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
       children: [
         // ── Info bar ───────────────────────────────────────────
         Padding(
+          key: _infoBarKey,
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Row(
             children: [
@@ -761,6 +796,7 @@ class _RockBalancingModalState extends State<RockBalancingModal>
                   width: fitW,
                   height: fitH,
                   child: GestureDetector(
+                    key: _canvasKey,
                     onPanStart: _onPanStart,
                     onPanUpdate: _onPanUpdate,
                     onPanEnd: _onPanEnd,

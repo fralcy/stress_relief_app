@@ -925,6 +925,86 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tutorialGardenInventoryDesc => 'Chọn loại hạt giống, sau đó nhấn ô trống để trồng. Mỗi loại cây có thời gian lớn và điểm thưởng riêng.';
 
+  // Tutorial - Rock Balancing Lobby
+  @override
+  String get tutorialRockLobbyConfigTitle => 'Số lượng đá';
+  @override
+  String get tutorialRockLobbyConfigDesc => 'Chọn số lượng đá. Càng nhiều đá, thử thách càng cao nhưng sáng tạo càng lớn.';
+  @override
+  String get tutorialRockLobbyRoomTitle => 'Tạo hoặc tham gia';
+  @override
+  String get tutorialRockLobbyRoomDesc => 'Tạo phòng mới hoặc tìm và Tham gia vào phòng hiện có trong cùng mạng Wi-Fi.';
+  @override
+  String get tutorialRockLobbyPlayersTitle => 'Người chơi';
+  @override
+  String get tutorialRockLobbyPlayersDesc => 'Danh sách người chơi. Mọi người cần Sẵn sàng để chủ phòng có thể bắt đầu.';
+  @override
+  String get tutorialRockLobbyStartTitle => 'Bắt đầu';
+  @override
+  String get tutorialRockLobbyStartDesc => 'Khi tất cả đã sẵn sàng, chạm đây để bắt đầu.';
+  @override
+  String get tutorialRockLobbyReadyTitle => 'Sẵn sàng';
+  @override
+  String get tutorialRockLobbyReadyDesc => 'Chạm để báo hiệu bạn đã sẵn sàng.';
+
+  // Tutorial - Rock Balancing Game
+  @override
+  String get tutorialRockGameCanvasTitle => 'Xếp chồng đá';
+  @override
+  String get tutorialRockGameCanvasDesc => 'Kéo đá để xếp chồng. Viền xanh nghĩa là người khác đang giữ viên đá đó.';
+  @override
+  String get tutorialRockGameCanvasSoloDesc => 'Kéo các viên đá để nhấc lên và đặt chồng lên nhau.';
+  @override
+  String get tutorialRockGameInfoTitle => 'Kỷ lục';
+  @override
+  String get tutorialRockGameInfoDesc => 'Độ cao cao nhất được lưu tại đây. Tiếp tục xếp để phá kỷ lục của chính mình!';
+
+  // Tutorial - Firefly Lobby
+  @override
+  String get tutorialFireflyLobbyConfigTitle => 'Số lượng đom đóm';
+  @override
+  String get tutorialFireflyLobbyConfigDesc => 'Chọn số đom đóm xuất hiện cùng lúc. Càng nhiều đom đóm, không khí càng nhộn nhịp.';
+  @override
+  String get tutorialFireflyLobbyRoomTitle => 'Tạo hoặc tham gia';
+  @override
+  String get tutorialFireflyLobbyRoomDesc => 'Tạo phòng mới hoặc tìm và Tham gia vào phòng hiện có trong cùng mạng Wi-Fi.';
+  @override
+  String get tutorialFireflyLobbyPlayersTitle => 'Người chơi';
+  @override
+  String get tutorialFireflyLobbyPlayersDesc => 'Xem danh sách người chơi và vai trò. Mọi người cần Sẵn sàng để chủ phòng có thể bắt đầu.';
+  @override
+  String get tutorialFireflyLobbyRoleTitle => 'Chọn vai trò';
+  @override
+  String get tutorialFireflyLobbyRoleDesc => 'Đèn hút/đẩy đom đóm, Lọ dùng để bắt. Có thể đổi vai trò bất kỳ lúc nào.';
+  @override
+  String get tutorialFireflyLobbyStartTitle => 'Bắt đầu';
+  @override
+  String get tutorialFireflyLobbyStartDesc => 'Khi tất cả đã sẵn sàng, chạm đây để bắt đầu. Chỉ chủ phòng mới có thể khởi động.';
+  @override
+  String get tutorialFireflyLobbyReadyTitle => 'Sẵn sàng';
+  @override
+  String get tutorialFireflyLobbyReadyDesc => 'Chạm để báo hiệu bạn đã sẵn sàng. Chủ phòng sẽ khởi động khi tất cả đã sẵn sàng.';
+
+  // Tutorial - Firefly Game
+  @override
+  String get tutorialFireflyGameCanvasTitle => 'Di chuyển công cụ';
+  @override
+  String get tutorialFireflyGameCanvasDesc => 'Chạm để di chuyển công cụ đến vị trí đó.';
+  @override
+  String get tutorialFireflyGameCanvasSoloDesc => 'Chạm và kéo trực tiếp Đèn hoặc Lọ. Bạn có thể điều khiển cả hai cùng lúc.';
+  @override
+  String get tutorialFireflyGameCaughtTitle => 'Bắt đom đóm';
+  @override
+  String get tutorialFireflyGameCaughtDesc => 'Chiếu Đèn làm đom đóm phát sáng, sau đó dùng Lọ hứng lấy chúng.';
+  @override
+  String get tutorialFireflyGameBrightnessTitle => 'Hút hoặc đẩy';
+  @override
+  String get tutorialFireflyGameBrightnessDesc => 'Chuyển giữa Hút (đèn mờ) và Đẩy (đèn sáng) để dồn đom đóm về phía Lọ.';
+  @override
+  String get tutorialFireflyGameSwitchTitle => 'Đổi vai trò';
+  @override
+  String get tutorialFireflyGameSwitchDesc => 'Chạm để hoán đổi giữa Đèn và Lọ. Hãy phối hợp với đồng đội để có chiến thuật tốt nhất.';
+
   @override
 
   // Breathing Exercise

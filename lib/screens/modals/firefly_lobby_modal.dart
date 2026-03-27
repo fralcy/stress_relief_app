@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
@@ -50,18 +51,100 @@ class FireflyLobbyModal extends StatefulWidget {
   State<FireflyLobbyModal> createState() => _FireflyLobbyModalState();
 
   static Future<void> show(BuildContext context) {
+    final modalKey = GlobalKey<_FireflyLobbyModalState>();
     return AppModal.show(
       context: context,
       title: AppLocalizations.of(context).fireflyCatching,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
       enableDrag: false,
       onClose: () => Navigator.of(context).pop(),
-      content: const FireflyLobbyModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: FireflyLobbyModal(key: modalKey),
     );
   }
 }
 
 class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
+  // ── Tutorial keys ────────────────────────────────────────
+  final GlobalKey _sliderKey = GlobalKey();
+  final GlobalKey _createJoinKey = GlobalKey();
+  final GlobalKey _playerListKey = GlobalKey();
+  final GlobalKey _roleSelectorKey = GlobalKey();
+  final GlobalKey _startKey = GlobalKey();
+  final GlobalKey _readyKey = GlobalKey();
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    final List<TutorialStep> steps;
+    switch (_state) {
+      case _LobbyState.hostLobby:
+        steps = [
+          TutorialStep(
+            targetKey: _playerListKey,
+            title: l10n.tutorialFireflyLobbyPlayersTitle,
+            description: l10n.tutorialFireflyLobbyPlayersDesc,
+            tag: 'firefly_lobby_players',
+          ),
+          TutorialStep(
+            targetKey: _roleSelectorKey,
+            title: l10n.tutorialFireflyLobbyRoleTitle,
+            description: l10n.tutorialFireflyLobbyRoleDesc,
+            tag: 'firefly_lobby_role',
+          ),
+          TutorialStep(
+            targetKey: _startKey,
+            title: l10n.tutorialFireflyLobbyStartTitle,
+            description: l10n.tutorialFireflyLobbyStartDesc,
+            tag: 'firefly_lobby_start',
+          ),
+        ];
+      case _LobbyState.clientLobby:
+        steps = [
+          TutorialStep(
+            targetKey: _playerListKey,
+            title: l10n.tutorialFireflyLobbyPlayersTitle,
+            description: l10n.tutorialFireflyLobbyPlayersDesc,
+            tag: 'firefly_lobby_players',
+          ),
+          TutorialStep(
+            targetKey: _roleSelectorKey,
+            title: l10n.tutorialFireflyLobbyRoleTitle,
+            description: l10n.tutorialFireflyLobbyRoleDesc,
+            tag: 'firefly_lobby_role',
+          ),
+          TutorialStep(
+            targetKey: _readyKey,
+            title: l10n.tutorialFireflyLobbyReadyTitle,
+            description: l10n.tutorialFireflyLobbyReadyDesc,
+            tag: 'firefly_lobby_ready',
+          ),
+        ];
+      default:
+        steps = [
+          TutorialStep(
+            targetKey: _sliderKey,
+            title: l10n.tutorialFireflyLobbyConfigTitle,
+            description: l10n.tutorialFireflyLobbyConfigDesc,
+            tag: 'firefly_lobby_config',
+          ),
+          TutorialStep(
+            targetKey: _createJoinKey,
+            title: l10n.tutorialFireflyLobbyRoomTitle,
+            description: l10n.tutorialFireflyLobbyRoomDesc,
+            tag: 'firefly_lobby_room',
+          ),
+        ];
+    }
+    TutorialOverlay(
+      context: context,
+      steps: steps,
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   // ── FSM ──────────────────────────────────────────────────
   _LobbyState _state = _LobbyState.idle;
   bool _transitioning = false;
@@ -573,13 +656,19 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
         const SizedBox(height: 10),
         AppButton(label: l10n.startGame, onPressed: _onStartSolo),
         const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
-        Text(l10n.multiplayer,
-            style: AppTypography.bodyMedium(context,
-                color: theme.text, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        AppButton(label: l10n.createRoom, onPressed: _startHosting),
-        const SizedBox(height: 10),
-        AppButton(label: l10n.joinGame, onPressed: _doScan),
+        Column(
+          key: _createJoinKey,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.multiplayer,
+                style: AppTypography.bodyMedium(context,
+                    color: theme.text, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            AppButton(label: l10n.createRoom, onPressed: _startHosting),
+            const SizedBox(height: 10),
+            AppButton(label: l10n.joinGame, onPressed: _doScan),
+          ],
+        ),
         if (_discoveredHosts.isNotEmpty) ...[
           const SizedBox(height: 14),
           Text(l10n.hostsFound,
@@ -681,7 +770,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
         const SizedBox(height: 16),
         _buildButtonRow(theme, l10n,
             actionLabel: l10n.startGame,
-            onAction: (room.currentRoom?.allReady ?? false) ? _onStartGame : null),
+            onAction: (room.currentRoom?.allReady ?? false) ? _onStartGame : null,
+            rowKey: _startKey),
       ],
     );
   }
@@ -700,7 +790,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
             onAction: () {
               room.setReady(!isReady);
               SfxService().buttonClick();
-            }),
+            },
+            rowKey: _readyKey),
       ],
     );
   }
@@ -756,6 +847,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   Widget _buildFireflyCountConfig(AppTheme theme, AppLocalizations l10n) {
     return Column(
+      key: _sliderKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('${l10n.maxFireflyCount}: $_fireflyCount',
@@ -788,6 +880,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   Widget _buildClientRoleSelector(AppTheme theme, AppLocalizations l10n) {
     return Column(
+      key: _roleSelectorKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.selectStartingRole,
@@ -832,6 +925,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   Widget _buildRoleSelector(AppTheme theme, AppLocalizations l10n) {
     return Column(
+      key: _roleSelectorKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.selectStartingRole,
@@ -914,6 +1008,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     final players = room.currentRoom?.activePlayers ?? [];
     final isHost = LanService().role == LanRole.host;
     return Column(
+      key: _playerListKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
@@ -1009,8 +1104,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
   }
 
   Widget _buildButtonRow(AppTheme theme, AppLocalizations l10n,
-      {required String actionLabel, required VoidCallback? onAction}) {
-    return Row(children: [
+      {required String actionLabel, required VoidCallback? onAction, Key? rowKey}) {
+    return Row(key: rowKey, children: [
       Expanded(
         child: ElevatedButton(
           onPressed: _cancelAndGoIdle,

@@ -16,6 +16,7 @@ import '../../core/constants/avatar_presets.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_modal.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'rock_balancing_modal.dart';
 
 // ──────────────────────────────────────────────────────────────
@@ -49,13 +50,15 @@ class RockBalancingLobbyModal extends StatefulWidget {
       _RockBalancingLobbyModalState();
 
   static Future<void> show(BuildContext context) {
+    final modalKey = GlobalKey<_RockBalancingLobbyModalState>();
     return AppModal.show(
       context: context,
       title: AppLocalizations.of(context).rockBalancing,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
       enableDrag: false,
       onClose: () => _closeRequested(context),
-      content: const RockBalancingLobbyModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: RockBalancingLobbyModal(key: modalKey),
     );
   }
 
@@ -67,6 +70,43 @@ class RockBalancingLobbyModal extends StatefulWidget {
 }
 
 class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
+  // ── Tutorial keys ─────────────────────────────────────────────
+  final GlobalKey _sliderKey     = GlobalKey();
+  final GlobalKey _createJoinKey = GlobalKey();
+  final GlobalKey _playerListKey = GlobalKey();
+  final GlobalKey _startKey      = GlobalKey();
+  final GlobalKey _readyKey      = GlobalKey();
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    late List<TutorialStep> steps;
+    switch (_state) {
+      case _LobbyState.hostLobby:
+        steps = [
+          TutorialStep(targetKey: _playerListKey, title: l10n.tutorialRockLobbyPlayersTitle, description: l10n.tutorialRockLobbyPlayersDesc, tag: 'players'),
+          TutorialStep(targetKey: _startKey,      title: l10n.tutorialRockLobbyStartTitle,   description: l10n.tutorialRockLobbyStartDesc,   tag: 'start'),
+        ];
+      case _LobbyState.clientLobby:
+        steps = [
+          TutorialStep(targetKey: _playerListKey, title: l10n.tutorialRockLobbyPlayersTitle, description: l10n.tutorialRockLobbyPlayersDesc, tag: 'players'),
+          TutorialStep(targetKey: _readyKey,      title: l10n.tutorialRockLobbyReadyTitle,   description: l10n.tutorialRockLobbyReadyDesc,   tag: 'ready'),
+        ];
+      default:
+        steps = [
+          TutorialStep(targetKey: _sliderKey,     title: l10n.tutorialRockLobbyConfigTitle,  description: l10n.tutorialRockLobbyConfigDesc,  tag: 'config'),
+          TutorialStep(targetKey: _createJoinKey, title: l10n.tutorialRockLobbyRoomTitle,    description: l10n.tutorialRockLobbyRoomDesc,    tag: 'room'),
+        ];
+    }
+    TutorialOverlay(
+      context: context,
+      steps: steps,
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   // ── FSM ──────────────────────────────────────────────────────
   _LobbyState _state = _LobbyState.idle;
 
@@ -531,13 +571,19 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
 
         // ── Section: Multiplayer ───────────────────────────────
-        Text(l10n.multiplayer,
-            style: AppTypography.bodyMedium(context,
-                color: theme.text, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
-        AppButton(label: l10n.createRoom, onPressed: _startHosting),
-        const SizedBox(height: 10),
-        AppButton(label: l10n.joinGame, onPressed: _doScan),
+        Column(
+          key: _createJoinKey,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.multiplayer,
+                style: AppTypography.bodyMedium(context,
+                    color: theme.text, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            AppButton(label: l10n.createRoom, onPressed: _startHosting),
+            const SizedBox(height: 10),
+            AppButton(label: l10n.joinGame, onPressed: _doScan),
+          ],
+        ),
         if (_discoveredHosts.isNotEmpty) ...[
           const SizedBox(height: 14),
           Text(l10n.hostsFound,
@@ -641,8 +687,8 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   /// Action button + cancel button side-by-side, same format, different colors.
   Widget _buildButtonRow(AppTheme theme, AppLocalizations l10n,
-      {required String actionLabel, required VoidCallback? onAction}) {
-    return Row(children: [
+      {required String actionLabel, required VoidCallback? onAction, Key? rowKey}) {
+    return Row(key: rowKey, children: [
       Expanded(
         child: ElevatedButton(
           onPressed: _cancelAndGoIdle,
@@ -683,6 +729,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         _buildRockCountConfig(theme, l10n),
         const SizedBox(height: 16),
         _buildButtonRow(theme, l10n,
+          rowKey: _startKey,
           actionLabel: l10n.startGame,
           onAction: (room.currentRoom?.allReady ?? false) ? _onStartGame : null,
         ),
@@ -734,6 +781,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         _buildPlayerList(theme, l10n, room),
         const SizedBox(height: 20),
         _buildButtonRow(theme, l10n,
+          rowKey: _readyKey,
           actionLabel: isReady ? l10n.notReadyLabel : l10n.readyLabel,
           onAction: () {
             room.setReady(!isReady);
@@ -832,6 +880,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     final players = room.currentRoom?.activePlayers ?? [];
     final isHost = LanService().role == LanRole.host;
     return Column(
+      key: _playerListKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
@@ -952,6 +1001,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   Widget _buildRockCountConfig(AppTheme theme, AppLocalizations l10n) {
     return Column(
+      key: _sliderKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('${l10n.rockCount}: $_rockCount',

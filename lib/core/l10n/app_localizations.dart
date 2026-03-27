@@ -381,6 +381,50 @@ abstract class AppLocalizations {
   String get tutorialGardenInventoryTitle;
   String get tutorialGardenInventoryDesc;
 
+  // Tutorial - Rock Balancing Lobby
+  String get tutorialRockLobbyConfigTitle;
+  String get tutorialRockLobbyConfigDesc;
+  String get tutorialRockLobbyRoomTitle;
+  String get tutorialRockLobbyRoomDesc;
+  String get tutorialRockLobbyPlayersTitle;
+  String get tutorialRockLobbyPlayersDesc;
+  String get tutorialRockLobbyStartTitle;
+  String get tutorialRockLobbyStartDesc;
+  String get tutorialRockLobbyReadyTitle;
+  String get tutorialRockLobbyReadyDesc;
+
+  // Tutorial - Rock Balancing Game
+  String get tutorialRockGameCanvasTitle;
+  String get tutorialRockGameCanvasDesc;
+  String get tutorialRockGameCanvasSoloDesc;
+  String get tutorialRockGameInfoTitle;
+  String get tutorialRockGameInfoDesc;
+
+  // Tutorial - Firefly Lobby
+  String get tutorialFireflyLobbyConfigTitle;
+  String get tutorialFireflyLobbyConfigDesc;
+  String get tutorialFireflyLobbyRoomTitle;
+  String get tutorialFireflyLobbyRoomDesc;
+  String get tutorialFireflyLobbyPlayersTitle;
+  String get tutorialFireflyLobbyPlayersDesc;
+  String get tutorialFireflyLobbyRoleTitle;
+  String get tutorialFireflyLobbyRoleDesc;
+  String get tutorialFireflyLobbyStartTitle;
+  String get tutorialFireflyLobbyStartDesc;
+  String get tutorialFireflyLobbyReadyTitle;
+  String get tutorialFireflyLobbyReadyDesc;
+
+  // Tutorial - Firefly Game
+  String get tutorialFireflyGameCanvasTitle;
+  String get tutorialFireflyGameCanvasDesc;
+  String get tutorialFireflyGameCanvasSoloDesc;
+  String get tutorialFireflyGameCaughtTitle;
+  String get tutorialFireflyGameCaughtDesc;
+  String get tutorialFireflyGameBrightnessTitle;
+  String get tutorialFireflyGameBrightnessDesc;
+  String get tutorialFireflyGameSwitchTitle;
+  String get tutorialFireflyGameSwitchDesc;
+
   // Breathing Exercise
   String get breathing;
   String get breathingExercise;

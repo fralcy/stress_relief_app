@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -51,6 +52,7 @@ class FireflyModal extends StatefulWidget {
     List<String> playerOrder = const [],
     Map<int, FireflyRole> allRoles = const {},
   }) {
+    final modalKey = GlobalKey<_FireflyModalState>();
     final h = MediaQuery.of(context).size.height * 0.95;
     final l10n = AppLocalizations.of(context);
     return AppModal.show(
@@ -60,6 +62,7 @@ class FireflyModal extends StatefulWidget {
       minHeight: h,
       scrollable: false,
       enableDrag: false,
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
       onClose: () {
         showDialog(
           context: context,
@@ -82,6 +85,7 @@ class FireflyModal extends StatefulWidget {
         );
       },
       content: FireflyModal(
+        key: modalKey,
         maxOnScreen: maxOnScreen,
         fireflySeed: fireflySeed,
         role: role,
@@ -95,6 +99,95 @@ class FireflyModal extends StatefulWidget {
 
 class _FireflyModalState extends State<FireflyModal>
     with TickerProviderStateMixin {
+  // ── Tutorial keys ─────────────────────────────────────────
+  final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey _caughtKey = GlobalKey();
+  final GlobalKey _brightnessKey = GlobalKey();
+  final GlobalKey _toolSwitchKey = GlobalKey();
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    final List<TutorialStep> steps;
+    if (_isSolo) {
+      steps = [
+        TutorialStep(
+          targetKey: _canvasKey,
+          title: l10n.tutorialFireflyGameCanvasTitle,
+          description: l10n.tutorialFireflyGameCanvasSoloDesc,
+          tag: 'firefly_canvas_solo',
+        ),
+        TutorialStep(
+          targetKey: _brightnessKey,
+          title: l10n.tutorialFireflyGameBrightnessTitle,
+          description: l10n.tutorialFireflyGameBrightnessDesc,
+          tag: 'firefly_brightness',
+        ),
+        TutorialStep(
+          targetKey: _caughtKey,
+          title: l10n.tutorialFireflyGameCaughtTitle,
+          description: l10n.tutorialFireflyGameCaughtDesc,
+          tag: 'firefly_caught',
+        ),
+      ];
+    } else if (_role == FireflyRole.lamp) {
+      steps = [
+        TutorialStep(
+          targetKey: _canvasKey,
+          title: l10n.tutorialFireflyGameCanvasTitle,
+          description: l10n.tutorialFireflyGameCanvasDesc,
+          tag: 'firefly_canvas_lan',
+        ),
+        TutorialStep(
+          targetKey: _brightnessKey,
+          title: l10n.tutorialFireflyGameBrightnessTitle,
+          description: l10n.tutorialFireflyGameBrightnessDesc,
+          tag: 'firefly_brightness',
+        ),
+        TutorialStep(
+          targetKey: _toolSwitchKey,
+          title: l10n.tutorialFireflyGameSwitchTitle,
+          description: l10n.tutorialFireflyGameSwitchDesc,
+          tag: 'firefly_switch',
+        ),
+        TutorialStep(
+          targetKey: _caughtKey,
+          title: l10n.tutorialFireflyGameCaughtTitle,
+          description: l10n.tutorialFireflyGameCaughtDesc,
+          tag: 'firefly_caught',
+        ),
+      ];
+    } else {
+      steps = [
+        TutorialStep(
+          targetKey: _canvasKey,
+          title: l10n.tutorialFireflyGameCanvasTitle,
+          description: l10n.tutorialFireflyGameCanvasDesc,
+          tag: 'firefly_canvas_lan',
+        ),
+        TutorialStep(
+          targetKey: _toolSwitchKey,
+          title: l10n.tutorialFireflyGameSwitchTitle,
+          description: l10n.tutorialFireflyGameSwitchDesc,
+          tag: 'firefly_switch',
+        ),
+        TutorialStep(
+          targetKey: _caughtKey,
+          title: l10n.tutorialFireflyGameCaughtTitle,
+          description: l10n.tutorialFireflyGameCaughtDesc,
+          tag: 'firefly_caught',
+        ),
+      ];
+    }
+    TutorialOverlay(
+      context: context,
+      steps: steps,
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   // ── Physics ───────────────────────────────────────────────
   static const double _fixedDt = 1.0 / 60.0;
   bool _worldReady = false;
@@ -512,6 +605,7 @@ class _FireflyModalState extends State<FireflyModal>
           child: Row(
             children: [
               Text(
+                key: _caughtKey,
                 '${l10n.caught}: ${snap?.totalCaught ?? 0}',
                 style: AppTypography.bodySmall(context,
                     color: theme.primary, fontWeight: FontWeight.bold),
@@ -520,6 +614,7 @@ class _FireflyModalState extends State<FireflyModal>
               // Brightness toggle (only when current role is lamp, or solo)
               if (_isSolo || _role == FireflyRole.lamp)
                 GestureDetector(
+                  key: _brightnessKey,
                   onTap: _toggleBrightness,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -536,6 +631,7 @@ class _FireflyModalState extends State<FireflyModal>
               // Switch tool (LAN only)
               if (!_isSolo)
                 GestureDetector(
+                  key: _toolSwitchKey,
                   onTap: _switchTool,
                   child: Container(
                     margin: const EdgeInsets.only(left: 8),
@@ -615,6 +711,7 @@ class _FireflyModalState extends State<FireflyModal>
 
               if (_isSolo) {
                 return Listener(
+                  key: _canvasKey,
                   onPointerDown: _onPointerDown,
                   onPointerMove: _onPointerMove,
                   onPointerUp: _onPointerUp,
@@ -623,6 +720,7 @@ class _FireflyModalState extends State<FireflyModal>
               }
 
               return GestureDetector(
+                key: _canvasKey,
                 onPanUpdate: _onLanPanUpdate,
                 child: canvas,
               );

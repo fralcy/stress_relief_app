@@ -922,6 +922,86 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialGardenInventoryDesc => 'Select a seed type, then tap an empty plot to plant it. Each plant has different growth time and rewards.';
 
+  // Tutorial - Rock Balancing Lobby
+  @override
+  String get tutorialRockLobbyConfigTitle => 'Rock Count';
+  @override
+  String get tutorialRockLobbyConfigDesc => 'Choose the number of rocks. More rocks mean more variety but also more challenge.';
+  @override
+  String get tutorialRockLobbyRoomTitle => 'Create or Join';
+  @override
+  String get tutorialRockLobbyRoomDesc => 'Create a new room or find and Join an existing room on the same Wi-Fi network.';
+  @override
+  String get tutorialRockLobbyPlayersTitle => 'Players';
+  @override
+  String get tutorialRockLobbyPlayersDesc => 'Player list. Everyone must mark themselves as Ready before the host can start.';
+  @override
+  String get tutorialRockLobbyStartTitle => 'Start Game';
+  @override
+  String get tutorialRockLobbyStartDesc => 'Once everyone is ready, tap here to begin.';
+  @override
+  String get tutorialRockLobbyReadyTitle => 'Ready Up';
+  @override
+  String get tutorialRockLobbyReadyDesc => 'Tap this button to signal you are ready.';
+
+  // Tutorial - Rock Balancing Game
+  @override
+  String get tutorialRockGameCanvasTitle => 'Balance Rocks';
+  @override
+  String get tutorialRockGameCanvasDesc => 'Drag rocks to stack them. A blue outline means another player is currently holding that rock.';
+  @override
+  String get tutorialRockGameCanvasSoloDesc => 'Drag the rocks to pick them up and stack them on top of each other.';
+  @override
+  String get tutorialRockGameInfoTitle => 'Record';
+  @override
+  String get tutorialRockGameInfoDesc => 'Your highest stack is tracked here. Keep stacking to beat your own record!';
+
+  // Tutorial - Firefly Lobby
+  @override
+  String get tutorialFireflyLobbyConfigTitle => 'Firefly Count';
+  @override
+  String get tutorialFireflyLobbyConfigDesc => 'Choose the number of fireflies. More fireflies mean more action on screen.';
+  @override
+  String get tutorialFireflyLobbyRoomTitle => 'Create or Join';
+  @override
+  String get tutorialFireflyLobbyRoomDesc => 'Create a new room or find and Join an existing room on the same Wi-Fi network.';
+  @override
+  String get tutorialFireflyLobbyPlayersTitle => 'Players';
+  @override
+  String get tutorialFireflyLobbyPlayersDesc => 'See the players and their roles. Everyone must be Ready for the host to start.';
+  @override
+  String get tutorialFireflyLobbyRoleTitle => 'Choose Your Role';
+  @override
+  String get tutorialFireflyLobbyRoleDesc => 'The Lamp attracts/repels fireflies, while the Jar catches them. You can switch anytime.';
+  @override
+  String get tutorialFireflyLobbyStartTitle => 'Start Game';
+  @override
+  String get tutorialFireflyLobbyStartDesc => 'Once everyone is ready, tap here to begin. Only the host can start the game.';
+  @override
+  String get tutorialFireflyLobbyReadyTitle => 'Ready Up';
+  @override
+  String get tutorialFireflyLobbyReadyDesc => 'Tap to signal you are ready.';
+
+  // Tutorial - Firefly Game
+  @override
+  String get tutorialFireflyGameCanvasTitle => 'Move Your Tool';
+  @override
+  String get tutorialFireflyGameCanvasDesc => 'Tap to move your tool to that position.';
+  @override
+  String get tutorialFireflyGameCanvasSoloDesc => 'Tap and drag the Lamp or Jar directly. You can control both tools at once.';
+  @override
+  String get tutorialFireflyGameCaughtTitle => 'Catch Fireflies';
+  @override
+  String get tutorialFireflyGameCaughtDesc => 'Use the Lamp to light up fireflies, then scoop them up with the Jar.';
+  @override
+  String get tutorialFireflyGameBrightnessTitle => 'Attract or Repel';
+  @override
+  String get tutorialFireflyGameBrightnessDesc => 'Switch between Attract (dim light) and Repel (bright light) to herd fireflies toward the Jar.';
+  @override
+  String get tutorialFireflyGameSwitchTitle => 'Switch Role';
+  @override
+  String get tutorialFireflyGameSwitchDesc => 'Tap here to swap between the Lamp and Jar. Coordinate with your team for the best strategy.';
+
   @override
 
   // Breathing Exercise
