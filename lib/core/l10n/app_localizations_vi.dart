@@ -1119,10 +1119,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sleepTipSetBedtime => 'Đặt giờ đi ngủ để nhận gợi ý!';
 
   @override
-  String get sleepTipEarly => 'Còn nhiều thời gian trước giờ ngủ!';
+  String get sleepTipEarly => 'Còn nhiều thời gian trước giờ ngủ! Cứ tiếp tục nhé 😊';
+
+  @override
+  String get sleepTipEarly2 => 'Những thói quen nhỏ mỗi ngày sẽ tích lũy thành giấc ngủ chất lượng hơn.';
+
+  @override
+  String get sleepTipEarly3 => 'Ánh sáng tự nhiên ban ngày giúp đồng hồ sinh học của bạn tiết melatonin đúng giờ vào ban đêm.';
+
+  @override
+  String get sleepTipEarly4 => 'Uống đủ nước cả ngày giúp cơ thể thoải mái — nhưng hạn chế uống nhiều sát giờ đi ngủ nhé.';
 
   @override
   String get sleepTipWindDown => 'Đã đến lúc chuẩn bị đi ngủ.';
+
+  @override
+  String get sleepTipWindDown2 => 'Thử vươn vai nhẹ hoặc hít thở sâu để chuẩn bị vào giấc ngủ.';
+
+  @override
+  String get sleepTipWindDown3 => 'Tắt bớt đèn và tĩnh tâm — giấc ngủ đang đến gần rồi.';
 
   @override
   String get sleepTipLate => 'Đã quá giờ ngủ! Thử hít thở nhé?';
@@ -1135,7 +1150,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sleepLog => 'Nhật ký giấc ngủ';
 
   @override
-  String get sleepHistory => 'Lịch sử (7 ngày gần nhất)';
+  String get sleepHistory => 'Lịch sử (14 ngày gần nhất)';
 
   @override
   String get tapDayToLogSleep => 'Chạm vào ngày để ghi lại giấc ngủ';
@@ -1160,6 +1175,54 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noSleepData => 'Chưa có dữ liệu giấc ngủ';
+
+  @override
+  String get sleepReminderDisabledDesc => 'Bật để nhận nhắc nhở trước giờ ngủ.';
+
+  @override
+  String get sleepReminderEnabledDesc => 'Nhắc lúc';
+
+  @override
+  String get sleepTipsCardTitle => 'Mẹo ngủ ngon';
+
+  @override
+  String get sleepTipsLead => 'Có thể bạn đã biết?';
+
+  @override
+  String get sleepTip1 => 'Người lớn cần 7–9 giờ ngủ mỗi đêm để duy trì sức khỏe tốt.';
+
+  @override
+  String get sleepTip2 => 'Giờ ngủ đều đặn — kể cả cuối tuần — giúp đồng hồ sinh học ổn định hơn.';
+
+  @override
+  String get sleepTip3 => 'Giảm độ sáng màn hình và tránh nội dung gây kích thích 30 phút trước khi ngủ để bảo vệ melatonin.';
+
+  @override
+  String get sleepTip4 => 'Phòng mát (18–20°C) giúp cơ thể hạ nhiệt, tạo điều kiện cho giấc ngủ sâu.';
+
+  @override
+  String get sleepTip5 => 'Caffeine tồn tại trong máu từ 5–7 tiếng — hạn chế uống sau 2 giờ chiều giúp cơ thể dễ đi vào giấc ngủ sâu hơn tối nay.';
+
+  @override
+  String get sleepTip6 => 'Một giấc ngủ ngắn 10–20 phút trước 3 giờ chiều giúp tỉnh táo trở lại mà không gây lờ đờ hay ảnh hưởng đến giấc ngủ tối.';
+
+  @override
+  String get sleepTip7 => 'Tập thể dục rất tốt cho giấc ngủ — nhưng hãy dành ít nhất 1 giờ để cơ thể hạ nhiệt trước khi lên giường.';
+
+  @override
+  String get sleepTip8 => 'Thư giãn ngắn trước khi ngủ giúp não hiểu rằng đã đến giờ nghỉ.';
+
+  @override
+  String get sleepTip9 => 'Tránh ăn no trong vòng 2 tiếng trước khi ngủ để tránh khó chịu.';
+
+  @override
+  String get sleepTip10 => 'Ghi ra kế hoạch ngày mai trước khi ngủ giúp tâm trí thư thái hơn.';
+
+  @override
+  String get sleepLastWeek => 'Tuần trước';
+
+  @override
+  String get sleepThisWeek => 'Tuần này';
 
   // ==================== PROFILE ====================
 

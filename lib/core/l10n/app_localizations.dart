@@ -467,7 +467,12 @@ abstract class AppLocalizations {
   // Sleep tips
   String get sleepTipSetBedtime;
   String get sleepTipEarly;
+  String get sleepTipEarly2;
+  String get sleepTipEarly3;
+  String get sleepTipEarly4;
   String get sleepTipWindDown;
+  String get sleepTipWindDown2;
+  String get sleepTipWindDown3;
   String get sleepTipLate;
   String get sleepTipVeryLate;
 
@@ -482,6 +487,28 @@ abstract class AppLocalizations {
   String get sleepLogSaved;
   String get hoursUnit;
   String get noSleepData;
+
+  // Reminder card
+  String get sleepReminderDisabledDesc;
+  String get sleepReminderEnabledDesc;
+
+  // Sleep tips card
+  String get sleepTipsCardTitle;
+  String get sleepTipsLead;
+  String get sleepTip1;
+  String get sleepTip2;
+  String get sleepTip3;
+  String get sleepTip4;
+  String get sleepTip5;
+  String get sleepTip6;
+  String get sleepTip7;
+  String get sleepTip8;
+  String get sleepTip9;
+  String get sleepTip10;
+
+  // History grid week labels
+  String get sleepLastWeek;
+  String get sleepThisWeek;
 
   // ==================== PROFILE ====================
   String get menuProfile;

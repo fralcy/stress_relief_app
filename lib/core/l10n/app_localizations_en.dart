@@ -1116,10 +1116,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepTipSetBedtime => 'Set your bedtime for personalized tips!';
 
   @override
-  String get sleepTipEarly => 'Plenty of time before bed!';
+  String get sleepTipEarly => 'Plenty of time before bed! Keep it up 😊';
+
+  @override
+  String get sleepTipEarly2 => 'Small consistent habits build up to better sleep over time.';
+
+  @override
+  String get sleepTipEarly3 => 'Natural daylight exposure helps your body clock release melatonin at the right time at night.';
+
+  @override
+  String get sleepTipEarly4 => 'Stay hydrated throughout the day — but avoid drinking too much close to bedtime.';
 
   @override
   String get sleepTipWindDown => 'Time to wind down for sleep.';
+
+  @override
+  String get sleepTipWindDown2 => 'Try some light stretching or deep breathing to ease into sleep.';
+
+  @override
+  String get sleepTipWindDown3 => 'Dim the lights and quiet your mind — rest is on the way.';
 
   @override
   String get sleepTipLate => "Past bedtime! Try breathing?";
@@ -1132,7 +1147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepLog => 'Sleep Log';
 
   @override
-  String get sleepHistory => 'History (Last 7 days)';
+  String get sleepHistory => 'History (Last 14 days)';
 
   @override
   String get tapDayToLogSleep => 'Tap a day to log your sleep';
@@ -1157,6 +1172,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSleepData => 'No sleep data yet';
+
+  @override
+  String get sleepReminderDisabledDesc => 'Turn on to get a nudge before bed.';
+
+  @override
+  String get sleepReminderEnabledDesc => 'Reminder set for';
+
+  @override
+  String get sleepTipsCardTitle => 'Sleep Tips';
+
+  @override
+  String get sleepTipsLead => 'Did you know?';
+
+  @override
+  String get sleepTip1 => 'Adults need 7–9 hours of sleep per night for optimal health.';
+
+  @override
+  String get sleepTip2 => 'A consistent sleep schedule, even on weekends, strengthens your body clock.';
+
+  @override
+  String get sleepTip3 => 'Reduce screen brightness and avoid stimulating content 30 min before bed to protect your melatonin.';
+
+  @override
+  String get sleepTip4 => 'A cool room (18–20°C) helps your body drop core temperature for deeper sleep.';
+
+  @override
+  String get sleepTip5 => 'Caffeine has a half-life of 5–7 hours — limiting it after 2 pm gives your body a better chance at deep sleep tonight.';
+
+  @override
+  String get sleepTip6 => 'A 10–20 min nap before 3 pm can restore alertness without grogginess or disrupting your night sleep.';
+
+  @override
+  String get sleepTip7 => 'Exercise is great for sleep — just give your body at least 1 hour to wind down before bed.';
+
+  @override
+  String get sleepTip8 => 'A short relaxation routine signals your brain that it\'s time to rest.';
+
+  @override
+  String get sleepTip9 => 'Avoid large meals within 2 hours of bedtime to prevent discomfort.';
+
+  @override
+  String get sleepTip10 => 'Writing down tomorrow\'s tasks before bed clears your mind for sleep.';
+
+  @override
+  String get sleepLastWeek => 'Last week';
+
+  @override
+  String get sleepThisWeek => 'This week';
 
   // ==================== PROFILE ====================
 

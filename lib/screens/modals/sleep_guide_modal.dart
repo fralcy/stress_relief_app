@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/line_graph.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sleep_guide_service.dart';
@@ -10,6 +14,7 @@ import '../../core/utils/asset_loader.dart';
 import '../../core/utils/notifier.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../models/sleep_log.dart';
+import '../../models/sleep_settings.dart';
 import '../../models/scene_models.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/score_provider.dart';
@@ -37,12 +42,15 @@ class SleepGuideModal extends StatefulWidget {
 class _SleepGuideModalState extends State<SleepGuideModal> {
   final SleepGuideService _sleepService = SleepGuideService();
 
-  // 0 = today … 6 = 6 days ago (data index)
+  // 0 = today … 13 = 13 days ago (data index)
   int _selectedDayIndex = 0;
   int? _logBedtimeMinutes;
   int? _logWakeTimeMinutes;
   int? _logQuality;
   bool _showDurationGraph = true;
+  int _currentTipIndex = 0;
+  int _mascotTipIndex = 0;
+  Timer? _reminderTimer;
 
   static const _qualityEmojis = ['😢', '😕', '😐', '🙂', '😊'];
 
@@ -50,9 +58,54 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   void initState() {
     super.initState();
     _loadLogForSelectedDay();
+    _mascotTipIndex = Random().nextInt(10);
+    _reminderTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _reminderTimer?.cancel();
+    super.dispose();
   }
 
   // ==================== HELPERS ====================
+
+  /// Expression for the mascot tip card — awake variants far from bedtime,
+  /// sleepy when approaching/at bedtime, calm when well past it.
+  MascotExpression _tipMascotExpression(SleepSettings settings) {
+    if (settings.bedtimeMinutes == null) return MascotExpression.idle;
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    final diff = settings.bedtimeMinutes! - currentMinutes;
+    final normalizedDiff = diff < -720 ? diff + 1440 : diff;
+    if (normalizedDiff > 60) return MascotExpression.happy;
+    return MascotExpression.sleepy;
+  }
+
+  /// Returns a randomly-selected tip from the pool appropriate for the
+  /// current time relative to bedtime.
+  String _getMascotTip(AppLocalizations l10n, SleepSettings settings) {
+    if (settings.bedtimeMinutes == null) return l10n.sleepTipSetBedtime;
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    final diff = settings.bedtimeMinutes! - currentMinutes;
+    final normalizedDiff = diff < -720 ? diff + 1440 : diff;
+
+    if (normalizedDiff > 60) {
+      final pool = [l10n.sleepTipEarly, l10n.sleepTipEarly2, l10n.sleepTipEarly3, l10n.sleepTipEarly4];
+      return pool[_mascotTipIndex % pool.length];
+    } else if (normalizedDiff > 0) {
+      final pool = [l10n.sleepTipWindDown, l10n.sleepTipWindDown2, l10n.sleepTipWindDown3];
+      return pool[_mascotTipIndex % pool.length];
+    } else if (normalizedDiff > -60) {
+      return l10n.sleepTipLate;
+    } else {
+      return l10n.sleepTipVeryLate;
+    }
+  }
 
   DateTime _dateFor(int index) {
     final now = DateTime.now();
@@ -169,14 +222,14 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             child: Row(
               children: [
                 Image.asset(
-                  AssetLoader.getMascotAsset(MascotExpression.sleepy),
+                  AssetLoader.getMascotAsset(_tipMascotExpression(sleepSettings)),
                   width: 80,
                   height: 80,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _sleepService.getSleepTip(l10n, sleepSettings),
+                    _getMascotTip(l10n, sleepSettings),
                     style: AppTypography.bodyMedium(context),
                   ),
                 ),
@@ -184,6 +237,8 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             ),
           ),
 
+          const SizedBox(height: 12),
+          _buildSleepTipsCard(l10n),
           const SizedBox(height: 24),
 
           // ── Sleep Log ──
@@ -259,12 +314,33 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   // ==================== DAY GRID ====================
 
   Widget _buildDayGrid() {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final labelStyle = AppTypography.bodySmall(context).copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.sleepLastWeek, style: labelStyle),
+        const SizedBox(height: 4),
+        Opacity(opacity: 0.6, child: _buildDayRow(13, applyEditOpacity: false)),
+        const SizedBox(height: 8),
+        Text(l10n.sleepThisWeek, style: labelStyle),
+        const SizedBox(height: 4),
+        _buildDayRow(6, applyEditOpacity: true),
+      ],
+    );
+  }
+
+  /// Builds a 7-cell row starting from [firstDataIdx] down to [firstDataIdx - 6].
+  /// Leftmost cell = oldest day, rightmost = newest.
+  Widget _buildDayRow(int firstDataIdx, {required bool applyEditOpacity}) {
+    final theme = Theme.of(context);
     return Row(
-      children: List.generate(7, (displayIdx) {
-        // Ascending: leftmost = oldest (6d ago), rightmost = today
-        final dataIdx = 6 - displayIdx;
+      children: List.generate(7, (i) {
+        final dataIdx = firstDataIdx - i;
         final date = _dateFor(dataIdx);
         final log = _logFor(dataIdx);
         final hasLog = log != null;
@@ -290,7 +366,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             child: AspectRatio(
               aspectRatio: 1,
               child: Opacity(
-                opacity: canEdit ? 1.0 : 0.65,
+                opacity: applyEditOpacity ? (canEdit ? 1.0 : 0.65) : 1.0,
                 child: InkWell(
                   onTap: () {
                     setState(() {
@@ -341,8 +417,8 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     final qualityValues = <double?>[];
     final labels = <String>[];
 
-    // Oldest → newest (left to right), i=6 = 6 days ago, i=0 = today
-    for (int i = 6; i >= 0; i--) {
+    // Oldest → newest (left to right), i=13 = 13 days ago, i=0 = today
+    for (int i = 13; i >= 0; i--) {
       final date = _dateFor(i);
       final log = logs.cast<SleepLog?>().firstWhere(
             (l) =>
@@ -354,7 +430,9 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           );
       durationValues.add(log?.durationHours);
       qualityValues.add(log?.quality?.toDouble());
-      labels.add('${date.day}/${date.month}');
+      // Show label only on even positions to avoid overlap (7 visible out of 14)
+      final idx = 13 - i; // array position 0..13
+      labels.add(idx.isEven ? '${date.day}/${date.month}' : '');
     }
 
     final hasAnyLog = durationValues.any((v) => v != null) ||
@@ -378,7 +456,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             minY: 0,
             maxY: graphMaxY,
             yUnit: graphUnit,
-            highlightIndex: 6 - _selectedDayIndex,
+            highlightIndex: 13 - _selectedDayIndex,
           )
         else
           SizedBox(
@@ -571,6 +649,55 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             ),
           );
         }),
+      ),
+    );
+  }
+
+  // ==================== SLEEP TIPS CARD ====================
+
+  Widget _buildSleepTipsCard(AppLocalizations l10n) {
+    final tips = [
+      l10n.sleepTip1, l10n.sleepTip2, l10n.sleepTip3, l10n.sleepTip4,
+      l10n.sleepTip5, l10n.sleepTip6, l10n.sleepTip7, l10n.sleepTip8,
+      l10n.sleepTip9, l10n.sleepTip10,
+    ];
+    final tip = tips[_currentTipIndex % tips.length];
+    return AppCard(
+      title: l10n.sleepTipsCardTitle,
+      isExpandable: true,
+      initiallyExpanded: false,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.sleepTipsLead,
+            style: AppTypography.bodySmall(context).copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(tip, style: AppTypography.bodyMedium(context)),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _currentTipIndex = (_currentTipIndex + 1) % tips.length;
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
