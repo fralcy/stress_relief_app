@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_theme.dart';
 import '../core/constants/app_typography.dart';
+import '../core/constants/avatar_presets.dart';
 import '../core/providers/theme_provider.dart';
 import '../core/providers/locale_provider.dart';
 import '../core/widgets/app_button.dart';
@@ -26,7 +27,10 @@ class MobilePortraitWelcomeScreen extends StatefulWidget {
 class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScreen> {
   int _currentStep = 0;
   late UserSettings _settings;
-  
+  late final TextEditingController _nameController;
+  final FocusNode _nameFocusNode = FocusNode();
+  int _selectedAvatarIndex = 0;
+
   final List<String> _bgmList = [
     'Lofi Beats',
     'Rain Sounds',
@@ -42,12 +46,25 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
   void initState() {
     super.initState();
     _settings = DataManager().userSettings;
+    _nameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _nameFocusNode.dispose();
+    super.dispose();
   }
 
   void _nextStep() {
     SfxService().buttonClick();
-    if (_currentStep < 2) {
+    if (_currentStep < 3) {
       setState(() => _currentStep++);
+      if (_currentStep == 3) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _nameFocusNode.requestFocus(),
+        );
+      }
     } else {
       _finishSetup();
     }
@@ -61,6 +78,14 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
   }
 
   void _finishSetup() {
+    // Save profile (name + avatar) — use 'Player' as fallback if name left blank
+    final name = _nameController.text.trim();
+    final displayName = name.isNotEmpty ? name : 'Player';
+    final profile = DataManager().userProfile;
+    DataManager().saveUserProfile(
+      profile.copyWith(name: displayName, avatarIndex: _selectedAvatarIndex),
+    );
+
     // Save settings
     DataManager().saveUserSettings(_settings);
     
@@ -114,6 +139,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
   }
 
   Widget _buildProgressIndicator(AppTheme theme) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
@@ -122,26 +148,27 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStepLabel(AppLocalizations.of(context).language, 0, theme),
-              _buildStepLabel(AppLocalizations.of(context).theme, 1, theme),
-              _buildStepLabel(AppLocalizations.of(context).audio, 2, theme),
+              _buildStepLabel(l10n.language, 0, theme),
+              _buildStepLabel(l10n.theme, 1, theme),
+              _buildStepLabel(l10n.audio, 2, theme),
+              _buildStepLabel(l10n.menuProfile, 3, theme),
             ],
           ),
           const SizedBox(height: 12),
           // Progress bar
           Row(
-            children: List.generate(3, (index) {
+            children: List.generate(4, (index) {
               final isActive = index == _currentStep;
               final isCompleted = index < _currentStep;
-              
+
               return Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   height: 4,
-                  margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
+                  margin: EdgeInsets.only(right: index < 3 ? 8 : 0),
                   decoration: BoxDecoration(
-                    color: isActive || isCompleted 
-                        ? theme.primary 
+                    color: isActive || isCompleted
+                        ? theme.primary
                         : theme.primary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: isActive ? [
@@ -209,6 +236,8 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
         return _buildThemeStep(theme);
       case 2:
         return _buildAudioStep(theme);
+      case 3:
+        return _buildProfileStep(theme);
       default:
         return const SizedBox();
     }
@@ -760,27 +789,134 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
         top: false,
         child: Row(
           children: [
-            if (_currentStep > 0)
-              Expanded(
-                child: AppButton(
-                  label: AppLocalizations.of(context).back,
-                  onPressed: _previousStep,
-                ),
-              ),
-            if (_currentStep > 0) const SizedBox(width: 16),
             Expanded(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                child: AppButton(
-                  label: _currentStep == 2 ? AppLocalizations.of(context).getStarted : AppLocalizations.of(context).next,
-                  isActive: true,
-                  onPressed: _nextStep,
-                ),
+              child: _currentStep > 0
+                  ? AppButton(
+                      label: AppLocalizations.of(context).back,
+                      onPressed: _previousStep,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AppButton(
+                label: AppLocalizations.of(context).tutorialSkip,
+                onPressed: _finishSetup,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AppButton(
+                label: _currentStep == 3
+                    ? AppLocalizations.of(context).getStarted
+                    : AppLocalizations.of(context).next,
+                isActive: true,
+                onPressed: _nextStep,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProfileStep(AppTheme theme) {
+    final l10n = AppLocalizations.of(context);
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          Text(
+            kAvatarPresets[_selectedAvatarIndex],
+            style: const TextStyle(fontSize: 72),
+          ),
+          const SizedBox(height: 24),
+          Builder(
+            builder: (context) => Text(
+              l10n.menuProfile,
+              style: AppTypography.h2(context, color: theme.text),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 32),
+          TextField(
+            controller: _nameController,
+            focusNode: _nameFocusNode,
+            style: AppTypography.bodyMedium(context, color: theme.text),
+            decoration: InputDecoration(
+              labelText: l10n.name,
+              labelStyle: AppTypography.bodySmall(context,
+                  color: theme.text.withOpacity(0.6)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: theme.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: theme.primary, width: 1.5),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+            maxLength: 20,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _nameFocusNode.unfocus(),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Builder(
+              builder: (context) => Text(
+                l10n.chooseAvatar,
+                style: AppTypography.bodySmall(context,
+                    color: theme.text.withOpacity(0.6)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildAvatarGrid(theme),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarGrid(AppTheme theme) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 6,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: kAvatarPresets.length,
+      itemBuilder: (context, i) {
+        final selected = i == _selectedAvatarIndex;
+        return GestureDetector(
+          onTap: () {
+            SfxService().buttonClick();
+            setState(() => _selectedAvatarIndex = i);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: selected
+                  ? theme.primary.withOpacity(0.15)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected ? theme.primary : theme.border,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(kAvatarPresets[i],
+                style: const TextStyle(fontSize: 22)),
+          ),
+        );
+      },
     );
   }
 

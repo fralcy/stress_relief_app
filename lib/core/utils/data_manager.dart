@@ -142,7 +142,7 @@ class DataManager {
             id: 'initial_user',
             username: 'new_user',
             email: 'initial@example.com',
-            name: 'New User',
+            name: '',
           );
           break;
         case 'guest':
@@ -150,7 +150,7 @@ class DataManager {
             id: 'guest_user',
             username: 'guest',
             email: 'guest@example.com',
-            name: 'Guest User',
+            name: 'Player',
           );
           break;
         case 'debug':
@@ -158,7 +158,7 @@ class DataManager {
             id: 'debug_user',
             username: 'debug',
             email: 'debug@example.com',
-            name: 'Debug User',
+            name: 'Player',
           );
           break;
         case 'logged_in':
@@ -166,7 +166,7 @@ class DataManager {
             id: userId,
             username: _authService.userEmail?.split('@')[0] ?? 'user',
             email: _authService.userEmail ?? 'user@example.com',
-            name: _authService.currentUser?.displayName ?? 'User',
+            name: _authService.currentUser?.displayName ?? '',
           );
           break;
         default:
@@ -174,7 +174,7 @@ class DataManager {
             id: 'initial_user',
             username: 'new_user',
             email: 'initial@example.com',
-            name: 'New User',
+            name: '',
           );
       }
       
@@ -194,7 +194,6 @@ class DataManager {
       id: 'guest_user',
       username: 'guest',
       email: 'guest@example.com',
-      name: 'Guest User',
       lastUpdatedAt: DateTime.now(),
     );
     await _userProfileHive.put('current', guestProfile);
@@ -207,7 +206,6 @@ class DataManager {
       id: 'debug_user',
       username: 'debug',
       email: 'debug@example.com',
-      name: 'Debug User',
       lastUpdatedAt: DateTime.now(),
     );
     await _userProfileHive.put('current', debugProfile);
