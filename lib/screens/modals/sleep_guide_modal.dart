@@ -13,6 +13,7 @@ import '../../core/utils/sfx_service.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/notifier.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../models/sleep_log.dart';
 import '../../models/sleep_settings.dart';
 import '../../models/scene_models.dart';
@@ -30,17 +31,24 @@ class SleepGuideModal extends StatefulWidget {
 
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_SleepGuideModalState>();
     return AppModal.show(
       context: context,
       title: l10n.sleepGuide,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const SleepGuideModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: SleepGuideModal(key: modalKey),
     );
   }
 }
 
 class _SleepGuideModalState extends State<SleepGuideModal> {
   final SleepGuideService _sleepService = SleepGuideService();
+
+  final GlobalKey _tipKey = GlobalKey();
+  final GlobalKey _gridKey = GlobalKey();
+  final GlobalKey _graphKey = GlobalKey();
+  final GlobalKey _checkinKey = GlobalKey();
 
   // 0 = today … 13 = 13 days ago (data index)
   int _selectedDayIndex = 0;
@@ -201,6 +209,45 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     }
   }
 
+  // ==================== TUTORIAL ====================
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(
+          targetKey: _tipKey,
+          title: l10n.tutorialSleepTipTitle,
+          description: l10n.tutorialSleepTipDesc,
+          tag: 'sleep_tip',
+        ),
+        TutorialStep(
+          targetKey: _gridKey,
+          title: l10n.tutorialSleepGridTitle,
+          description: l10n.tutorialSleepGridDesc,
+          tag: 'sleep_grid',
+        ),
+        TutorialStep(
+          targetKey: _graphKey,
+          title: l10n.tutorialSleepGraphTitle,
+          description: l10n.tutorialSleepGraphDesc,
+          tag: 'sleep_graph',
+        ),
+        TutorialStep(
+          targetKey: _checkinKey,
+          title: l10n.tutorialSleepCheckinTitle,
+          description: l10n.tutorialSleepCheckinDesc,
+          tag: 'sleep_checkin',
+        ),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   // ==================== BUILD ====================
 
   @override
@@ -213,27 +260,30 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Mascot tip
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Image.asset(
-                  AssetLoader.getMascotAsset(_tipMascotExpression(sleepSettings)),
-                  width: 80,
-                  height: 80,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _getMascotTip(l10n, sleepSettings),
-                    style: AppTypography.bodyMedium(context),
+          KeyedSubtree(
+            key: _tipKey,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    AssetLoader.getMascotAsset(_tipMascotExpression(sleepSettings)),
+                    width: 80,
+                    height: 80,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _getMascotTip(l10n, sleepSettings),
+                      style: AppTypography.bodyMedium(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -252,11 +302,11 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           ),
           const SizedBox(height: 12),
 
-          _buildDayGrid(),
+          KeyedSubtree(key: _gridKey, child: _buildDayGrid()),
           const SizedBox(height: 16),
-          _buildSleepGraph(l10n),
+          KeyedSubtree(key: _graphKey, child: _buildSleepGraph(l10n)),
           const SizedBox(height: 16),
-          _buildCheckInForm(l10n),
+          KeyedSubtree(key: _checkinKey, child: _buildCheckInForm(l10n)),
 
           const SizedBox(height: 24),
           const Divider(),

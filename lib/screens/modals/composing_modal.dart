@@ -6,6 +6,8 @@ import '../../core/widgets/app_button.dart';
 import '../../core/utils/composing_service.dart';
 import '../../core/utils/achievement_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
+import '../../core/utils/sfx_service.dart';
 import 'dart:async';
 import '../../core/utils/bgm_service.dart';
 import 'library_modal.dart';
@@ -35,11 +37,13 @@ class ComposingModal extends StatefulWidget {
     // Pause BGM khi mở modal
     await BgmService().pause();
     
+    final modalKey = GlobalKey<_ComposingModalState>();
     await AppModal.show(
       context: context,
       title: l10n.music,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const ComposingModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: ComposingModal(key: modalKey),
     );
     
     // Resume BGM khi đóng modal
@@ -50,6 +54,11 @@ class ComposingModal extends StatefulWidget {
 class _ComposingModalState extends State<ComposingModal> {
   final TextEditingController _nameController = TextEditingController();
   final ComposingService _composingService = ComposingService();
+
+  final GlobalKey _toolbarKey = GlobalKey();
+  final GlobalKey _timelineKey = GlobalKey();
+  final GlobalKey _playbackKey = GlobalKey();
+  final GlobalKey _notesKey = GlobalKey();
   
   String _songName = 'My Song';
   bool _isEditingName = false;
@@ -405,6 +414,23 @@ class _ComposingModalState extends State<ComposingModal> {
     );
   }
 
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(targetKey: _toolbarKey, title: l10n.tutorialComposeToolbarTitle, description: l10n.tutorialComposeToolbarDesc, tag: 'compose_toolbar'),
+        TutorialStep(targetKey: _timelineKey, title: l10n.tutorialComposeTimelineTitle, description: l10n.tutorialComposeTimelineDesc, tag: 'compose_timeline'),
+        TutorialStep(targetKey: _playbackKey, title: l10n.tutorialComposePlaybackTitle, description: l10n.tutorialComposePlaybackDesc, tag: 'compose_playback'),
+        TutorialStep(targetKey: _notesKey, title: l10n.tutorialComposeNotesTitle, description: l10n.tutorialComposeNotesDesc, tag: 'compose_notes'),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -418,15 +444,15 @@ class _ComposingModalState extends State<ComposingModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildToolbar(l10n, theme),
+          KeyedSubtree(key: _toolbarKey, child: _buildToolbar(l10n, theme)),
           const SizedBox(height: 16),
-          _buildTimeline(theme),
+          KeyedSubtree(key: _timelineKey, child: _buildTimeline(theme)),
           const SizedBox(height: 16),
-          _buildPlaybackControls(l10n),
+          KeyedSubtree(key: _playbackKey, child: _buildPlaybackControls(l10n)),
           const SizedBox(height: 24),
           _buildInstrumentSection(l10n, theme),
           const SizedBox(height: 16),
-          _buildNoteSection(l10n, theme),
+          KeyedSubtree(key: _notesKey, child: _buildNoteSection(l10n, theme)),
         ],
       ),
     );

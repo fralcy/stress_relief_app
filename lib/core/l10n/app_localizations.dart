@@ -315,6 +315,46 @@ abstract class AppLocalizations {
   String get tutorialSkip;
   String tutorialPageOf(int current, int total);
 
+  // Tutorial overlays — Sleep Guide
+  String get tutorialSleepTipTitle;
+  String get tutorialSleepTipDesc;
+  String get tutorialSleepGridTitle;
+  String get tutorialSleepGridDesc;
+  String get tutorialSleepGraphTitle;
+  String get tutorialSleepGraphDesc;
+  String get tutorialSleepCheckinTitle;
+  String get tutorialSleepCheckinDesc;
+
+  // Tutorial overlays — Drawing
+  String get tutorialDrawCanvasTitle;
+  String get tutorialDrawCanvasDesc;
+  String get tutorialDrawToolbarTitle;
+  String get tutorialDrawToolbarDesc;
+  String get tutorialDrawZoomTitle;
+  String get tutorialDrawZoomDesc;
+  String get tutorialDrawPaletteTitle;
+  String get tutorialDrawPaletteDesc;
+
+  // Tutorial overlays — Composing
+  String get tutorialComposeToolbarTitle;
+  String get tutorialComposeToolbarDesc;
+  String get tutorialComposeTimelineTitle;
+  String get tutorialComposeTimelineDesc;
+  String get tutorialComposePlaybackTitle;
+  String get tutorialComposePlaybackDesc;
+  String get tutorialComposeNotesTitle;
+  String get tutorialComposeNotesDesc;
+
+  // Tutorial overlays — Emotion Diary
+  String get tutorialDiaryHistoryTitle;
+  String get tutorialDiaryHistoryDesc;
+  String get tutorialDiaryQuestionsTitle;
+  String get tutorialDiaryQuestionsDesc;
+  String get tutorialDiaryNotesTitle;
+  String get tutorialDiaryNotesDesc;
+  String get tutorialDiarySaveTitle;
+  String get tutorialDiarySaveDesc;
+
   // Theme names
   String get themePastelBlueBreeze;
   String get themeCalmLavender;

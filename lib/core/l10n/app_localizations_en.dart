@@ -709,6 +709,78 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String tutorialPageOf(int current, int total) => 'Page $current/$total';
 
+  // Tutorial overlays — Sleep Guide
+  @override
+  String get tutorialSleepTipTitle => 'Daily Sleep Tip';
+  @override
+  String get tutorialSleepTipDesc => 'The mascot card shows a tip based on your schedule. The card below offers additional random tips.';
+  @override
+  String get tutorialSleepGridTitle => 'Two-Week History';
+  @override
+  String get tutorialSleepGridDesc => 'Each cell represents a night\'s sleep quality with an emoji. Tap to view or edit your check-in.';
+  @override
+  String get tutorialSleepGraphTitle => 'Sleep Graph';
+  @override
+  String get tutorialSleepGraphDesc => 'Toggle between Duration and Quality to track your sleep trends over the past two weeks.';
+  @override
+  String get tutorialSleepCheckinTitle => 'Sleep Reminder';
+  @override
+  String get tutorialSleepCheckinDesc => 'Set your target bedtime and wake time to receive gentle daily notifications.';
+
+  // Tutorial overlays — Drawing
+  @override
+  String get tutorialDrawCanvasTitle => 'Pixel Canvas';
+  @override
+  String get tutorialDrawCanvasDesc => 'Tap or drag on the grid to paint pixels with your selected color.';
+  @override
+  String get tutorialDrawToolbarTitle => 'Toolbar';
+  @override
+  String get tutorialDrawToolbarDesc => 'Name your art, undo strokes, clear the canvas, open a saved work, or load templates to start quickly.';
+  @override
+  String get tutorialDrawZoomTitle => 'Zoom & Pan';
+  @override
+  String get tutorialDrawZoomDesc => 'Use arrows to pan across the canvas and +/− to zoom in or out.';
+  @override
+  String get tutorialDrawPaletteTitle => 'Color Palette';
+  @override
+  String get tutorialDrawPaletteDesc => 'Tap a swatch to pick a color. The highlighted border indicates your active selection.';
+
+  // Tutorial overlays — Composing
+  @override
+  String get tutorialComposeToolbarTitle => 'Song Toolbar';
+  @override
+  String get tutorialComposeToolbarDesc => 'Name your composition here. Your progress is saved automatically.';
+  @override
+  String get tutorialComposeTimelineTitle => 'Note Timeline';
+  @override
+  String get tutorialComposeTimelineDesc => 'Rows represent instruments; columns represent beats. Tap a cell to place or remove a note.';
+  @override
+  String get tutorialComposePlaybackTitle => 'Playback Controls';
+  @override
+  String get tutorialComposePlaybackDesc => 'Press Play to loop your composition continuously, or Stop to reset to beat 1. Open a saved song or browse the library for sound samples.';
+  @override
+  String get tutorialComposeNotesTitle => 'Instrument & Notes';
+  @override
+  String get tutorialComposeNotesDesc => 'Select an instrument from the top row, then choose a note (Do–Do, 8 notes) — tap to play directly, or select to place on the timeline.';
+
+  // Tutorial overlays — Emotion Diary
+  @override
+  String get tutorialDiaryHistoryTitle => 'Mood History';
+  @override
+  String get tutorialDiaryHistoryDesc => 'The grid displays your weekly mood, while the graph plots your emotional trends.';
+  @override
+  String get tutorialDiaryQuestionsTitle => 'Daily Check-in';
+  @override
+  String get tutorialDiaryQuestionsDesc => 'Rate your mood, stress, and productivity (1–5). All three are required to save.';
+  @override
+  String get tutorialDiaryNotesTitle => 'Personal Notes';
+  @override
+  String get tutorialDiaryNotesDesc => 'Write freely about your day — thoughts, feelings, or memories (Up to 400 characters).';
+  @override
+  String get tutorialDiarySaveTitle => 'Save Entry';
+  @override
+  String get tutorialDiarySaveDesc => 'Tap Save after your check-in. You can update your entry anytime before midnight.';
+
   // Theme names
   @override
   String get themePastelBlueBreeze => 'Pastel Blue Breeze';

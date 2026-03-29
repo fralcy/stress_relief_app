@@ -5,6 +5,7 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../core/constants/drawing_palette.dart';
 import '../../core/widgets/pixel_canvas.dart';
 import '../../core/utils/painting_service.dart';
@@ -33,11 +34,13 @@ class DrawingModal extends StatefulWidget {
     
     if (!context.mounted) return;
     
+    final modalKey = GlobalKey<_DrawingModalState>();
     return AppModal.show(
       context: context,
       title: l10n.art,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const DrawingModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: DrawingModal(key: modalKey),
     );
   }
 }
@@ -45,6 +48,11 @@ class DrawingModal extends StatefulWidget {
 class _DrawingModalState extends State<DrawingModal> {
   final PaintingService _paintingService = PaintingService();
   final TextEditingController _nameController = TextEditingController();
+
+  final GlobalKey _toolbarKey = GlobalKey();
+  final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey _zoomKey = GlobalKey();
+  final GlobalKey _paletteKey = GlobalKey();
   
   late List<List<int>> _pixels;
   int _selectedColorIndex = 0;
@@ -334,6 +342,23 @@ class _DrawingModalState extends State<DrawingModal> {
     }
   }
 
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(targetKey: _toolbarKey, title: l10n.tutorialDrawToolbarTitle, description: l10n.tutorialDrawToolbarDesc, tag: 'draw_toolbar'),
+        TutorialStep(targetKey: _canvasKey, title: l10n.tutorialDrawCanvasTitle, description: l10n.tutorialDrawCanvasDesc, tag: 'draw_canvas'),
+        TutorialStep(targetKey: _zoomKey, title: l10n.tutorialDrawZoomTitle, description: l10n.tutorialDrawZoomDesc, tag: 'draw_zoom'),
+        TutorialStep(targetKey: _paletteKey, title: l10n.tutorialDrawPaletteTitle, description: l10n.tutorialDrawPaletteDesc, tag: 'draw_palette'),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -354,36 +379,39 @@ class _DrawingModalState extends State<DrawingModal> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ========== TOOLBAR ==========
-            _buildToolbar(l10n, theme),
-            
+            KeyedSubtree(key: _toolbarKey, child: _buildToolbar(l10n, theme)),
+
             const SizedBox(height: 16),
-            
+
             // ========== CANVAS ==========
-            Listener(
-              onPointerDown: (_) => setState(() => _isDrawing = true),
-              onPointerUp: (_) => setState(() => _isDrawing = false),
-              onPointerCancel: (_) => setState(() => _isDrawing = false),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: PixelCanvas(
-                  gridSize: 32,
-                  pixels: _pixels,
-                  selectedColorIndex: _selectedColorIndex,
-                  onPixelPaint: _onPixelPaint,
-                  zoomLevel: _zoomLevel,
-                  panX: _panX,
-                  panY: _panY,
+            KeyedSubtree(
+              key: _canvasKey,
+              child: Listener(
+                onPointerDown: (_) => setState(() => _isDrawing = true),
+                onPointerUp: (_) => setState(() => _isDrawing = false),
+                onPointerCancel: (_) => setState(() => _isDrawing = false),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: PixelCanvas(
+                    gridSize: 32,
+                    pixels: _pixels,
+                    selectedColorIndex: _selectedColorIndex,
+                    onPixelPaint: _onPixelPaint,
+                    zoomLevel: _zoomLevel,
+                    panX: _panX,
+                    panY: _panY,
+                  ),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // ========== ZOOM AND PAN CONTROLS ==========
-            _buildZoomPanControls(l10n, theme),
-            
+            KeyedSubtree(key: _zoomKey, child: _buildZoomPanControls(l10n, theme)),
+
             const SizedBox(height: 16),
-            
+
             // ========== COLOR PALETTE LABEL ==========
             Text(
               l10n.colorPalette,
@@ -419,7 +447,7 @@ class _DrawingModalState extends State<DrawingModal> {
             const SizedBox(height: 12),
             
             // ========== COLOR PALETTE GRID ==========
-            _buildColorPalette(theme),
+            KeyedSubtree(key: _paletteKey, child: _buildColorPalette(theme)),
           ],
         ),
       ),

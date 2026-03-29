@@ -712,6 +712,78 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String tutorialPageOf(int current, int total) => 'Trang $current/$total';
 
+  // Tutorial overlays — Sleep Guide
+  @override
+  String get tutorialSleepTipTitle => 'Mẹo Giấc Ngủ Hôm Nay';
+  @override
+  String get tutorialSleepTipDesc => 'Thẻ linh vật hiển thị mẹo dựa trên giờ ngủ của bạn. Thẻ phía dưới cung cấp thêm các mẹo ngẫu nhiên khác.';
+  @override
+  String get tutorialSleepGridTitle => 'Lịch Sử Hai Tuần';
+  @override
+  String get tutorialSleepGridDesc => 'Mỗi ô hiển thị chất lượng giấc ngủ qua biểu tượng cảm xúc. Nhấn để xem hoặc chỉnh sửa bản ghi đêm đó.';
+  @override
+  String get tutorialSleepGraphTitle => 'Biểu Đồ Giấc Ngủ';
+  @override
+  String get tutorialSleepGraphDesc => 'Chuyển đổi giữa Thời lượng và Chất lượng để theo dõi xu hướng giấc ngủ trong 14 ngày qua.';
+  @override
+  String get tutorialSleepCheckinTitle => 'Nhắc Nhở Giấc Ngủ';
+  @override
+  String get tutorialSleepCheckinDesc => 'Đặt giờ ngủ và giờ thức mục tiêu để nhận thông báo nhắc nhở nhẹ nhàng hàng ngày.';
+
+  // Tutorial overlays — Drawing
+  @override
+  String get tutorialDrawCanvasTitle => 'Canvas Pixel';
+  @override
+  String get tutorialDrawCanvasDesc => 'Nhấn hoặc kéo trên lưới để tô màu cho từng ô pixel.';
+  @override
+  String get tutorialDrawToolbarTitle => 'Thanh Công Cụ';
+  @override
+  String get tutorialDrawToolbarDesc => 'Đặt tên tranh, hoàn tác nét vẽ, xóa bảng vẽ, mở tranh đã lưu hoặc tải mẫu gợi ý có sẵn để bắt đầu nhanh.';
+  @override
+  String get tutorialDrawZoomTitle => 'Thu Phóng & Di Chuyển';
+  @override
+  String get tutorialDrawZoomDesc => 'Dùng các nút mũi tên để di chuyển và +/− để phóng to/thu nhỏ khi vẽ chi tiết.';
+  @override
+  String get tutorialDrawPaletteTitle => 'Bảng Màu';
+  @override
+  String get tutorialDrawPaletteDesc => 'Nhấn để chọn màu. Ô có viền nổi bật là màu bạn đang sử dụng.';
+
+  // Tutorial overlays — Composing
+  @override
+  String get tutorialComposeToolbarTitle => 'Thanh Quản Lý';
+  @override
+  String get tutorialComposeToolbarDesc => 'Đặt tên cho bản nhạc tại đây. Mọi thay đổi sẽ được tự động lưu lại.';
+  @override
+  String get tutorialComposeTimelineTitle => 'Dòng Thời Gian';
+  @override
+  String get tutorialComposeTimelineDesc => 'Mỗi hàng là một nhạc cụ, mỗi cột là một nhịp. Nhấn vào ô để đặt hoặc xóa nốt nhạc.';
+  @override
+  String get tutorialComposePlaybackTitle => 'Trình Phát';
+  @override
+  String get tutorialComposePlaybackDesc => 'Nhấn Phát để nghe lặp liên tục hoặc Dừng để quay về nhịp đầu tiên. Mở nhạc đã lưu hoặc khám phá mẫu âm thanh từ thư viện.';
+  @override
+  String get tutorialComposeNotesTitle => 'Nhạc Cụ & Nốt Nhạc';
+  @override
+  String get tutorialComposeNotesDesc => 'Chọn nhạc cụ ở hàng trên, sau đó chọn nốt (Đô–Đô, 8 nốt) — có thể chạm để chơi trực tiếp hoặc chọn để đặt vào dòng thời gian.';
+
+  // Tutorial overlays — Emotion Diary
+  @override
+  String get tutorialDiaryHistoryTitle => 'Lịch Sử Tâm Trạng';
+  @override
+  String get tutorialDiaryHistoryDesc => 'Lưới hiển thị tâm trạng theo tuần và biểu đồ biểu diễn xu hướng cảm xúc của bạn.';
+  @override
+  String get tutorialDiaryQuestionsTitle => 'Ghi Chép Hàng Ngày';
+  @override
+  String get tutorialDiaryQuestionsDesc => 'Đánh giá tâm trạng, mức căng thẳng và năng suất (thang 1–5). Cần hoàn thành cả ba để lưu.';
+  @override
+  String get tutorialDiaryNotesTitle => 'Ghi Chú Cá Nhân';
+  @override
+  String get tutorialDiaryNotesDesc => 'Tự do viết về ngày của bạn — suy nghĩ, cảm xúc hoặc bất cứ điều gì (Tối đa 400 ký tự).';
+  @override
+  String get tutorialDiarySaveTitle => 'Lưu Nhật Ký';
+  @override
+  String get tutorialDiarySaveDesc => 'Nhấn Lưu sau khi đánh giá. Bạn có thể cập nhật nội dung bất cứ lúc nào trước nửa đêm.';
+
   // Theme names
   @override
   String get themePastelBlueBreeze => 'Làn gió xanh dương';

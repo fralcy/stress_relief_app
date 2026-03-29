@@ -8,6 +8,7 @@ import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/line_graph.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/utils/auth_service.dart';
@@ -26,11 +27,13 @@ class EmotionDiaryModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_EmotionDiaryModalState>();
     return AppModal.show(
       context: context,
       title: l10n.emotionDiary,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
-      content: const EmotionDiaryModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: EmotionDiaryModal(key: modalKey),
     );
   }
 }
@@ -38,6 +41,11 @@ class EmotionDiaryModal extends StatefulWidget {
 class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   // 0 = today … 13 = 13 days ago (data index, matches sleep guide convention)
   int _selectedDayIndex = 0;
+
+  final GlobalKey _historyKey = GlobalKey();
+  final GlobalKey _questionsKey = GlobalKey();
+  final GlobalKey _notesKey = GlobalKey();
+  final GlobalKey _saveKey = GlobalKey();
 
   // Likert scale values (1-5, null = not selected)
   int? _overallFeeling;
@@ -119,6 +127,23 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
 
   // ==================== BUILD ====================
 
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(targetKey: _historyKey, title: l10n.tutorialDiaryHistoryTitle, description: l10n.tutorialDiaryHistoryDesc, tag: 'diary_history'),
+        TutorialStep(targetKey: _questionsKey, title: l10n.tutorialDiaryQuestionsTitle, description: l10n.tutorialDiaryQuestionsDesc, tag: 'diary_questions'),
+        TutorialStep(targetKey: _notesKey, title: l10n.tutorialDiaryNotesTitle, description: l10n.tutorialDiaryNotesDesc, tag: 'diary_notes'),
+        TutorialStep(targetKey: _saveKey, title: l10n.tutorialDiarySaveTitle, description: l10n.tutorialDiarySaveDesc, tag: 'diary_save'),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -130,7 +155,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ========== HISTORY SECTION ==========
-          _buildHistorySection(l10n, theme),
+          KeyedSubtree(key: _historyKey, child: _buildHistorySection(l10n, theme)),
 
           const SizedBox(height: 24),
           Divider(color: theme.border, height: 1, thickness: 1.5),
@@ -319,59 +344,63 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         ),
         const SizedBox(height: 12),
 
-        // Question 1: Overall feeling
-        _buildLikertQuestion(
-          question: l10n.howDoYouFeelOverall,
-          value: _overallFeeling,
-          labels: [l10n.veryBad, l10n.bad, l10n.neutral, l10n.good, l10n.great],
-          onChanged: isReadOnly
-              ? null
-              : (val) {
-                  SfxService().buttonClick();
-                  setState(() => _overallFeeling = val);
-                },
-          theme: theme,
+        KeyedSubtree(
+          key: _questionsKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Question 1: Overall feeling
+              _buildLikertQuestion(
+                question: l10n.howDoYouFeelOverall,
+                value: _overallFeeling,
+                labels: [l10n.veryBad, l10n.bad, l10n.neutral, l10n.good, l10n.great],
+                onChanged: isReadOnly
+                    ? null
+                    : (val) {
+                        SfxService().buttonClick();
+                        setState(() => _overallFeeling = val);
+                      },
+                theme: theme,
+              ),
+              const SizedBox(height: 20),
+              // Question 2: Stress level
+              _buildLikertQuestion(
+                question: l10n.howWasYourStressLevel,
+                value: _stressLevel,
+                labels: [l10n.veryHigh, l10n.high, l10n.moderate, l10n.low, l10n.relaxed],
+                onChanged: isReadOnly
+                    ? null
+                    : (val) {
+                        SfxService().buttonClick();
+                        setState(() => _stressLevel = val);
+                      },
+                theme: theme,
+              ),
+              const SizedBox(height: 20),
+              // Question 3: Productivity
+              _buildLikertQuestion(
+                question: l10n.howProductiveWereYou,
+                value: _productivity,
+                labels: [l10n.none, l10n.little, l10n.average, l10n.good, l10n.very],
+                onChanged: isReadOnly
+                    ? null
+                    : (val) {
+                        SfxService().buttonClick();
+                        setState(() => _productivity = val);
+                      },
+                theme: theme,
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 20),
 
-        // Question 2: Stress level
-        _buildLikertQuestion(
-          question: l10n.howWasYourStressLevel,
-          value: _stressLevel,
-          labels: [l10n.veryHigh, l10n.high, l10n.moderate, l10n.low, l10n.relaxed],
-          onChanged: isReadOnly
-              ? null
-              : (val) {
-                  SfxService().buttonClick();
-                  setState(() => _stressLevel = val);
-                },
-          theme: theme,
-        ),
-
-        const SizedBox(height: 20),
-
-        // Question 3: Productivity
-        _buildLikertQuestion(
-          question: l10n.howProductiveWereYou,
-          value: _productivity,
-          labels: [l10n.none, l10n.little, l10n.average, l10n.good, l10n.very],
-          onChanged: isReadOnly
-              ? null
-              : (val) {
-                  SfxService().buttonClick();
-                  setState(() => _productivity = val);
-                },
-          theme: theme,
-        ),
-
-        const SizedBox(height: 20),
-
-        _buildDiaryTextArea(l10n, isReadOnly, theme),
+        KeyedSubtree(key: _notesKey, child: _buildDiaryTextArea(l10n, isReadOnly, theme)),
 
         if (!isReadOnly) ...[
           const SizedBox(height: 20),
-          _buildSaveButton(l10n, theme),
+          KeyedSubtree(key: _saveKey, child: _buildSaveButton(l10n, theme)),
         ],
       ],
     );
