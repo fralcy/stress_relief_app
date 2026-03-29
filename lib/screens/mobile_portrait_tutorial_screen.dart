@@ -23,7 +23,7 @@ class MobilePortraitTutorialScreen extends StatefulWidget {
 
 class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScreen> {
   int _currentPage = 0;
-  final int _totalPages = 6;
+  final int _totalPages = 4;
   final PageController _pageController = PageController();
 
   @override
@@ -106,11 +106,9 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
               },
               children: [
                 _buildOverviewPage(theme, l10n),
-                _buildPointsPage(theme, l10n),
-                _buildLifeSupportPage(theme, l10n),
                 _buildRewardingPage(theme, l10n),
                 _buildCreativePage(theme, l10n),
-                _buildSettingsPage(theme, l10n),
+                _buildCoopLanPage(theme, l10n),
               ],
             ),
           ),
@@ -179,6 +177,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
 
   Widget _buildPageScaffold({
     required AppTheme theme,
+    required AppLocalizations l10n,
     required String title,
     required String content,
     String? emoji,
@@ -264,6 +263,36 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          Builder(
+            builder: (context) {
+              final tipStyle = AppTypography.bodySmall(context, color: theme.text).copyWith(
+                fontStyle: FontStyle.italic,
+              );
+              return RichText(
+                text: TextSpan(
+                  style: tipStyle,
+                  children: [
+                    TextSpan(text: '${l10n.tutorialTipPrefix} '),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: theme.text, width: 1.5),
+                        ),
+                        child: Icon(Icons.help_outline, size: 11, color: theme.text),
+                      ),
+                    ),
+                    TextSpan(text: ' ${l10n.tutorialTipSuffix}'),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -272,33 +301,17 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
   Widget _buildOverviewPage(AppTheme theme, AppLocalizations l10n) {
     return _buildPageScaffold(
       theme: theme,
+      l10n: l10n,
       title: l10n.tutorialOverviewTitle,
       content: l10n.tutorialOverviewDesc,
       emoji: '🏠',
     );
   }
 
-  Widget _buildPointsPage(AppTheme theme, AppLocalizations l10n) {
-    return _buildPageScaffold(
-      theme: theme,
-      title: l10n.tutorialPointsTitle,
-      content: l10n.tutorialPointsDesc,
-      emoji: '💎',
-    );
-  }
-
-  Widget _buildLifeSupportPage(AppTheme theme, AppLocalizations l10n) {
-    return _buildPageScaffold(
-      theme: theme,
-      title: l10n.tutorialLifestyleSupportTitle,
-      content: l10n.tutorialLifestyleSupportDesc,
-      emoji: '📋',
-    );
-  }
-
   Widget _buildRewardingPage(AppTheme theme, AppLocalizations l10n) {
     return _buildPageScaffold(
       theme: theme,
+      l10n: l10n,
       title: l10n.tutorialRewardingTitle,
       content: l10n.tutorialRewardingDesc,
       emoji: '🎮',
@@ -308,18 +321,20 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
   Widget _buildCreativePage(AppTheme theme, AppLocalizations l10n) {
     return _buildPageScaffold(
       theme: theme,
+      l10n: l10n,
       title: l10n.tutorialCreativeTitle,
       content: l10n.tutorialCreativeDesc,
       emoji: '🎨',
     );
   }
 
-  Widget _buildSettingsPage(AppTheme theme, AppLocalizations l10n) {
+  Widget _buildCoopLanPage(AppTheme theme, AppLocalizations l10n) {
     return _buildPageScaffold(
       theme: theme,
-      title: l10n.tutorialSettingsTitle,
-      content: l10n.tutorialSettingsDesc,
-      emoji: '⚙️',
+      l10n: l10n,
+      title: l10n.tutorialLifestyleSupportTitle,
+      content: l10n.tutorialLifestyleSupportDesc,
+      emoji: '🤝',
     );
   }
 
@@ -426,9 +441,10 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                 ),
                 child: ElevatedButton.icon(
                   onPressed: _currentPage < _totalPages - 1 ? _nextPage : _finish,
+                  iconAlignment: IconAlignment.end,
                   icon: Icon(
-                    _currentPage < _totalPages - 1 
-                        ? Icons.arrow_forward_ios 
+                    _currentPage < _totalPages - 1
+                        ? Icons.arrow_forward_ios
                         : Icons.check_circle_outline,
                     size: 18,
                   ),

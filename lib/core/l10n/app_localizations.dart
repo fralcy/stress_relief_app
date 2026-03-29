@@ -301,16 +301,14 @@ abstract class AppLocalizations {
   String get tutorialTitle;
   String get tutorialOverviewTitle;
   String get tutorialOverviewDesc;
-  String get tutorialPointsTitle;
-  String get tutorialPointsDesc;
+  String get tutorialTipPrefix;
+  String get tutorialTipSuffix;
   String get tutorialLifestyleSupportTitle;
   String get tutorialLifestyleSupportDesc;
   String get tutorialRewardingTitle;
   String get tutorialRewardingDesc;
   String get tutorialCreativeTitle;
   String get tutorialCreativeDesc;
-  String get tutorialSettingsTitle;
-  String get tutorialSettingsDesc;
   String get tutorialPrevious;
   String get tutorialNext;
   String get tutorialGotIt;

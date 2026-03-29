@@ -669,40 +669,33 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tutorialTitle => 'Hướng dẫn sử dụng';
 
   @override
-  String get tutorialOverviewTitle => 'Tổng quan - Giao diện & Điều hướng';
+  String get tutorialOverviewTitle => 'Tổng quan & Công cụ hàng ngày';
 
   @override
-  String get tutorialOverviewDesc => 'Ứng dụng cho phép đồng hành cùng một linh vật mèo dễ thương trong những khoảnh khắc bình yên. Giao diện chính là 5 khu vực của một căn nhà, tương ứng với chúng là các chức năng khác nhau như phòng khách làm trung tâm điều khiển, khu vườn để trồng cây thư giãn, bể cá để nuôi cá và thu thập xu, phòng tranh để sáng tác nghệ thuật, và phòng nhạc để sáng tác âm nhạc. Dùng các nút phía dưới để điều hướng giữa các khu vực.';
+  String get tutorialOverviewDesc => 'Đồng hành cùng linh vật đáng yêu khám phá 5 không gian ấm cúng. Phòng khách là nơi bạn chăm sóc thân tâm — từ lập kế hoạch ngày mới, ghi chép cảm xúc đến luyện thở và cải thiện giấc ngủ.';
 
   @override
-  String get tutorialPointsTitle => 'Hệ thống Điểm & Cửa hàng';
+  String get tutorialTipPrefix => 'Mẹo: Nhấn biểu tượng';
+  @override
+  String get tutorialTipSuffix => 'ở góc trên bên trái để xem hướng dẫn chi tiết khi sử dụng chúng.';
 
   @override
-  String get tutorialPointsDesc => 'Bạn có thể nhận điểm khi làm việc hàng ngày, viết nhật ký hoặc chăm sóc cây cá. Dùng điểm để mua bối cảnh mới cho các phòng.';
+  String get tutorialLifestyleSupportTitle => 'Kết nối bạn bè (LAN)';
 
   @override
-  String get tutorialLifestyleSupportTitle => 'Quản lý Cuộc sống - Nhiệm vụ & Nhật ký';
+  String get tutorialLifestyleSupportDesc => 'Gắn kết hơn khi chơi cùng bạn bè qua mạng Wi-Fi nội bộ. Cùng nhau chinh phục thử thách xếp đá cân bằng, hoặc phối hợp bắt đom đóm — một người giữ lọ, một người dẫn đường. Bắt đầu ngay tại phòng khách!';
 
   @override
-  String get tutorialLifestyleSupportDesc => 'Chăm sóc bản thân tốt hơn với công cụ quản lý thời gian và nhật ký cảm xúc. Lập danh sách việc cần làm và nhận thông báo nhắc nhở. Nhật ký đơn giản giúp bạn nhìn lại ngày qua 3 câu hỏi ngắn và ghi chú suy nghĩ.';
+  String get tutorialRewardingTitle => 'Mini-game & Phần thưởng';
 
   @override
-  String get tutorialRewardingTitle => 'Mini-game có thưởng - Vườn & Bể cá';
+  String get tutorialRewardingDesc => 'Tích lũy điểm thưởng qua các hoạt động thư giãn: chăm sóc vườn cây xanh mát hay nuôi cá trong bể. Dùng điểm để thay đổi diện mạo mới cho ngôi nhà tại Cửa hàng không gian.';
 
   @override
-  String get tutorialRewardingDesc => 'Minigame giúp bạn nhận điểm. Trồng và chăm sóc cây trong vườn, nuôi cá trong bể và cho chúng ăn định kỳ.';
+  String get tutorialCreativeTitle => 'Không gian Sáng tạo';
 
   @override
-  String get tutorialCreativeTitle => 'Mini-game Sáng tạo - Vẽ & Âm nhạc';
-
-  @override
-  String get tutorialCreativeDesc => 'Vẽ tranh đơn giản với các màu sắc cơ bản và lưu lại. Phòng nhạc cho phép thử nghiệm với các nốt nhạc từ những nhạc cụ khác nhau.';
-
-  @override
-  String get tutorialSettingsTitle => 'Cài đặt & Đồng bộ';
-
-  @override
-  String get tutorialSettingsDesc => 'Cài đặt cho phép tùy chỉnh trải nghiệm cá nhân:\n\n• Thay đổi màu sắc chủ đề\n• Chọn ngôn ngữ (Tiếng Việt/English)\n• Điều chỉnh âm lượng nhạc nền và hiệu ứng âm thanh\n• Cài đặt thông báo nhắc nhở\n\nBạn có thể đồng bộ dữ liệu với lưu trữ đám mây để giữ tiến độ tốt hơn thông qua việc đăng ký tài khoản hoặc sử dụng chế độ khách.';
+  String get tutorialCreativeDesc => 'Thỏa sức sáng tạo tại Phòng tranh với bảng màu rực rỡ và lưu giữ tác phẩm tại thư viện riêng. Ghé thăm Phòng nhạc để tự tay soạn những giai điệu chữa lành từ các nhạc cụ độc đáo.';
 
   @override
   String get tutorialPrevious => 'Trước';

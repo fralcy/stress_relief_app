@@ -666,40 +666,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialTitle => 'User Guide';
 
   @override
-  String get tutorialOverviewTitle => 'Overview - Layout & Navigation';
+  String get tutorialOverviewTitle => 'Overview & Daily Tools';
 
   @override
-  String get tutorialOverviewDesc => 'The app allows you to journey alongside an adorable cat mascot in peaceful moments. The main interface consists of 5 areas of a house, each corresponding to different functions such as the living room as a control center, garden for planting and relaxation, aquarium for raising fish and collecting coins, painting room for creating art, and music room for composing music. Use the navigation buttons below to move between areas.';
+  String get tutorialOverviewDesc => 'Journey with an adorable mascot through 5 cozy rooms. The living room is your sanctuary for self-care — manage to-do lists, track moods, practice breathing, and build healthy sleep habits.';
 
   @override
-  String get tutorialPointsTitle => 'Points & Shop System';
+  String get tutorialTipPrefix => 'Tip: Tap the';
+  @override
+  String get tutorialTipSuffix => 'icon in the top-left corner for detailed guidance while using each feature.';
 
   @override
-  String get tutorialPointsDesc => 'Earn points by completing daily tasks, writing diary entries, or playing mini-games. Use points to buy new backgrounds for rooms.';
+  String get tutorialLifestyleSupportTitle => 'Co-op LAN Games';
 
   @override
-  String get tutorialLifestyleSupportTitle => 'Life Management - Tasks & Emotion Diary';
+  String get tutorialLifestyleSupportDesc => 'Connect with friends over local Wi-Fi. Team up for a rock-stacking balance challenge, or cooperate to catch fireflies — one holds the jar while the other guides the way. Join the fun from your living room!';
 
   @override
-  String get tutorialLifestyleSupportDesc => 'Take better care of yourself with time management and emotion diary tools. Create daily to-do lists and get helpful reminders. Simple diary helps you reflect on your day through 3 quick questions and personal notes.';
+  String get tutorialRewardingTitle => 'Mini-games & Rewards';
 
   @override
-  String get tutorialRewardingTitle => 'Rewarding Mini-games - Garden & Aquarium';
+  String get tutorialRewardingDesc => 'Earn points through relaxing activities: tending your garden or raising fish. Use your rewards to unlock stunning new backgrounds for your rooms in the Decor Shop.';
 
   @override
-  String get tutorialRewardingDesc => 'Mini-games help you earn points. Plant and care for crops in the garden, raise fish in the aquarium and feed them regularly.';
+  String get tutorialCreativeTitle => 'Creative Space';
 
   @override
-  String get tutorialCreativeTitle => 'Creative Minigames - Drawing & Music';
-
-  @override
-  String get tutorialCreativeDesc => 'Draw simple pictures with basic colors and save them. The music room lets you experiment with musical notes from different instruments.';
-
-  @override
-  String get tutorialSettingsTitle => 'Settings & Sync';
-
-  @override
-  String get tutorialSettingsDesc => 'Settings allow you to customize your personal experience:\n\n• Change themes and colors\n• Choose language (Vietnamese/English)\n• Adjust background music and sound effects volume\n• Set up reminder notifications\n\nYou can sync data with cloud storage to better preserve your progress by registering an account or using guest mode.';
+  String get tutorialCreativeDesc => 'Unleash your creativity in the Art Room with a vibrant palette and personal gallery. Visit the Music Room to compose soothing melodies by arranging notes and selecting unique instruments.';
 
   @override
   String get tutorialPrevious => 'Previous';
