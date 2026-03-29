@@ -4,9 +4,6 @@ import 'app_localizations.dart';
 /// Tiếng Việt
 class AppLocalizationsVi extends AppLocalizations {
   @override
-  String get appName => 'Giảm Căng Thẳng';
-  
-  @override
   String get ok => 'OK';
   
   @override
@@ -124,12 +121,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get enabled => 'Bật';
 
   @override
-  String get on => 'BẬT';
-
-  @override
-  String get off => 'TẮT';
-
-  @override
   String get display => 'Hiển thị';
   
   @override
@@ -175,9 +166,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get resetToDefault => 'Đặt lại mặc định';
 
   @override
-  String get cloudSyncComingSoon => 'Đồng bộ cloud sắp ra mắt!';
-  
-  @override
   String get resetConfirmation => 'Bạn có chắc muốn đặt lại tất cả cài đặt?';
 
   @override
@@ -188,33 +176,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get addTask => 'Thêm công việc';
-  
-  @override
-  String get editTask => 'Sửa công việc';
 
-  @override
-  String get completed => 'Hoàn thành';
-  
-  @override
-  String get earnPoints => 'Nhận điểm';
-                     
   @override
   String get noTasksYet => 'Chưa có công việc nào!';
-
-  @override
-  String get enterTaskName => 'Nhập tên công việc';
-
-  @override
-  String get taskAdded => 'Đã thêm công việc!';
-
-  @override
-  String get taskDeleted => 'Đã xóa công việc!';
-
-  @override
-  String get taskUpdated => 'Đã cập nhật công việc!';
-
-  @override
-  String get taskNameRequired => 'Vui lòng nhập tên công việc';
 
   @override
   String get expectedPoints => 'Điểm dự kiến';
@@ -232,12 +196,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noCompletedTasks => 'Chưa có công việc nào hoàn thành!';
 
   @override
-  String get pointsClaimed => 'Đã nhận điểm!';
-
-  @override
-  String get alreadyClaimedOrNoTasks => 'Đã nhận hoặc chưa có công việc hoàn thành!';
-
-  @override
   String get sceneShop => 'Cửa hàng bối cảnh';
 
   @override
@@ -251,6 +209,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tapDayToViewDetails => 'Chạm vào ngày để xem chi tiết';
+
+  @override
+  String get noDiaryData => 'Chưa có dữ liệu nhật ký';
 
   @override
   String get todaysJournal => 'Nhật ký hôm nay';
@@ -313,9 +274,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get writeYourThoughts => 'Viết suy nghĩ của bạn...';
 
   @override
-  String get journalSaved => '✅ Đã lưu nhật ký!';
-
-  @override
   String get saveToEarnPoints => '✨ Lưu để nhận điểm!';
 
   @override
@@ -337,12 +295,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lastFed => 'Cho ăn lần cuối:';
-
-  @override
-  String get hoursAgo => 'giờ trước';
-
-  @override
-  String get feedNow => 'Cho ăn ngay';
 
   @override
   String get fishShop => 'CỬA HÀNG CÁ';
@@ -375,15 +327,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get platy => 'Cá Platy';
 
   @override
-  String get readyToFeed => 'Sẵn sàng cho ăn!';
-
-  @override
-  String get hoursLeft => 'giờ còn lại';
-
-  @override
-  String get claimCoins => 'Nhận xu';
-
-  @override
   String get tankFull => 'BỂ ĐẦY';
 
   @override
@@ -392,7 +335,6 @@ class AppLocalizationsVi extends AppLocalizations {
   // ==================== ROCK BALANCING LAN ====================
   @override String get players => 'Người chơi';
   @override String get rockBalancing => 'Xếp đá';
-  @override String get playTogether => 'Chơi cùng bạn bè 🪨';
   @override String get lanNotConnected => 'Cần kết nối LAN trước khi chơi';
   @override String get rockCount => 'Số viên đá';
   @override String get joinGame => 'Tham gia';
@@ -422,12 +364,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get syncError => 'Đồng bộ thất bại';
   @override String get record => 'Kỷ lục';
   @override String get endGame => 'Kết thúc';
-  @override String get overview => 'Toàn cảnh';
   @override String get rocksStacked => 'Viên đá xếp lên';
   @override String get maxHeightLabel => 'Chiều cao tối đa';
-
-  @override
-  String get maxFish => 'Tối đa 10 con';
 
   // Firefly Catching
   @override String get fireflyCatching => 'Hứng Đom Đóm';
@@ -516,12 +454,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get drum => 'Trống';
   
-  @override
-  String get selectNote => 'CHỌN NỐT NHẠC';
-  
-  @override
-  String get eraser => 'Tẩy';
-
   // Scene Shop
   @override
   String get yourPoints => 'Điểm của bạn';
@@ -609,9 +541,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get enterPassword => 'Nhập mật khẩu';
 
   @override
-  String get enterUsername => 'Nhập tên đăng nhập';
-
-  @override
   String get passwordTooShort => 'Mật khẩu phải có ít nhất 6 ký tự';
 
   @override
@@ -619,9 +548,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get invalidEmail => 'Email không hợp lệ';
-
-  @override
-  String get usernameRequired => 'Vui lòng nhập tên đăng nhập';
 
   @override
   String get letsGetStarted => 'Bắt đầu nào!';
@@ -1090,30 +1016,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get wakeTime => 'Giờ thức dậy';
 
-  @override
-  String get sleepTimer => 'Hẹn giờ ngủ';
-
-  @override
-  String get timerDuration => 'Thời lượng';
-
-  @override
-  String get startTimer => 'Bắt đầu';
-
-  @override
-  String get stopTimer => 'Dừng lại';
-
-  @override
-  String get musicWillFadeOut => 'Nhạc sẽ nhỏ dần và tắt';
-
-  @override
-  String get troubleSleeping => 'Khó ngủ?';
-
-  @override
-  String get tryBreathingExercise => 'Thử bài tập hít thở để thư giãn';
-
-  @override
-  String get goToBreathing => 'Đến Hít thở';
-
   // Sleep tips
   @override
   String get sleepTipSetBedtime => 'Đặt giờ đi ngủ để nhận gợi ý!';
@@ -1175,12 +1077,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noSleepData => 'Chưa có dữ liệu giấc ngủ';
-
-  @override
-  String get sleepReminderDisabledDesc => 'Bật để nhận nhắc nhở trước giờ ngủ.';
-
-  @override
-  String get sleepReminderEnabledDesc => 'Nhắc lúc';
 
   @override
   String get sleepTipsCardTitle => 'Mẹo ngủ ngon';

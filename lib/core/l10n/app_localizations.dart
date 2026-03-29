@@ -4,9 +4,6 @@ import '../../models/scene_models.dart';
 /// Base class cho localization
 /// Mỗi ngôn ngữ sẽ implement class này
 abstract class AppLocalizations {
-  // App info
-  String get appName;
-  
   // Common words
   String get ok;
   String get cancel;
@@ -58,8 +55,6 @@ abstract class AppLocalizations {
   String get volume;
   String get sfx;
   String get enabled;
-  String get on;
-  String get off;
   
   // Settings Modal - Display
   String get display;
@@ -83,30 +78,18 @@ abstract class AppLocalizations {
   String get cloudSync;
   String get sync;
   String get resetToDefault;
-  String get cloudSyncComingSoon;
   String get resetConfirmation;
 
   // Schedule Task
   String get scheduleTask;
   String get taskName;
   String get addTask;
-  String get editTask;
-  String get completed;
-  String get earnPoints;
-                     
   String get noTasksYet;
-  String get enterTaskName;
-  String get taskAdded;
-  String get taskDeleted;
-  String get taskUpdated;
-  String get taskNameRequired;
   String get expectedPoints;
   String get endDayAndClaimPoints;
   String get completedTasks;
   String get alreadyClaimedToday;
   String get noCompletedTasks;
-  String get pointsClaimed;
-  String get alreadyClaimedOrNoTasks;
   String get sceneShop;
   String get feature;
   
@@ -114,6 +97,7 @@ abstract class AppLocalizations {
   String get emotionDiary;
   String get historyLast2Weeks;
   String get tapDayToViewDetails;
+  String get noDiaryData;
   String get todaysJournal;
   String get dailyJournal;
   String get howDoYouFeelOverall;
@@ -134,7 +118,6 @@ abstract class AppLocalizations {
   String get average;
   String get very;
   String get writeYourThoughts;
-  String get journalSaved;
   String get saveToEarnPoints;
   String get alreadySavedToday;
 
@@ -146,8 +129,6 @@ abstract class AppLocalizations {
   String get fish;
   String get hour;
   String get lastFed;
-  String get hoursAgo;
-  String get feedNow;
   String get fishShop;
   String get owned;
   String get noFishYet;
@@ -158,16 +139,12 @@ abstract class AppLocalizations {
   String get molly;
   String get cory;
   String get platy;
-  String get readyToFeed;
-  String get hoursLeft;
-  String get claimCoins;
   String get tankFull;
   String get fishHungry;
 
   // ==================== ROCK BALANCING LAN ====================
   String get players;
   String get rockBalancing;
-  String get playTogether;
   String get lanNotConnected;
   String get rockCount;
   String get joinGame;
@@ -197,10 +174,8 @@ abstract class AppLocalizations {
   String get syncError;
   String get record;
   String get endGame;
-  String get overview;
   String get rocksStacked;
   String get maxHeightLabel;
-  String get maxFish;
 
   // Firefly Catching
   String get fireflyCatching;
@@ -242,8 +217,6 @@ abstract class AppLocalizations {
   String get synth;
   String get bass;
   String get drum;
-  String get selectNote;
-  String get eraser;
 
   // Scene Shop (additional strings)
   String get yourPoints;
@@ -276,11 +249,9 @@ abstract class AppLocalizations {
   String get createAccount;
   String get enterEmail;
   String get enterPassword;
-  String get enterUsername;
   String get passwordTooShort;
   String get passwordsDoNotMatch;
   String get invalidEmail;
-  String get usernameRequired;
   String get letsGetStarted;
   String get welcomeBack;
   String get dontHaveAccount;
@@ -455,15 +426,6 @@ abstract class AppLocalizations {
   String get sleepSchedule;
   String get bedtime;
   String get wakeTime;
-  String get sleepTimer;
-  String get timerDuration;
-  String get startTimer;
-  String get stopTimer;
-  String get musicWillFadeOut;
-  String get troubleSleeping;
-  String get tryBreathingExercise;
-  String get goToBreathing;
-
   // Sleep tips
   String get sleepTipSetBedtime;
   String get sleepTipEarly;
@@ -487,10 +449,6 @@ abstract class AppLocalizations {
   String get sleepLogSaved;
   String get hoursUnit;
   String get noSleepData;
-
-  // Reminder card
-  String get sleepReminderDisabledDesc;
-  String get sleepReminderEnabledDesc;
 
   // Sleep tips card
   String get sleepTipsCardTitle;

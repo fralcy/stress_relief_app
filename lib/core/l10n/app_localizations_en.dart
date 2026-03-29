@@ -4,9 +4,6 @@ import 'app_localizations.dart';
 /// English
 class AppLocalizationsEn extends AppLocalizations {
   @override
-  String get appName => 'Stress Relief';
-  
-  @override
   String get ok => 'OK';
   
   @override
@@ -121,12 +118,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enabled => 'Enabled';
 
   @override
-  String get on => 'ON';
-
-  @override
-  String get off => 'OFF';
-
-  @override
   String get display => 'Display';
   
   @override
@@ -172,9 +163,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetToDefault => 'Reset to Default';
 
   @override
-  String get cloudSyncComingSoon => 'Cloud sync coming soon!';
-  
-  @override
   String get resetConfirmation => 'Are you sure you want to reset all settings?';
 
   @override
@@ -185,33 +173,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addTask => 'Add Task';
-  
-  @override
-  String get editTask => 'Edit Task';
 
-  @override
-  String get completed => 'Completed';
-  
-  @override
-  String get earnPoints => 'Earn Points';
-                     
   @override
   String get noTasksYet => 'No tasks yet!';
-
-  @override
-  String get enterTaskName => 'Enter task name';
-
-  @override
-  String get taskAdded => 'Task added!';
-
-  @override
-  String get taskDeleted => 'Task deleted!';
-
-  @override
-  String get taskUpdated => 'Task updated!';
-
-  @override
-  String get taskNameRequired => 'Please enter task name';
 
   @override
   String get expectedPoints => 'Expected points';
@@ -229,12 +193,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCompletedTasks => 'No completed tasks!';
 
   @override
-  String get pointsClaimed => 'Points claimed!';
-
-  @override
-  String get alreadyClaimedOrNoTasks => 'Already claimed or no completed tasks!';
-
-  @override
   String get sceneShop => 'Scene Shop';
 
   @override
@@ -248,6 +206,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tapDayToViewDetails => 'Tap a day to view details';
+
+  @override
+  String get noDiaryData => 'No diary data yet';
 
   @override
   String get todaysJournal => "Today's Journal";
@@ -310,9 +271,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get writeYourThoughts => 'Write your thoughts...';
 
   @override
-  String get journalSaved => '✅ Journal saved!';
-
-  @override
   String get saveToEarnPoints => '✨ Save to earn points!';
 
   @override
@@ -334,12 +292,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lastFed => 'Last fed:';
-
-  @override
-  String get hoursAgo => 'hours ago';
-
-  @override
-  String get feedNow => 'Feed Now';
 
   @override
   String get fishShop => 'FISH SHOP';
@@ -372,15 +324,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get platy => 'Platy';
 
   @override
-  String get readyToFeed => 'Ready to feed!';
-
-  @override
-  String get hoursLeft => 'h left';
-
-  @override
-  String get claimCoins => 'Claim';
-
-  @override
   String get tankFull => 'TANK FULL';
 
   @override
@@ -389,7 +332,6 @@ class AppLocalizationsEn extends AppLocalizations {
   // ==================== ROCK BALANCING LAN ====================
   @override String get players => 'Players';
   @override String get rockBalancing => 'Rock Balancing';
-  @override String get playTogether => 'Play with Friends 🪨';
   @override String get lanNotConnected => 'Please connect to LAN before playing';
   @override String get rockCount => 'Number of rocks';
   @override String get joinGame => 'Join';
@@ -419,12 +361,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get syncError => 'Sync failed';
   @override String get record => 'Record';
   @override String get endGame => 'End game';
-  @override String get overview => 'Overview';
   @override String get rocksStacked => 'Rocks stacked';
   @override String get maxHeightLabel => 'Max height';
-
-  @override
-  String get maxFish => 'Max 10 fish';
 
   // Firefly Catching
   @override String get fireflyCatching => 'Firefly Catching';
@@ -513,12 +451,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get drum => 'Drum';
   
-  @override
-  String get selectNote => 'SELECT NOTE';
-  
-  @override
-  String get eraser => 'Eraser';
-
   // Scene Shop
   @override
   String get yourPoints => 'Your Points';
@@ -606,9 +538,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterPassword => 'Enter password';
 
   @override
-  String get enterUsername => 'Enter username';
-
-  @override
   String get passwordTooShort => 'Password must be at least 6 characters';
 
   @override
@@ -616,9 +545,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidEmail => 'Invalid email';
-
-  @override
-  String get usernameRequired => 'Please enter username';
 
   @override
   String get letsGetStarted => 'Let\'s get started!';
@@ -1087,30 +1013,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wakeTime => 'Wake Time';
 
-  @override
-  String get sleepTimer => 'Sleep Timer';
-
-  @override
-  String get timerDuration => 'Duration';
-
-  @override
-  String get startTimer => 'Start Timer';
-
-  @override
-  String get stopTimer => 'Stop Timer';
-
-  @override
-  String get musicWillFadeOut => 'Music will fade out gradually';
-
-  @override
-  String get troubleSleeping => 'Having trouble sleeping?';
-
-  @override
-  String get tryBreathingExercise => 'Try a breathing exercise to relax';
-
-  @override
-  String get goToBreathing => 'Go to Breathing';
-
   // Sleep tips
   @override
   String get sleepTipSetBedtime => 'Set your bedtime for personalized tips!';
@@ -1172,12 +1074,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSleepData => 'No sleep data yet';
-
-  @override
-  String get sleepReminderDisabledDesc => 'Turn on to get a nudge before bed.';
-
-  @override
-  String get sleepReminderEnabledDesc => 'Reminder set for';
 
   @override
   String get sleepTipsCardTitle => 'Sleep Tips';

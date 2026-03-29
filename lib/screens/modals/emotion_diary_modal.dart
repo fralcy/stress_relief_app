@@ -6,6 +6,7 @@ import '../../core/constants/app_theme.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/line_graph.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sfx_service.dart';
@@ -35,13 +36,14 @@ class EmotionDiaryModal extends StatefulWidget {
 }
 
 class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
-  int? _selectedDayIndex; // null = today (index 14)
-  
+  // 0 = today … 13 = 13 days ago (data index, matches sleep guide convention)
+  int _selectedDayIndex = 0;
+
   // Likert scale values (1-5, null = not selected)
   int? _overallFeeling;
   int? _stressLevel;
   int? _productivity;
-  
+
   final TextEditingController _diaryController = TextEditingController();
   final int _maxDiaryLength = 400;
 
@@ -52,14 +54,13 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   @override
   void initState() {
     super.initState();
-    _selectedDayIndex = 14; // Default to today
     _loadDiaryForSelectedDay();
     _checkDebugMode();
 
     // Listen to text changes for character counter
     _diaryController.addListener(() {
-    setState(() {});
-  });
+      setState(() {});
+    });
   }
 
   Future<void> _checkDebugMode() async {
@@ -77,6 +78,35 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     super.dispose();
   }
 
+  // ==================== HELPERS ====================
+
+  /// dataIdx 0 = today, dataIdx 13 = 13 days ago
+  DateTime _getDateForIndex(int dataIdx) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day).subtract(Duration(days: dataIdx));
+  }
+
+  bool _isToday(int dataIdx) => dataIdx == 0;
+
+  bool _canEdit(int dataIdx) {
+    if (_isDebugMode) return true;
+    return _isToday(dataIdx);
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  Map<String, dynamic> _getDayData(int dataIdx) {
+    final date = _getDateForIndex(dataIdx);
+    final diaries = DataManager().emotionDiaries;
+    final diary = diaries.where((d) => _isSameDay(d.date, date)).firstOrNull;
+    return {
+      'date': date,
+      'hasData': diary != null,
+      'avgScore': diary != null ? (diary.q1 + diary.q2 + diary.q3) / 3.0 : null,
+    };
+  }
+
   // Get emoji based on average likert score (1-5)
   String _getEmojiForScore(double? score) {
     if (score == null) return '';
@@ -87,37 +117,12 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     return '😊';
   }
 
-  // Get history data for the last 15 days
-  List<Map<String, dynamic>> _getHistory() {
-    final diaries = DataManager().emotionDiaries;
-    
-    return List.generate(15, (index) {
-      final date = _getDateForIndex(index);
-      final diary = diaries.where((d) => _isSameDay(d.date, date)).firstOrNull;
-      
-      return {
-        'date': date,
-        'hasData': diary != null,
-        'avgScore': diary != null ? (diary.q1 + diary.q2 + diary.q3) / 3.0 : null,
-      };
-    });
-  }
-
-  bool _isToday(int index) => index == 14;
-
-  bool _canEdit(int index) {
-    // Debug mode: cho phép edit mọi ngày trong 15-day history
-    if (_isDebugMode) return true;
-
-    // Production: chỉ cho phép edit today
-    return _isToday(index);
-  }
+  // ==================== BUILD ====================
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
-    final history = _getHistory();
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -125,7 +130,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ========== HISTORY SECTION ==========
-          _buildHistorySection(history, theme),
+          _buildHistorySection(l10n, theme),
 
           const SizedBox(height: 24),
           Divider(color: theme.border, height: 1, thickness: 1.5),
@@ -138,52 +143,60 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     );
   }
 
-  Widget _buildHistorySection(List<Map<String, dynamic>> history, AppTheme theme) {
-    final l10n = AppLocalizations.of(context);
-    
+  // ==================== HISTORY SECTION ====================
+
+  Widget _buildHistorySection(AppLocalizations l10n, AppTheme theme) {
+    final labelStyle = AppTypography.bodySmall(context,
+        color: theme.text.withOpacity(0.6));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.historyLast2Weeks,
-          style: AppTypography.bodyLarge(context, color: theme.text).copyWith(fontWeight: FontWeight.bold),
+          style: AppTypography.bodyLarge(context, color: theme.text)
+              .copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        
-        // 5x3 Grid of day buttons
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 5,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 1,
-          ),
-          itemCount: 15,
-          itemBuilder: (context, index) {
-            return _buildDayButton(history[index], index, theme);
-          },
-        ),
-        
+
+        // Last week row (older, dimmed)
+        Text(l10n.sleepLastWeek, style: labelStyle),
+        const SizedBox(height: 4),
+        Opacity(opacity: 0.6, child: _buildDayRow(13, theme)),
+        const SizedBox(height: 8),
+
+        // This week row (recent, full opacity)
+        Text(l10n.sleepThisWeek, style: labelStyle),
+        const SizedBox(height: 4),
+        _buildDayRow(6, theme),
+
+        const SizedBox(height: 16),
+        _buildMoodGraph(l10n, theme),
+
         const SizedBox(height: 12),
         Text(
           l10n.tapDayToViewDetails,
-          style: AppTypography.bodySmall(context,
-            color: theme.text.withOpacity(0.6),
-          ),
+          style: labelStyle,
         ),
       ],
     );
   }
 
-  Widget _buildDayButton(Map<String, dynamic> dayData, int index, AppTheme theme) {
+  /// Builds a 7-cell row starting from [firstDataIdx] down to [firstDataIdx - 6].
+  /// Leftmost = oldest, rightmost = newest.
+  Widget _buildDayRow(int firstDataIdx, AppTheme theme) {
+    return Row(
+      children: List.generate(7, (i) => _buildDayCell(firstDataIdx - i, theme)),
+    );
+  }
+
+  Widget _buildDayCell(int dataIdx, AppTheme theme) {
+    final dayData = _getDayData(dataIdx);
     final date = dayData['date'] as DateTime;
     final hasData = dayData['hasData'] as bool;
     final avgScore = dayData['avgScore'] as double?;
-    final isSelected = _selectedDayIndex == index;
-    
-    // Determine border color
+    final isSelected = _selectedDayIndex == dataIdx;
+
     Color borderColor;
     if (isSelected) {
       borderColor = theme.secondary;
@@ -193,138 +206,169 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       borderColor = theme.border;
     }
 
-    return InkWell(
-      onTap: () {
-        SfxService().buttonClick();
-        setState(() {
-          _selectedDayIndex = index;
-          _loadDiaryForSelectedDay();
-        });
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.background,
-          border: Border.all(color: borderColor, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${date.day}',
-              style: AppTypography.bodyMedium(context,
-                color: theme.text,
-                fontWeight: FontWeight.bold,
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: InkWell(
+            onTap: () {
+              SfxService().buttonClick();
+              setState(() {
+                _selectedDayIndex = dataIdx;
+                _loadDiaryForSelectedDay();
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.background,
+                border: Border.all(color: borderColor, width: 2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${date.day}',
+                    style: AppTypography.bodyMedium(context,
+                        color: theme.text, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _getEmojiForScore(avgScore),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              _getEmojiForScore(avgScore),
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _buildMoodGraph(AppLocalizations l10n, AppTheme theme) {
+    final diaries = DataManager().emotionDiaries;
+    final values = <double?>[];
+    final labels = <String>[];
+
+    // Oldest → newest (left to right), i=13 = 13 days ago, i=0 = today
+    for (int i = 13; i >= 0; i--) {
+      final date = _getDateForIndex(i);
+      final diary =
+          diaries.where((d) => _isSameDay(d.date, date)).firstOrNull;
+      values.add(
+          diary != null ? (diary.q1 + diary.q2 + diary.q3) / 3.0 : null);
+      // Show label only on even positions to avoid overlap
+      final j = 13 - i;
+      labels.add(j.isEven ? '${date.day}/${date.month}' : '');
+    }
+
+    final hasAnyData = values.any((v) => v != null);
+
+    if (!hasAnyData) {
+      return SizedBox(
+        height: 80,
+        child: Center(
+          child: Text(
+            l10n.noDiaryData,
+            style: AppTypography.bodySmall(context,
+                color: theme.text.withOpacity(0.6)),
+          ),
+        ),
+      );
+    }
+
+    return LineGraph(
+      values: values,
+      labels: labels,
+      minY: 1,
+      maxY: 5,
+      yUnit: '',
+      highlightIndex: 13 - _selectedDayIndex,
+    );
+  }
+
+  // ==================== CHECK-IN SECTION ====================
+
   Widget _buildCheckInSection(AppLocalizations l10n, AppTheme theme) {
-    final isReadOnly = !_canEdit(_selectedDayIndex ?? 14);
-    
-    // Lấy history để hiển thị date subtitle
-    final history = _getHistory();
-    final dayData = history[_selectedDayIndex ?? 14];
+    final isReadOnly = !_canEdit(_selectedDayIndex);
+    final dayData = _getDayData(_selectedDayIndex);
     final date = dayData['date'] as DateTime;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ========== TITLE ==========
         Text(
           isReadOnly
-            ? (_isDebugMode
-                ? '${l10n.dailyJournal} [DEBUG: Edit Enabled]'
-                : l10n.dailyJournal)
-            : l10n.todaysJournal,
-          style: AppTypography.h4(context,
-            color: theme.text,
-          ),
+              ? (_isDebugMode
+                  ? '${l10n.dailyJournal} [DEBUG: Edit Enabled]'
+                  : l10n.dailyJournal)
+              : l10n.todaysJournal,
+          style: AppTypography.h4(context, color: theme.text),
         ),
         const SizedBox(height: 16),
-        
+
         // ========== DATE SUBTITLE ==========
         Text(
           _formatDate(date, l10n),
           style: AppTypography.bodyMedium(context,
-            color: theme.text,
-            fontWeight: FontWeight.w600,
-          ),
+              color: theme.text, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-        
+
         // Question 1: Overall feeling
         _buildLikertQuestion(
           question: l10n.howDoYouFeelOverall,
           value: _overallFeeling,
-          labels: [
-            l10n.veryBad,
-            l10n.bad,
-            l10n.neutral,
-            l10n.good,
-            l10n.great,
-          ],
-          onChanged: isReadOnly ? null : (val) {
-            SfxService().buttonClick();
-            setState(() => _overallFeeling = val);
-          },
+          labels: [l10n.veryBad, l10n.bad, l10n.neutral, l10n.good, l10n.great],
+          onChanged: isReadOnly
+              ? null
+              : (val) {
+                  SfxService().buttonClick();
+                  setState(() => _overallFeeling = val);
+                },
           theme: theme,
         ),
-        
+
         const SizedBox(height: 20),
-        
+
         // Question 2: Stress level
         _buildLikertQuestion(
           question: l10n.howWasYourStressLevel,
           value: _stressLevel,
-          labels: [
-            l10n.veryHigh,
-            l10n.high,
-            l10n.moderate,
-            l10n.low,
-            l10n.relaxed,
-          ],
-          onChanged: isReadOnly ? null : (val) {
-            SfxService().buttonClick();
-            setState(() => _stressLevel = val);
-          },
+          labels: [l10n.veryHigh, l10n.high, l10n.moderate, l10n.low, l10n.relaxed],
+          onChanged: isReadOnly
+              ? null
+              : (val) {
+                  SfxService().buttonClick();
+                  setState(() => _stressLevel = val);
+                },
           theme: theme,
         ),
-        
+
         const SizedBox(height: 20),
-        
+
         // Question 3: Productivity
         _buildLikertQuestion(
           question: l10n.howProductiveWereYou,
           value: _productivity,
-          labels: [
-            l10n.none,
-            l10n.little,
-            l10n.average,
-            l10n.good,
-            l10n.very,
-          ],
-          onChanged: isReadOnly ? null : (val) {
-            SfxService().buttonClick();
-            setState(() => _productivity = val);
-          },
+          labels: [l10n.none, l10n.little, l10n.average, l10n.good, l10n.very],
+          onChanged: isReadOnly
+              ? null
+              : (val) {
+                  SfxService().buttonClick();
+                  setState(() => _productivity = val);
+                },
           theme: theme,
         ),
-        
+
         const SizedBox(height: 20),
-        
-        // Diary text area
+
         _buildDiaryTextArea(l10n, isReadOnly, theme),
-        
+
         if (!isReadOnly) ...[
           const SizedBox(height: 20),
           _buildSaveButton(l10n, theme),
@@ -346,12 +390,10 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
         Text(
           question,
           style: AppTypography.bodyMedium(context,
-            color: theme.text,
-            fontWeight: FontWeight.w600,
-          ),
+              color: theme.text, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        
+
         // 5 radio buttons
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -363,15 +405,15 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
                   Radio<int>(
                     value: optionValue,
                     groupValue: value,
-                    onChanged: onChanged != null ? (val) => onChanged(val!) : null,
+                    onChanged:
+                        onChanged != null ? (val) => onChanged(val!) : null,
                     activeColor: theme.primary,
                   ),
                   Text(
                     labels[index],
                     textAlign: TextAlign.center,
                     style: AppTypography.captionSmall(context,
-                      color: theme.text.withOpacity(0.8),
-                    ),
+                        color: theme.text.withOpacity(0.8)),
                   ),
                 ],
               ),
@@ -382,7 +424,8 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     );
   }
 
-  Widget _buildDiaryTextArea(AppLocalizations l10n, bool isReadOnly, AppTheme theme) {
+  Widget _buildDiaryTextArea(
+      AppLocalizations l10n, bool isReadOnly, AppTheme theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -411,19 +454,18 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
-            counterText: '', // Hide default counter
+            counterText: '',
           ),
         ),
         const SizedBox(height: 4),
-        
+
         // Custom character counter (right aligned)
         Align(
           alignment: Alignment.centerRight,
           child: Text(
             '${_diaryController.text.length}/$_maxDiaryLength',
             style: AppTypography.bodySmall(context,
-              color: theme.text.withOpacity(0.6),
-            ),
+                color: theme.text.withOpacity(0.6)),
           ),
         ),
       ],
@@ -431,14 +473,15 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   }
 
   Widget _buildSaveButton(AppLocalizations l10n, AppTheme theme) {
-    final canSave = _overallFeeling != null && 
-                    _stressLevel != null && 
-                    _productivity != null;
-    
+    final canSave = _overallFeeling != null &&
+        _stressLevel != null &&
+        _productivity != null;
+
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     final diaries = DataManager().emotionDiaries;
-    final isFirstTimeToday = !diaries.any((d) => _isSameDay(d.date, todayDate));
+    final isFirstTimeToday =
+        !diaries.any((d) => _isSameDay(d.date, todayDate));
 
     return Column(
       children: [
@@ -449,118 +492,84 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
             isDisabled: !canSave,
           ),
         ),
-        
         const SizedBox(height: 8),
-        
-        // Helper text
         Text(
-          isFirstTimeToday
-            ? l10n.saveToEarnPoints
-            : l10n.alreadySavedToday,
+          isFirstTimeToday ? l10n.saveToEarnPoints : l10n.alreadySavedToday,
           textAlign: TextAlign.center,
           style: AppTypography.bodySmall(context,
-            color: isFirstTimeToday ? theme.primary : theme.border,
-            fontWeight: isFirstTimeToday ? FontWeight.w500 : FontWeight.normal,
-          ),
+              color: isFirstTimeToday ? theme.primary : theme.border,
+              fontWeight:
+                  isFirstTimeToday ? FontWeight.w500 : FontWeight.normal),
         ),
       ],
     );
   }
 
-  void _saveCheckIn() async {
-  // Validate notes length
-  if (_diaryController.text.length > _maxDiaryLength) {
-    _diaryController.text = _diaryController.text.substring(0, _maxDiaryLength);
-  }
+  // ==================== SAVE ====================
 
-    // Get the selected date (not always today!)
-    final selectedDate = _getDateForIndex(_selectedDayIndex ?? 14);
+  void _saveCheckIn() async {
+    if (_diaryController.text.length > _maxDiaryLength) {
+      _diaryController.text =
+          _diaryController.text.substring(0, _maxDiaryLength);
+    }
+
+    final selectedDate = _getDateForIndex(_selectedDayIndex);
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     final isSavingToday = _isSameDay(selectedDate, todayDate);
 
     final diaries = DataManager().emotionDiaries;
-    final existingIndex = diaries.indexWhere((d) => _isSameDay(d.date, selectedDate));
+    final existingIndex =
+        diaries.indexWhere((d) => _isSameDay(d.date, selectedDate));
     final isFirstTimeForDate = existingIndex == -1;
 
     final newDiary = EmotionDiary(
-      date: selectedDate, // Save to selected date, not always today
+      date: selectedDate,
       q1: _overallFeeling!,
       q2: _stressLevel!,
       q3: _productivity!,
       notes: _diaryController.text,
     );
 
-    // Update or add diary
     if (existingIndex != -1) {
       diaries[existingIndex] = newDiary;
     } else {
       diaries.add(newDiary);
     }
 
-    // Sort by date (newest first) and keep only last 15 days
     diaries.sort((a, b) => b.date.compareTo(a.date));
-    if (diaries.length > 15) {
-      diaries.removeRange(15, diaries.length);
-    }
+    if (diaries.length > 14) diaries.removeRange(14, diaries.length);
 
-    // Save to data manager
     await DataManager().saveEmotionDiaries(diaries);
 
-    // Award points ONLY if first time saving to TODAY (not past dates)
     if (isSavingToday && isFirstTimeForDate) {
-      SfxService().reward(); // Play reward sound for first time
+      SfxService().reward();
       const diaryPoints = 20;
       await context.read<ScoreProvider>().addPoints(diaryPoints);
     } else {
-      SfxService().buttonClick(); // Regular save sound
+      SfxService().buttonClick();
     }
 
-    // Achievement trigger — fire for every genuinely new diary entry
     if (mounted && isFirstTimeForDate) {
       final score = context.read<ScoreProvider>();
-      final newly = await context.read<AchievementProvider>().onDiaryAdded(score);
+      final newly =
+          await context.read<AchievementProvider>().onDiaryAdded(score);
       if (newly.isNotEmpty && mounted) {
         AchievementPopup.show(context, newly);
       }
     }
 
-    if (mounted) {
-      setState(() {}); // Force rebuild to update save button state
-    }
+    if (mounted) setState(() {});
   }
 
-  // Helper để format date theo locale
-  String _formatDate(DateTime date, AppLocalizations l10n) {
-    // Kiểm tra locale hiện tại
-    final locale = Localizations.localeOf(context);
-    
-    if (locale.languageCode == 'vi') {
-      // Tiếng Việt: "15 Tháng 10, 2025"
-      final months = [
-        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-      ];
-      return '${date.day} ${months[date.month - 1]}, ${date.year}';
-    } else {
-      // Tiếng Anh: "15 Oct, 2025"
-      final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-      return '${date.day} ${months[date.month - 1]}, ${date.year}';
-    }
-  }
+  // ==================== HELPERS ====================
 
-  // Load diary data for selected day
   void _loadDiaryForSelectedDay() {
-    if (_selectedDayIndex == null) return;
-    
-    final targetDate = _getDateForIndex(_selectedDayIndex!);
+    final targetDate = _getDateForIndex(_selectedDayIndex);
     final diaries = DataManager().emotionDiaries;
-    
-    final diary = diaries.where((d) => _isSameDay(d.date, targetDate)).firstOrNull;
-    
+    final diary =
+        diaries.where((d) => _isSameDay(d.date, targetDate)).firstOrNull;
+
     setState(() {
       if (diary != null) {
         _overallFeeling = diary.q1;
@@ -576,14 +585,20 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     });
   }
 
-  // Get date for history index (0 = 14 days ago, 14 = today)
-  DateTime _getDateForIndex(int index) {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day).subtract(Duration(days: 14 - index));
-  }
-
-  // Check if two dates are the same day
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+  String _formatDate(DateTime date, AppLocalizations l10n) {
+    final locale = Localizations.localeOf(context);
+    if (locale.languageCode == 'vi') {
+      final months = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+      ];
+      return '${date.day} ${months[date.month - 1]}, ${date.year}';
+    } else {
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${date.day} ${months[date.month - 1]}, ${date.year}';
+    }
   }
 }
