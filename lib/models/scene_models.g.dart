@@ -53,13 +53,19 @@ class SceneSetAdapter extends TypeAdapter<SceneSet> {
       case 0:
         return SceneSet.defaultSet;
       case 1:
-        return SceneSet.japanese;
+        return SceneSet.peachBlossom;
       case 2:
         return SceneSet.beach;
       case 3:
         return SceneSet.winter;
       case 4:
         return SceneSet.forest;
+      case 5:
+        return SceneSet.desert;
+      case 6:
+        return SceneSet.cosmic;
+      case 7:
+        return SceneSet.castle;
       default:
         return SceneSet.defaultSet;
     }
@@ -71,7 +77,7 @@ class SceneSetAdapter extends TypeAdapter<SceneSet> {
       case SceneSet.defaultSet:
         writer.writeByte(0);
         break;
-      case SceneSet.japanese:
+      case SceneSet.peachBlossom:
         writer.writeByte(1);
         break;
       case SceneSet.beach:
@@ -82,6 +88,15 @@ class SceneSetAdapter extends TypeAdapter<SceneSet> {
         break;
       case SceneSet.forest:
         writer.writeByte(4);
+        break;
+      case SceneSet.desert:
+        writer.writeByte(5);
+        break;
+      case SceneSet.cosmic:
+        writer.writeByte(6);
+        break;
+      case SceneSet.castle:
+        writer.writeByte(7);
         break;
     }
   }

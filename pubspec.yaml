@@ -102,8 +102,11 @@ flutter:
     - assets/images/scenes/default/
     - assets/images/scenes/forest/
     - assets/images/scenes/beach/
-    - assets/images/scenes/japanese/
+    - assets/images/scenes/peach_blossom/
     - assets/images/scenes/winter/
+    - assets/images/scenes/desert/
+    - assets/images/scenes/cosmic/
+    - assets/images/scenes/castle/
     - assets/images/mascot/
     - assets/images/plants/
     - assets/images/aquarium/

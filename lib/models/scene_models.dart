@@ -7,13 +7,19 @@ enum SceneSet {
   @HiveField(0)
   defaultSet,  // Bộ mặc định ban đầu
   @HiveField(1)
-  japanese,    // Phong cách Nhật Bản
+  peachBlossom, // Hoa anh đào
   @HiveField(2)
-  beach,       // Bãi biển nhiệt đới
+  beach,        // Bãi biển nhiệt đới
   @HiveField(3)
-  winter,      // Mùa đông tuyết trắng
+  winter,       // Mùa đông tuyết trắng
   @HiveField(4)
-  forest,      // Rừng cây xanh mát
+  forest,       // Rừng cây xanh mát
+  @HiveField(5)
+  desert,       // Ốc đảo sa mạc
+  @HiveField(6)
+  cosmic,       // Đêm vũ trụ
+  @HiveField(7)
+  castle,       // Lâu đài đá
 }
 
 /// 5 loại phòng trong app

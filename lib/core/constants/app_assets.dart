@@ -25,12 +25,33 @@ class AppAssets {
   static const String beachPaintingRoom = 'assets/images/scenes/beach/painting_room.png';
   static const String beachMusicRoom = 'assets/images/scenes/beach/music_room.png';
   
-  // Scene Set: Japanese
-  static const String japaneseLivingRoom = 'assets/images/scenes/japanese/living_room.png';
-  static const String japaneseGarden = 'assets/images/scenes/japanese/garden.png';
-  static const String japaneseAquarium = 'assets/images/scenes/japanese/aquarium.png';
-  static const String japanesePaintingRoom = 'assets/images/scenes/japanese/painting_room.png';
-  static const String japaneseMusicRoom = 'assets/images/scenes/japanese/music_room.png';
+  // Scene Set: Peach Blossom
+  static const String peachBlossomLivingRoom = 'assets/images/scenes/peach_blossom/living_room.png';
+  static const String peachBlossomGarden = 'assets/images/scenes/peach_blossom/garden.png';
+  static const String peachBlossomAquarium = 'assets/images/scenes/peach_blossom/aquarium.png';
+  static const String peachBlossomPaintingRoom = 'assets/images/scenes/peach_blossom/painting_room.png';
+  static const String peachBlossomMusicRoom = 'assets/images/scenes/peach_blossom/music_room.png';
+
+  // Scene Set: Desert
+  static const String desertLivingRoom = 'assets/images/scenes/desert/living_room.png';
+  static const String desertGarden = 'assets/images/scenes/desert/garden.png';
+  static const String desertAquarium = 'assets/images/scenes/desert/aquarium.png';
+  static const String desertPaintingRoom = 'assets/images/scenes/desert/painting_room.png';
+  static const String desertMusicRoom = 'assets/images/scenes/desert/music_room.png';
+
+  // Scene Set: Cosmic
+  static const String cosmicLivingRoom = 'assets/images/scenes/cosmic/living_room.png';
+  static const String cosmicGarden = 'assets/images/scenes/cosmic/garden.png';
+  static const String cosmicAquarium = 'assets/images/scenes/cosmic/aquarium.png';
+  static const String cosmicPaintingRoom = 'assets/images/scenes/cosmic/painting_room.png';
+  static const String cosmicMusicRoom = 'assets/images/scenes/cosmic/music_room.png';
+
+  // Scene Set: Castle
+  static const String castleLivingRoom = 'assets/images/scenes/castle/living_room.png';
+  static const String castleGarden = 'assets/images/scenes/castle/garden.png';
+  static const String castleAquarium = 'assets/images/scenes/castle/aquarium.png';
+  static const String castlePaintingRoom = 'assets/images/scenes/castle/painting_room.png';
+  static const String castleMusicRoom = 'assets/images/scenes/castle/music_room.png';
   
   // Scene Set: Winter
   static const String winterLivingRoom = 'assets/images/scenes/winter/living_room.png';
@@ -85,12 +106,12 @@ class AppAssets {
       SceneType.paintingRoom: beachPaintingRoom,
       SceneType.musicRoom: beachMusicRoom,
     },
-    SceneSet.japanese: {
-      SceneType.livingRoom: japaneseLivingRoom,
-      SceneType.garden: japaneseGarden,
-      SceneType.aquarium: japaneseAquarium,
-      SceneType.paintingRoom: japanesePaintingRoom,
-      SceneType.musicRoom: japaneseMusicRoom,
+    SceneSet.peachBlossom: {
+      SceneType.livingRoom: peachBlossomLivingRoom,
+      SceneType.garden: peachBlossomGarden,
+      SceneType.aquarium: peachBlossomAquarium,
+      SceneType.paintingRoom: peachBlossomPaintingRoom,
+      SceneType.musicRoom: peachBlossomMusicRoom,
     },
     SceneSet.winter: {
       SceneType.livingRoom: winterLivingRoom,
@@ -98,6 +119,27 @@ class AppAssets {
       SceneType.aquarium: winterAquarium,
       SceneType.paintingRoom: winterPaintingRoom,
       SceneType.musicRoom: winterMusicRoom,
+    },
+    SceneSet.desert: {
+      SceneType.livingRoom: desertLivingRoom,
+      SceneType.garden: desertGarden,
+      SceneType.aquarium: desertAquarium,
+      SceneType.paintingRoom: desertPaintingRoom,
+      SceneType.musicRoom: desertMusicRoom,
+    },
+    SceneSet.cosmic: {
+      SceneType.livingRoom: cosmicLivingRoom,
+      SceneType.garden: cosmicGarden,
+      SceneType.aquarium: cosmicAquarium,
+      SceneType.paintingRoom: cosmicPaintingRoom,
+      SceneType.musicRoom: cosmicMusicRoom,
+    },
+    SceneSet.castle: {
+      SceneType.livingRoom: castleLivingRoom,
+      SceneType.garden: castleGarden,
+      SceneType.aquarium: castleAquarium,
+      SceneType.paintingRoom: castlePaintingRoom,
+      SceneType.musicRoom: castleMusicRoom,
     },
   };
   
@@ -121,17 +163,35 @@ class AppAssets {
       'icon': '🏖️',
       'description': 'Relaxing coastal scenes',
     },
-    SceneSet.japanese: {
-      'name': 'Japanese Collection',
+    SceneSet.peachBlossom: {
+      'name': 'Peach Blossom',
       'price': 1000,
-      'icon': '🎋',
-      'description': 'Traditional zen scenes',
+      'icon': '🌸',
+      'description': 'Cherry blossoms, koi ponds, and low wooden tables',
     },
     SceneSet.winter: {
       'name': 'Winter Collection',
       'price': 1000,
       'icon': '❄️',
       'description': 'Cozy winter wonderland',
+    },
+    SceneSet.desert: {
+      'name': 'Desert Oasis',
+      'price': 1000,
+      'icon': '🌵',
+      'description': 'Sandy dunes, warm amber light, and terracotta accents',
+    },
+    SceneSet.cosmic: {
+      'name': 'Cosmic Night',
+      'price': 1000,
+      'icon': '🌌',
+      'description': 'Starry skies, deep indigo, and glowing nebula hues',
+    },
+    SceneSet.castle: {
+      'name': 'Stone Castle',
+      'price': 1000,
+      'icon': '🏰',
+      'description': 'Cobblestone halls, cool gray stone, and medieval warmth',
     },
   };
   
@@ -162,8 +222,11 @@ class AppAssets {
   static const String tankDefault = 'assets/images/aquarium/tank_default.png';
   static const String tankForest = 'assets/images/aquarium/tank_forest.png';
   static const String tankBeach = 'assets/images/aquarium/tank_beach.png';
-  static const String tankJapanese = 'assets/images/aquarium/tank_japanese.png';
+  static const String tankPeachBlossom = 'assets/images/aquarium/tank_peach_blossom.png';
   static const String tankWinter = 'assets/images/aquarium/tank_winter.png';
+  static const String tankDesert = 'assets/images/aquarium/tank_desert.png';
+  static const String tankCosmic = 'assets/images/aquarium/tank_cosmic.png';
+  static const String tankCastle = 'assets/images/aquarium/tank_castle.png';
 
   // Fish types
   static const String fishBetta = 'assets/images/aquarium/fish_betta.png';
@@ -175,11 +238,14 @@ class AppAssets {
 
   // Maps
   static const Map<SceneSet, String> tankAssets = {
-    SceneSet.defaultSet: tankDefault,
-    SceneSet.forest: tankForest,
-    SceneSet.beach: tankBeach,
-    SceneSet.japanese: tankJapanese,
-    SceneSet.winter: tankWinter,
+    SceneSet.defaultSet:   tankDefault,
+    SceneSet.forest:       tankForest,
+    SceneSet.beach:        tankBeach,
+    SceneSet.peachBlossom: tankPeachBlossom,
+    SceneSet.winter:       tankWinter,
+    SceneSet.desert:       tankDesert,
+    SceneSet.cosmic:       tankCosmic,
+    SceneSet.castle:       tankCastle,
   };
 
   static const Map<String, String> fishAssets = {
@@ -195,29 +261,41 @@ class AppAssets {
   static const String rockBgDefault  = 'assets/images/rock_balancing/bg_default.png';
   static const String rockBgForest   = 'assets/images/rock_balancing/bg_forest.png';
   static const String rockBgBeach    = 'assets/images/rock_balancing/bg_beach.png';
-  static const String rockBgJapanese = 'assets/images/rock_balancing/bg_japanese.png';
-  static const String rockBgWinter   = 'assets/images/rock_balancing/bg_winter.png';
+  static const String rockBgPeachBlossom = 'assets/images/rock_balancing/bg_peach_blossom.png';
+  static const String rockBgWinter       = 'assets/images/rock_balancing/bg_winter.png';
+  static const String rockBgDesert       = 'assets/images/rock_balancing/bg_desert.png';
+  static const String rockBgCosmic       = 'assets/images/rock_balancing/bg_cosmic.png';
+  static const String rockBgCastle       = 'assets/images/rock_balancing/bg_castle.png';
 
   static const Map<SceneSet, String> rockBgAssets = {
-    SceneSet.defaultSet: rockBgDefault,
-    SceneSet.forest:     rockBgForest,
-    SceneSet.beach:      rockBgBeach,
-    SceneSet.japanese:   rockBgJapanese,
-    SceneSet.winter:     rockBgWinter,
+    SceneSet.defaultSet:   rockBgDefault,
+    SceneSet.forest:       rockBgForest,
+    SceneSet.beach:        rockBgBeach,
+    SceneSet.peachBlossom: rockBgPeachBlossom,
+    SceneSet.winter:       rockBgWinter,
+    SceneSet.desert:       rockBgDesert,
+    SceneSet.cosmic:       rockBgCosmic,
+    SceneSet.castle:       rockBgCastle,
   };
 
   // ==================== FIREFLY ====================
   static const String fireflyBgDefault  = 'assets/images/firefly/bg_default.png';
   static const String fireflyBgForest   = 'assets/images/firefly/bg_forest.png';
   static const String fireflyBgBeach    = 'assets/images/firefly/bg_beach.png';
-  static const String fireflyBgJapanese = 'assets/images/firefly/bg_japanese.png';
-  static const String fireflyBgWinter   = 'assets/images/firefly/bg_winter.png';
+  static const String fireflyBgPeachBlossom = 'assets/images/firefly/bg_peach_blossom.png';
+  static const String fireflyBgWinter       = 'assets/images/firefly/bg_winter.png';
+  static const String fireflyBgDesert       = 'assets/images/firefly/bg_desert.png';
+  static const String fireflyBgCosmic       = 'assets/images/firefly/bg_cosmic.png';
+  static const String fireflyBgCastle       = 'assets/images/firefly/bg_castle.png';
 
   static const Map<SceneSet, String> fireflyBgAssets = {
-    SceneSet.defaultSet: fireflyBgDefault,
-    SceneSet.forest:     fireflyBgForest,
-    SceneSet.beach:      fireflyBgBeach,
-    SceneSet.japanese:   fireflyBgJapanese,
-    SceneSet.winter:     fireflyBgWinter,
+    SceneSet.defaultSet:   fireflyBgDefault,
+    SceneSet.forest:       fireflyBgForest,
+    SceneSet.beach:        fireflyBgBeach,
+    SceneSet.peachBlossom: fireflyBgPeachBlossom,
+    SceneSet.winter:       fireflyBgWinter,
+    SceneSet.desert:       fireflyBgDesert,
+    SceneSet.cosmic:       fireflyBgCosmic,
+    SceneSet.castle:       fireflyBgCastle,
   };
 }
