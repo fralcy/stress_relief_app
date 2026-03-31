@@ -138,7 +138,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: Colors.red,
+            backgroundColor: context.colorScheme.error,
           ),
         );
       }
@@ -175,7 +175,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${AppLocalizations.of(context).failedToStartGuestMode}: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: context.colorScheme.error,
           ),
         );
       }
@@ -215,7 +215,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Debug activation failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: context.colorScheme.error,
           ),
         );
       }
@@ -477,11 +477,11 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red),
+              borderSide: BorderSide(color: context.colorScheme.error),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
+              borderSide: BorderSide(color: context.colorScheme.error, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

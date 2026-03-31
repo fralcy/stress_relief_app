@@ -137,7 +137,7 @@ class _ProfileContentState extends State<_ProfileContent> {
         const SizedBox(height: 24),
 
         // ── Section C: Per-feature stats ─────────────────────
-        _sectionHeader(context, theme, l10n.feature),
+        _sectionHeader(context, theme, l10n.progress),
         const SizedBox(height: 12),
         _buildStatsGrid(context, theme, l10n, counters),
         const SizedBox(height: 8),

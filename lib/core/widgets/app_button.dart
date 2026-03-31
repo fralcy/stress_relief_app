@@ -104,9 +104,12 @@ class AppButton extends StatelessWidget {
     // Label only
     if (icon == null && label != null) {
       return Builder(
-        builder: (context) => Text(
-          label!,
-          style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+        builder: (context) => FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label!,
+            style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+          ),
         ),
       );
     }
@@ -118,9 +121,14 @@ class AppButton extends StatelessWidget {
         children: [
           Icon(icon, size: 20),
           const SizedBox(width: 8),
-          Text(
-            label!,
-            style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label!,
+                style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
         ],
       ),

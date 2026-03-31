@@ -83,11 +83,11 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
         title: Builder(
           builder: (context) => Text(
             l10n.tutorialTitle,
-            style: AppTypography.h3(context, color: Colors.white),
+            style: AppTypography.h3(context, color: context.onPrimary),
           ),
         ),
         backgroundColor: theme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: context.onPrimary,
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: widget.isFromMainScreen,
@@ -374,9 +374,12 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                         onPressed: _previousPage,
                         icon: const Icon(Icons.arrow_back_ios, size: 18),
                         label: Builder(
-                          builder: (context) => Text(
-                            l10n.tutorialPrevious,
-                            style: AppTypography.labelLarge(context),
+                          builder: (context) => FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              l10n.tutorialPrevious,
+                              style: AppTypography.labelLarge(context),
+                            ),
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -409,9 +412,12 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                     ),
                   ),
                   child: Builder(
-                    builder: (context) => Text(
-                      l10n.tutorialSkip,
-                      style: AppTypography.labelLarge(context),
+                    builder: (context) => FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        l10n.tutorialSkip,
+                        style: AppTypography.labelLarge(context),
+                      ),
                     ),
                   ),
                 ),
@@ -449,16 +455,19 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                     size: 18,
                   ),
                   label: Builder(
-                    builder: (context) => Text(
-                      _currentPage < _totalPages - 1
-                          ? l10n.tutorialNext
-                          : l10n.tutorialGotIt,
-                      style: AppTypography.button(context),
+                    builder: (context) => FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _currentPage < _totalPages - 1
+                            ? l10n.tutorialNext
+                            : l10n.tutorialGotIt,
+                        style: AppTypography.button(context),
+                      ),
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.text,
                     elevation: 0,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(

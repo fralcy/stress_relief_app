@@ -425,7 +425,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '🐟 $totalFish/10 • 🪙 $totalPointsPerHour/${l10n.hour}',
+              '🐟 $totalFish/10 • $totalPointsPerHour ${l10n.points}/${l10n.hour}',
               style: AppTypography.bodyMedium(context,
                 color: theme.text,
                 fontWeight: FontWeight.bold,
@@ -566,12 +566,19 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                         child: Text('🍞', style: TextStyle(fontSize: 12)),
                       ),
 
-                    // Góc trên phải: icon có xu (chỉ khi không đói hoặc đang chờ nhận)
+                    // Góc trên phải: icon có thể nhận điểm
                     if (claimable > 0)
-                      const Positioned(
+                      Positioned(
                         top: 1,
                         right: 1,
-                        child: Text('🪙', style: TextStyle(fontSize: 11)),
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.check, size: 10, color: Colors.white),
+                        ),
                       ),
 
                     // Progress bar phía dưới cá
@@ -644,9 +651,9 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     return _coinAnims.map((coinAnim) => FloatingLabelAnim(
       x: coinAnim.x,
       y: coinAnim.y,
-      label: '+${coinAnim.points} 🪙',
+      label: '+${coinAnim.points}',
       controller: coinAnim.controller,
-      backgroundColor: Colors.amber,
+      backgroundColor: context.theme.primary,
     )).toList();
   }
 
@@ -765,15 +772,13 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
               children: [
                 Text(name,
                   style: AppTypography.bodyLarge(context, color: theme.text, fontWeight: FontWeight.bold)),
-                Text('🪙 $pointsPerHour/${l10n.hour}',
+                Text('$pointsPerHour ${l10n.points}/${l10n.hour}',
                   style: AppTypography.bodyMedium(context, color: theme.text.withOpacity(0.7))),
                 Row(
                   children: [
-                    const Icon(Icons.monetization_on, size: 14, color: Colors.amber),
-                    const SizedBox(width: 4),
-                    Text('$price',
+                    Text('${l10n.price}: $price',
                       style: AppTypography.bodySmall(context,
-                        color: canBuy ? Colors.amber : Colors.red.withOpacity(0.7),
+                        color: canBuy ? Colors.amber : context.colorScheme.error,
                         fontWeight: FontWeight.bold,
                       )),
                   ],

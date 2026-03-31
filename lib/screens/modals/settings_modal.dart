@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_theme.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/providers/theme_provider.dart';
@@ -155,7 +156,7 @@ class _SettingsModalState extends State<SettingsModal> {
           content: Text('Sync failed: $e'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: context.colorScheme.error,
         ),
       );
     }
@@ -164,6 +165,7 @@ class _SettingsModalState extends State<SettingsModal> {
   Future<void> _handleLogout() async {
     SfxService().buttonClick();
     final l10n = AppLocalizations.of(context);
+    final errorColor = context.colorScheme.error;
     
     // Confirm logout
     final confirmed = await showDialog<bool>(
@@ -178,7 +180,7 @@ class _SettingsModalState extends State<SettingsModal> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: errorColor),
             child: Text(l10n.logout),
           ),
         ],
@@ -222,11 +224,10 @@ class _SettingsModalState extends State<SettingsModal> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Đăng xuất thành công'),
-          duration: const Duration(seconds: 3),
+          duration: Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
@@ -237,7 +238,7 @@ class _SettingsModalState extends State<SettingsModal> {
           content: Text('Logout failed: $e'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: errorColor,
         ),
       );
     }
@@ -255,6 +256,7 @@ class _SettingsModalState extends State<SettingsModal> {
   Future<void> _handleDebugExit() async {
     SfxService().buttonClick();
     final l10n = AppLocalizations.of(context);
+    final errorColor = context.colorScheme.error;
 
     // Confirm exit
     final confirmed = await showDialog<bool>(
@@ -269,7 +271,7 @@ class _SettingsModalState extends State<SettingsModal> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: errorColor),
             child: const Text('Exit'),
           ),
         ],
@@ -316,7 +318,6 @@ class _SettingsModalState extends State<SettingsModal> {
           content: Text('Đã thoát debug mode'),
           duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
@@ -327,7 +328,7 @@ class _SettingsModalState extends State<SettingsModal> {
           content: Text('Exit failed: $e'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: errorColor,
         ),
       );
     }
@@ -576,8 +577,8 @@ class _SettingsModalState extends State<SettingsModal> {
               child: ElevatedButton(
                 onPressed: _handleDebugExit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.primary,
+                  foregroundColor: context.colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -604,8 +605,8 @@ class _SettingsModalState extends State<SettingsModal> {
               child: ElevatedButton(
                 onPressed: _handleLogout,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
-                  foregroundColor: Colors.white,
+                  backgroundColor: context.colorScheme.error,
+                  foregroundColor: context.colorScheme.onError,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -801,11 +802,11 @@ class _SettingsModalState extends State<SettingsModal> {
                 Builder(
                   builder: (context) => Text(
                     '${minutes ~/ 60}:${(minutes % 60).toString().padLeft(2, '0')}',
-                    style: AppTypography.bodyLarge(context, color: Colors.white),
+                    style: AppTypography.bodyLarge(context, color: context.colorScheme.onPrimary),
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                Icon(Icons.arrow_drop_down, color: context.colorScheme.onPrimary, size: 20),
               ],
             ),
           ),

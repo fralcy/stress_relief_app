@@ -434,19 +434,12 @@ class _AchievementCard extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     if (achievement.pointsReward <= 0) return const SizedBox(width: 28);
-    return Column(
-      children: [
-        Icon(Icons.stars_rounded,
-            size: 14, color: context.onSurfaceVariant.withValues(alpha: 0.45)),
-        const SizedBox(height: 2),
-        Text(
-          '+${achievement.pointsReward}',
-          style: AppTypography.bodySmall(
-            context,
-            color: context.onSurfaceVariant.withValues(alpha: 0.45),
-          ),
-        ),
-      ],
+    return Text(
+      '+${achievement.pointsReward}',
+      style: AppTypography.bodySmall(
+        context,
+        color: context.onSurfaceVariant.withValues(alpha: 0.45),
+      ),
     );
   }
 }

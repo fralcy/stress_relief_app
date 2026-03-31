@@ -62,7 +62,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: Colors.red,
+            backgroundColor: context.colorScheme.error,
           ),
         );
       }
@@ -75,14 +75,6 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
     final theme = context.theme;
     
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.text),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -325,11 +317,11 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red),
+              borderSide: BorderSide(color: context.colorScheme.error),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
+              borderSide: BorderSide(color: context.colorScheme.error, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

@@ -502,7 +502,7 @@ class _DrawingModalState extends State<DrawingModal> {
                   width: 48,
                   height: 48,
                   alignment: Alignment.center,
-                  child: const Icon(Icons.check, color: Colors.green, size: 24),
+                  child: Icon(Icons.check, color: context.theme.primary, size: 24),
                 ),
               ),
               const SizedBox(width: 8),
@@ -513,7 +513,7 @@ class _DrawingModalState extends State<DrawingModal> {
                   width: 48,
                   height: 48,
                   alignment: Alignment.center,
-                  child: const Icon(Icons.close, color: Colors.red, size: 24),
+                  child: Icon(Icons.close, color: context.colorScheme.error, size: 24),
                 ),
               ),
             ] else ...[

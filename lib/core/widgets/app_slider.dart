@@ -68,16 +68,15 @@ class AppSlider extends StatelessWidget {
                   trackHeight: 8,
                   trackShape: const RoundedRectSliderTrackShape(),
 
-                  // M3 Thumb - WCAG AA compliant (48dp diameter)
                   thumbColor: context.primaryColor,
                   thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 24, // 48dp diameter for WCAG AA
+                    enabledThumbRadius: 14,
                   ),
 
-                  // M3 Overlay (touch feedback)
+                  // Overlay (touch feedback)
                   overlayColor: context.primaryColor.withValues(alpha: 0.12),
                   overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 28,
+                    overlayRadius: 20,
                   ),
 
                   // M3 Value indicator

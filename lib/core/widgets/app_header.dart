@@ -201,26 +201,17 @@ class _AppHeaderState extends State<AppHeader> {
         color: theme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.monetization_on, size: 20, color: theme.background),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Builder(
-              builder: (context) => Text(
-                points.toString(),
-                style: AppTypography.labelLarge(context,
-                  color: theme.background,
-                  fontWeight: FontWeight.bold,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
+      child: Builder(
+        builder: (context) => Text(
+          points.toString(),
+          style: AppTypography.labelLarge(context,
+            color: theme.background,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
       ),
     );
   }

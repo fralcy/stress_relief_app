@@ -196,7 +196,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sceneShop => 'Scene Shop';
 
   @override
-  String get feature => 'Feature';
+  String get scenePreviewExpand => 'See all rooms';
+
+  @override
+  String get scenePreviewCollapse => 'Show less';
+
+  @override
+  String get progress => 'Progress';
 
   @override
   String get emotionDiary => 'Emotion Diary';
@@ -289,6 +295,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hour => 'hour';
+
+  @override
+  String get price => 'Cost';
 
   @override
   String get lastFed => 'Last fed:';
@@ -468,7 +477,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notEnoughPoints => 'Not enough points';
   
   @override
-  String get points => 'points';
+  String get points => 'Points';
   
   @override
   String get free => 'FREE';
@@ -486,10 +495,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get beach => 'Beach';
   
   @override
-  String get japanese => 'Japanese';
-  
+  String get peachBlossom => 'Peach Blossom';
+
   @override
   String get winter => 'Winter';
+
+  @override
+  String get desert => 'Desert Oasis';
+
+  @override
+  String get cosmic => 'Cosmic Night';
+
+  @override
+  String get castle => 'Stone Castle';
 
   @override
   String get cozyHomeDesc => 'Classic home comfort scenes';
@@ -501,10 +519,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get beachDesc => 'Relaxing coastal scenes';
 
   @override
-  String get japaneseDesc => 'Traditional zen scenes';
+  String get peachBlossomDesc => 'Cherry blossoms, koi ponds, and low wooden tables';
 
   @override
   String get winterDesc => 'Cozy winter wonderland';
+
+  @override
+  String get desertDesc => 'Sandy dunes, warm amber light, and terracotta accents';
+
+  @override
+  String get cosmicDesc => 'Starry skies, deep indigo, and glowing nebula hues';
+
+  @override
+  String get castleDesc => 'Cobblestone halls, cool gray stone, and medieval warmth';
 
   // Authentication
   @override

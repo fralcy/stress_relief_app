@@ -5,7 +5,6 @@ import '../core/constants/app_typography.dart';
 import '../core/constants/avatar_presets.dart';
 import '../core/providers/theme_provider.dart';
 import '../core/providers/locale_provider.dart';
-import '../core/widgets/app_button.dart';
 import '../core/widgets/app_slider.dart';
 import '../core/widgets/app_dropdown.dart';
 import '../core/utils/data_manager.dart';
@@ -791,27 +790,77 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
           children: [
             Expanded(
               child: _currentStep > 0
-                  ? AppButton(
-                      label: AppLocalizations.of(context).back,
+                  ? ElevatedButton(
                       onPressed: _previousStep,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.secondary,
+                        foregroundColor: theme.text,
+                        elevation: 0,
+                        minimumSize: const Size(64, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Builder(
+                        builder: (context) => FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppLocalizations.of(context).back,
+                            style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
                     )
                   : const SizedBox.shrink(),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AppButton(
-                label: AppLocalizations.of(context).tutorialSkip,
+              child: ElevatedButton(
                 onPressed: _finishSetup,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.border,
+                  foregroundColor: theme.text,
+                  elevation: 0,
+                  minimumSize: const Size(64, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Builder(
+                  builder: (context) => FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      AppLocalizations.of(context).tutorialSkip,
+                      style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AppButton(
-                label: _currentStep == 3
-                    ? AppLocalizations.of(context).getStarted
-                    : AppLocalizations.of(context).next,
-                isActive: true,
+              child: ElevatedButton(
                 onPressed: _nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primary,
+                  foregroundColor: theme.text,
+                  elevation: 0,
+                  minimumSize: const Size(64, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Builder(
+                  builder: (context) => FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      _currentStep == 3
+                          ? AppLocalizations.of(context).getStarted
+                          : AppLocalizations.of(context).next,
+                      style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

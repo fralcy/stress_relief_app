@@ -91,7 +91,9 @@ abstract class AppLocalizations {
   String get alreadyClaimedToday;
   String get noCompletedTasks;
   String get sceneShop;
-  String get feature;
+  String get scenePreviewExpand;
+  String get scenePreviewCollapse;
+  String get progress;
   
   // Emotion Diary
   String get emotionDiary;
@@ -128,6 +130,7 @@ abstract class AppLocalizations {
   // Aquarium
   String get fish;
   String get hour;
+  String get price;
   String get lastFed;
   String get fishShop;
   String get owned;
@@ -230,13 +233,19 @@ abstract class AppLocalizations {
   String get cozyHome;
   String get forest;
   String get beach;
-  String get japanese;
+  String get peachBlossom;
   String get winter;
+  String get desert;
+  String get cosmic;
+  String get castle;
   String get cozyHomeDesc;
   String get forestDesc;
   String get beachDesc;
-  String get japaneseDesc;
+  String get peachBlossomDesc;
   String get winterDesc;
+  String get desertDesc;
+  String get cosmicDesc;
+  String get castleDesc;
 
   // Authentication
   String get signUp;

@@ -199,7 +199,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sceneShop => 'Cửa hàng bối cảnh';
 
   @override
-  String get feature => 'Tính năng';
+  String get scenePreviewExpand => 'Xem tất cả phòng';
+
+  @override
+  String get scenePreviewCollapse => 'Thu gọn';
+
+  @override
+  String get progress => 'Tiến trình';
 
   @override
   String get emotionDiary => 'Nhật ký cảm xúc';
@@ -292,6 +298,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get hour => 'giờ';
+
+  @override
+  String get price => 'Giá';
 
   @override
   String get lastFed => 'Cho ăn lần cuối:';
@@ -471,7 +480,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notEnoughPoints => 'Không đủ điểm';
   
   @override
-  String get points => 'điểm';
+  String get points => 'Điểm';
   
   @override
   String get free => 'MIỄN PHÍ';
@@ -489,10 +498,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get beach => 'Bãi biển';
   
   @override
-  String get japanese => 'Nhật Bản';
-  
+  String get peachBlossom => 'Hoa anh đào';
+
   @override
   String get winter => 'Mùa đông';
+
+  @override
+  String get desert => 'Ốc đảo sa mạc';
+
+  @override
+  String get cosmic => 'Đêm vũ trụ';
+
+  @override
+  String get castle => 'Lâu đài đá';
 
   @override
   String get cozyHomeDesc => 'Những khung cảnh ấm cúng tại nhà';
@@ -504,10 +522,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get beachDesc => 'Khung cảnh biển thư giãn';
 
   @override
-  String get japaneseDesc => 'Khung cảnh thiền Nhật Bản truyền thống';
+  String get peachBlossomDesc => 'Hoa đào, ao cá koi và bàn gỗ thấp';
 
   @override
   String get winterDesc => 'Xứ sở mùa đông ấm áp';
+
+  @override
+  String get desertDesc => 'Cồn cát, ánh vàng hổ phách và điểm nhấn đất son';
+
+  @override
+  String get cosmicDesc => 'Bầu trời sao, tím thẫm và sắc tinh vân lung linh';
+
+  @override
+  String get castleDesc => 'Hành lang đá cuội, đá xám mát và hơi ấm trung cổ';
 
   // Authentication
   @override
