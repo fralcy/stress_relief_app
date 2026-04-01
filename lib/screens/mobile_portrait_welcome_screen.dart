@@ -168,11 +168,11 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                   decoration: BoxDecoration(
                     color: isActive || isCompleted
                         ? theme.primary
-                        : theme.primary.withOpacity(0.2),
+                        : theme.border,
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: isActive ? [
                       BoxShadow(
-                        color: theme.primary.withOpacity(0.3),
+                        color: theme.primary,
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),
@@ -195,7 +195,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
       builder: (context) => Text(
         label,
         style: AppTypography.bodySmall(context,
-          color: isActive || isCompleted ? theme.primary : theme.text.withOpacity(0.5),
+          color: isActive || isCompleted ? theme.primary : theme.border,
           fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
@@ -251,8 +251,9 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.primary.withOpacity(0.1),
+              color: theme.background,
               shape: BoxShape.circle,
+              border: Border.all(color: theme.border, width: 2),
             ),
             child: Icon(
               Icons.palette_outlined,
@@ -275,7 +276,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             builder: (context) => Text(
               AppLocalizations.of(context).pickColorScheme,
               style: AppTypography.bodyLarge(context,
-                color: theme.text.withOpacity(0.7),
+                color: theme.text,
               ),
               textAlign: TextAlign.center,
             ),
@@ -385,8 +386,9 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.primary.withOpacity(0.1),
+              color: theme.background,
               shape: BoxShape.circle,
+              border: Border.all(color: theme.border, width: 2),
             ),
             child: Icon(
               Icons.language_outlined,
@@ -409,7 +411,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             builder: (context) => Text(
               AppLocalizations.of(context).choosePreferredLanguage,
               style: AppTypography.bodyLarge(context,
-                color: theme.text.withOpacity(0.7),
+                color: theme.text,
               ),
               textAlign: TextAlign.center,
             ),
@@ -458,9 +460,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? theme.primary.withOpacity(0.1) 
-              : theme.background,
+          color: theme.background,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? theme.primary : theme.border,
@@ -482,7 +482,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
               decoration: BoxDecoration(
                 color: theme.background,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.border.withOpacity(0.3)),
+                border: Border.all(color: theme.border),
               ),
               child: Center(
                 child: Text(
@@ -532,8 +532,9 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.primary.withOpacity(0.1),
+              color: theme.background,
               shape: BoxShape.circle,
+              border: Border.all(color: theme.border, width: 2),
             ),
             child: Icon(
               Icons.headphones_outlined,
@@ -556,7 +557,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             builder: (context) => Text(
               AppLocalizations.of(context).customizeAudioExperience,
               style: AppTypography.bodyLarge(context,
-                color: theme.text.withOpacity(0.7),
+                color: theme.text,
               ),
               textAlign: TextAlign.center,
             ),
@@ -624,7 +625,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Icon(Icons.volume_down, color: theme.text.withOpacity(0.6), size: 20),
+                    Icon(Icons.volume_down, color: theme.border, size: 20),
                     Expanded(
                       child: AppSlider(
                         label: '${_settings.bgmVolume}%',
@@ -640,7 +641,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                         },
                       ),
                     ),
-                    Icon(Icons.volume_up, color: theme.text.withOpacity(0.6), size: 20),
+                    Icon(Icons.volume_up, color: theme.border, size: 20),
                   ],
                 ),
               ],
@@ -687,7 +688,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.volume_down, color: theme.text.withOpacity(0.6), size: 20),
+                      Icon(Icons.volume_down, color: theme.border, size: 20),
                       Expanded(
                         child: AppSlider(
                           label: '${_settings.sfxVolume}%',
@@ -704,7 +705,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                           },
                         ),
                       ),
-                      Icon(Icons.volume_up, color: theme.text.withOpacity(0.6), size: 20),
+                      Icon(Icons.volume_up, color: theme.border, size: 20),
                     ],
                   ),
                 ],
@@ -746,7 +747,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.1),
+                  color: theme.border,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -779,7 +780,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
         color: theme.background,
         border: Border(
           top: BorderSide(
-            color: theme.border.withOpacity(0.3),
+            color: theme.border,
             width: 1,
           ),
         ),
@@ -794,7 +795,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                       onPressed: _previousStep,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.secondary,
-                        foregroundColor: theme.text,
+                        foregroundColor: theme.background,
                         elevation: 0,
                         minimumSize: const Size(64, 48),
                         shape: RoundedRectangleBorder(
@@ -819,7 +820,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 onPressed: _finishSetup,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.border,
-                  foregroundColor: theme.text,
+                  foregroundColor: theme.background,
                   elevation: 0,
                   minimumSize: const Size(64, 48),
                   shape: RoundedRectangleBorder(
@@ -843,7 +844,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 onPressed: _nextStep,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.primary,
-                  foregroundColor: theme.text,
+                  foregroundColor: theme.background,
                   elevation: 0,
                   minimumSize: const Size(64, 48),
                   shape: RoundedRectangleBorder(
@@ -895,7 +896,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             decoration: InputDecoration(
               labelText: l10n.name,
               labelStyle: AppTypography.bodySmall(context,
-                  color: theme.text.withOpacity(0.6)),
+                  color: theme.border),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: theme.border),
@@ -918,7 +919,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
               builder: (context) => Text(
                 l10n.chooseAvatar,
                 style: AppTypography.bodySmall(context,
-                    color: theme.text.withOpacity(0.6)),
+                    color: theme.border),
               ),
             ),
           ),
@@ -951,9 +952,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: selected
-                  ? theme.primary.withOpacity(0.15)
-                  : Colors.transparent,
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: selected ? theme.primary : theme.border,
@@ -975,8 +974,8 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
         return l10n.themePastelBlueBreeze;
       case 'calm_lavender':
         return l10n.themeCalmLavender;
-      case 'sunny_pastel_yellow':
-        return l10n.themeSunnyPastelYellow;
+      case 'warm_amber':
+        return l10n.themeWarmAmber;
       case 'minty_fresh':
         return l10n.themeMintyFresh;
       case 'midnight_blue':

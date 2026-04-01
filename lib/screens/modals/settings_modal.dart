@@ -690,8 +690,8 @@ class _SettingsModalState extends State<SettingsModal> {
           case 'calm_lavender':
             localizedName = l10n.themeCalmLavender;
             break;
-          case 'sunny_pastel_yellow':
-            localizedName = l10n.themeSunnyPastelYellow;
+          case 'warm_amber':
+            localizedName = l10n.themeWarmAmber;
             break;
           case 'minty_fresh':
             localizedName = l10n.themeMintyFresh;

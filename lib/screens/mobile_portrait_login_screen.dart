@@ -243,7 +243,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              theme.primary.withOpacity(0.2),
+              theme.border,
               theme.background,
               theme.background,
             ],
@@ -270,12 +270,12 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
 
                   Text(
                     l10n.signIn,
-                    style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
+                    style: AppTypography.bodyLarge(context, color: theme.border),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // Email field
                   _buildTextField(
                     controller: _emailController,
@@ -307,7 +307,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: theme.text.withOpacity(0.5),
+                        color: theme.border,
                       ),
                       onPressed: () {
                         setState(() => _isPasswordVisible = !_isPasswordVisible);
@@ -397,7 +397,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                     children: [
                       Text(
                         l10n.dontHaveAccount,
-                        style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
+                        style: AppTypography.bodyLarge(context, color: theme.border),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
@@ -458,7 +458,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
           style: TextStyle(color: theme.text),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: theme.text.withOpacity(0.4)),
+            hintStyle: TextStyle(color: theme.border),
             prefixIcon: Icon(prefixIcon, color: theme.primary),
             suffixIcon: suffixIcon,
             filled: true,

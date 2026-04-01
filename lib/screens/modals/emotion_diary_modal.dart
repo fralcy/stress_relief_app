@@ -172,7 +172,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
 
   Widget _buildHistorySection(AppLocalizations l10n, AppTheme theme) {
     final labelStyle = AppTypography.bodySmall(context,
-        color: theme.text.withOpacity(0.6));
+        color: theme.border);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +299,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           child: Text(
             l10n.noDiaryData,
             style: AppTypography.bodySmall(context,
-                color: theme.text.withOpacity(0.6)),
+                color: theme.border),
           ),
         ),
       );
@@ -442,7 +442,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
                     labels[index],
                     textAlign: TextAlign.center,
                     style: AppTypography.captionSmall(context,
-                        color: theme.text.withOpacity(0.8)),
+                        color: theme.text),
                   ),
                 ],
               ),
@@ -494,7 +494,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           child: Text(
             '${_diaryController.text.length}/$_maxDiaryLength',
             style: AppTypography.bodySmall(context,
-                color: theme.text.withOpacity(0.6)),
+                color: theme.border),
           ),
         ),
       ],

@@ -367,7 +367,7 @@ abstract class AppLocalizations {
   // Theme names
   String get themePastelBlueBreeze;
   String get themeCalmLavender;
-  String get themeSunnyPastelYellow;
+  String get themeWarmAmber;
   String get themeMintyFresh;
   String get themeMidnightBlue;
   String get themeSoftPurpleNight;

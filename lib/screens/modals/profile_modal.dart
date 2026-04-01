@@ -90,7 +90,7 @@ class _ProfileContentState extends State<_ProfileContent> {
         Text(
           l10n.chooseAvatar,
           style: AppTypography.bodySmall(context,
-              color: theme.text.withValues(alpha: 0.6)),
+              color: theme.text),
         ),
         const SizedBox(height: 8),
         _buildAvatarGrid(theme),
@@ -103,7 +103,7 @@ class _ProfileContentState extends State<_ProfileContent> {
           decoration: InputDecoration(
             labelText: l10n.name,
             labelStyle: AppTypography.bodySmall(context,
-                color: theme.text.withValues(alpha: 0.6)),
+                color: theme.text),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: theme.border),
@@ -172,9 +172,7 @@ class _ProfileContentState extends State<_ProfileContent> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: selected
-                  ? theme.primary.withValues(alpha: 0.15)
-                  : Colors.transparent,
+              color: selected ? theme.background : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: selected ? theme.primary : theme.border,
@@ -195,9 +193,9 @@ class _ProfileContentState extends State<_ProfileContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: theme.primary.withValues(alpha: 0.08),
+        color: theme.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: theme.primary),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -212,7 +210,7 @@ class _ProfileContentState extends State<_ProfileContent> {
           Text(
             'pts',
             style: AppTypography.bodySmall(context,
-                color: theme.primary.withValues(alpha: 0.7)),
+                color: theme.primary),
           ),
         ],
       ),
@@ -291,7 +289,7 @@ class _ProfileContentState extends State<_ProfileContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.primary.withValues(alpha: 0.06),
+        color: theme.background,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: theme.border),
       ),
@@ -307,7 +305,7 @@ class _ProfileContentState extends State<_ProfileContent> {
                 Text(
                   stat.label,
                   style: AppTypography.bodySmall(context,
-                      color: theme.text.withValues(alpha: 0.6)),
+                      color: theme.text),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

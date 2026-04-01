@@ -191,6 +191,7 @@ class _AppHeaderState extends State<AppHeader> {
   }
 
   Widget _buildCoinDisplay(int points, AppTheme theme) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       constraints: const BoxConstraints(
         minWidth: 120,
@@ -202,8 +203,7 @@ class _AppHeaderState extends State<AppHeader> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Builder(
-        builder: (context) => Text(
-          points.toString(),
+        builder: (context) => Text("${l10n.points}: ${points.toString()}",
           style: AppTypography.labelLarge(context,
             color: theme.background,
             fontWeight: FontWeight.bold,

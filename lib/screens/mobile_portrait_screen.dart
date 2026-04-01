@@ -183,8 +183,8 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             end: Alignment.bottomCenter,
             colors: [
               context.theme.background,
-              context.theme.primary.withOpacity(0.3),
-              context.theme.primary.withOpacity(0.3),
+              context.theme.border,
+              context.theme.border,
               context.theme.background,
             ],
             stops: const [0.0, 0.25, 0.75, 1.0],
@@ -302,13 +302,13 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                             Icon(
                               Icons.image_not_supported,
                               size: 64,
-                              color: context.theme.text.withOpacity(0.3),
+                              color: context.theme.border,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               _currentScene.toString().split('.').last,
                               style: AppTypography.bodyLarge(context,
-                                color: context.theme.text.withOpacity(0.5),
+                                color: context.theme.border,
                               ),
                             ),
                           ],
@@ -354,7 +354,7 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
                         width: mascotSize,
                         height: mascotSize,
                         decoration: BoxDecoration(
-                          color: context.theme.secondary.withOpacity(0.3),
+                          color: context.theme.secondary,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,

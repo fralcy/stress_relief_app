@@ -7,8 +7,8 @@ import '../constants/app_typography.dart';
 /// 
 /// Features:
 /// - Oval shape
-/// - Background: 75% opacity
-/// - Border: primary with 75% opacity
+/// - Background: background color
+/// - Border: border color
 /// - Optional tail pointing to mascot
 enum BubbleTailPosition { none, left, right, top, bottom }
 
@@ -41,9 +41,9 @@ class SpeechBubble extends StatelessWidget {
           margin: _getMarginForTail(),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: theme.background.withValues(alpha: 0.75), // 75% opacity
+            color: theme.background,
             border: Border.all(
-              color: theme.primary.withValues(alpha: 0.75), // 75% opacity
+              color: theme.primary,
               width: 2,
             ),
             borderRadius: BorderRadius.circular(20), // Bo tròn góc oval
@@ -90,11 +90,11 @@ class _BubbleTailPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = theme.background.withValues(alpha: 0.75)
+      ..color = theme.border
       ..style = PaintingStyle.fill;
 
     final borderPaint = Paint()
-      ..color = theme.primary.withValues(alpha: 0.75)
+      ..color = theme.primary
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

@@ -590,7 +590,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                         borderRadius: BorderRadius.circular(2),
                         child: LinearProgressIndicator(
                           value: cycleProgress / 100,
-                          backgroundColor: Colors.white.withOpacity(0.25),
+                          backgroundColor: theme.border,
                           valueColor: AlwaysStoppedAnimation(
                             theme.primary,
                           ),

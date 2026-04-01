@@ -819,7 +819,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get themeCalmLavender => 'Tím oải hương';
 
   @override
-  String get themeSunnyPastelYellow => 'Vàng nhạt nắng';
+  String get themeWarmAmber => 'Hổ Phách';
 
   @override
   String get themeMintyFresh => 'Xanh bạc hà';

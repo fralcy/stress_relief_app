@@ -23,7 +23,13 @@ class AppTheme {
   });
 
   /// Get preview colors for settings
-  List<Color> get previewColors => [primary, secondary, text, background, border];
+  List<Color> get previewColors => [
+    primary,
+    secondary,
+    text,
+    background,
+    border,
+  ];
 
   /// Generate Material 3 ColorScheme from theme colors
   /// This enables full M3 support with semantic colors
@@ -32,7 +38,6 @@ class AppTheme {
       return ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.dark,
-        // Override with custom colors while letting M3 generate harmonious variants
         primary: primary,
         secondary: secondary,
         surface: background,
@@ -41,7 +46,6 @@ class AppTheme {
       return ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.light,
-        // Override with custom colors while letting M3 generate harmonious variants
         primary: primary,
         secondary: secondary,
         surface: background,
@@ -51,94 +55,135 @@ class AppTheme {
 }
 
 /// All available themes
+///
+/// WCAG AA compliance targets per pair (measured at design time):
+///   text / background   ≥ 4.5:1  (normal text)
+///   border / background ≥ 3.0:1  (UI component / non-text)
+///   text / primary      ≥ 3.0:1  (UI component / non-text)
+///   primary / background≥ 3.0:1  (UI component / non-text)
+///   text / secondary    ≥ 3.0:1  (UI component / non-text)
+///   secondary /background≥ 3.0:1 (UI component / non-text)
+///
+/// Note: satisfying text/primary ≥ 4.5:1 AND primary/background ≥ 4.5:1
+/// simultaneously is mathematically impossible for any standard light/dark
+/// theme (where text and background are on opposite luminance ends).
+/// The 3.0:1 target for non-text pairs follows WCAG 1.4.11 (UI Components).
+/// If text is rendered directly ON a primary-colored background (e.g. inside
+/// a button), add a separate `onPrimary` / `onSecondary` color field.
 class AppThemes {
-  // Light themes
+  // ── Light themes ────────────────────────────────────────────────────────────
+
+  /// Pastel Blue Breeze — WCAG ratios:
+  ///   text/bg 15.08 | border/bg 4.29 | text/primary 3.05 |
+  ///   primary/bg 4.94 | text/secondary 3.01 | secondary/bg 5.01
   static const pastelBlueBreeze = AppTheme(
     id: 'pastel_blue_breeze',
     name: 'Pastel Blue Breeze',
-    primary: Color(0xFF4A9EE8), // Improved from #8EC5FC for WCAG AA (3.52:1 contrast)
-    secondary: Color(0xFFB2F7EF),
-    text: Color(0xFF2D3748),
-    background: Color(0xFFFDFEFE),
-    border: Color(0xFFCBD5E0),
+    primary: Color(0xFF2563EB),
+    secondary: Color(0xFF0E7A6A),
+    text: Color(0xFF1A2333),
+    background: Color(0xFFF8FAFD),
+    border: Color(0xFF5A7A9A),
     isDark: false,
   );
 
+  /// Calm Lavender — WCAG ratios:
+  ///   text/bg 16.05 | border/bg 5.61 | text/primary 3.07 |
+  ///   primary/bg 5.22 | text/secondary 3.24 | secondary/bg 4.95
   static const calmLavender = AppTheme(
     id: 'calm_lavender',
     name: 'Calm Lavender',
-    primary: Color(0xFF8B6DD9), // Improved from #CBB2FE for WCAG AA (3.51:1 contrast)
-    secondary: Color(0xFFFFD6E8),
-    text: Color(0xFF2F2F2F),
-    background: Color(0xFFFFFDFD),
-    border: Color(0xFFE0D7F9),
+    primary: Color(0xFF8040E8),
+    secondary: Color(0xFFBE3878),
+    text: Color(0xFF1E1A2E),
+    background: Color(0xFFFAF8FF),
+    border: Color(0xFF6B5A9A),
     isDark: false,
   );
 
-  static const sunnyPastelYellow = AppTheme(
-    id: 'sunny_pastel_yellow',
-    name: 'Sunny Pastel Yellow',
-    primary: Color(0xFFD6A000), // Improved from #FFE29A for WCAG AA (3.51:1 contrast)
-    secondary: Color(0xFFFFD3B6),
-    text: Color(0xFF3A3A3A),
-    background: Color(0xFFFFFEFB),
-    border: Color(0xFFF6E7C1),
+  /// Warm Amber — WCAG ratios:
+  ///   text/bg 17.36 | border/bg 5.53 | text/primary 4.13 |
+  ///   primary/bg 4.21 | text/secondary 3.02 | secondary/bg 5.74
+  static const warmAmber = AppTheme(
+    id: 'warm_amber',
+    name: 'Warm Amber',
+    primary: Color(0xFFA07200),
+    secondary: Color(0xFFA84800),
+    text: Color(0xFF1C1810),
+    background: Color(0xFFFFFDF5),
+    border: Color(0xFF7A6530),
     isDark: false,
   );
 
+  /// Minty Fresh — WCAG ratios:
+  ///   text/bg 16.72 | border/bg 5.62 | text/primary 3.22 |
+  ///   primary/bg 5.19 | text/secondary 3.27 | secondary/bg 5.11
   static const mintyFresh = AppTheme(
     id: 'minty_fresh',
     name: 'Minty Fresh',
-    primary: Color(0xFF5FCCB4), // Improved from #B8F2E6 for WCAG AA (3.52:1 contrast)
-    secondary: Color(0xFFFFB7B2),
-    text: Color(0xFF2B2B2B),
-    background: Color(0xFFFFFFFF),
-    border: Color(0xFFD1F2EB),
+    primary: Color(0xFF0C7A60),
+    secondary: Color(0xFFCC3030),
+    text: Color(0xFF141E1C),
+    background: Color(0xFFF5FFFD),
+    border: Color(0xFF3A7060),
     isDark: false,
   );
 
-  // Dark themes
+  // ── Dark themes ─────────────────────────────────────────────────────────────
+
+  /// Midnight Blue — WCAG ratios:
+  ///   text/bg 11.66 | border/bg 4.24 | text/primary 3.84 |
+  ///   primary/bg 3.04 | text/secondary 3.66 | secondary/bg 3.19
   static const midnightBlue = AppTheme(
     id: 'midnight_blue',
     name: 'Midnight Blue',
-    primary: Color(0xFF4F86F7),
-    secondary: Color(0xFF89CFF0),
-    text: Color(0xFFF1F5F9),
-    background: Color(0xFF1E293B),
-    border: Color(0xFF334155),
+    primary: Color(0xFF2060C0),
+    secondary: Color(0xFF1A7080),
+    text: Color(0xFFC0D0E8),
+    background: Color(0xFF0C1620),
+    border: Color(0xFF508098),
     isDark: true,
   );
 
+  /// Soft Purple Night — WCAG ratios:
+  ///   text/bg 12.18 | border/bg 4.42 | text/primary 3.67 |
+  ///   primary/bg 3.32 | text/secondary 3.40 | secondary/bg 3.58
   static const softPurpleNight = AppTheme(
     id: 'soft_purple_night',
     name: 'Soft Purple Night',
-    primary: Color(0xFFA78BFA),
-    secondary: Color(0xFFF0ABFC),
-    text: Color(0xFFF9FAFB),
-    background: Color(0xFF18181B),
-    border: Color(0xFF3F3F46),
+    primary: Color(0xFF7848C8),
+    secondary: Color(0xFF9050A0),
+    text: Color(0xFFCCC8EE),
+    background: Color(0xFF0C0A18),
+    border: Color(0xFF8070A0),
     isDark: true,
   );
 
+  /// Warm Sunset — WCAG ratios:
+  ///   text/bg 11.90 | border/bg 5.02 | text/primary 3.16 |
+  ///   primary/bg 3.76 | text/secondary 3.05 | secondary/bg 3.90
   static const warmSunset = AppTheme(
     id: 'warm_sunset',
     name: 'Warm Sunset',
-    primary: Color(0xFFFCA5A5),
-    secondary: Color(0xFFFDE68A),
-    text: Color(0xFFFEF9C3),
-    background: Color(0xFF1C1917),
-    border: Color(0xFF374151),
+    primary: Color(0xFFB84848),
+    secondary: Color(0xFF207898),
+    text: Color(0xFFE0C890),
+    background: Color(0xFF100C08),
+    border: Color(0xFFA07870),
     isDark: true,
   );
 
+  /// Serene Green Night — WCAG ratios:
+  ///   text/bg 11.62 | border/bg 4.29 | text/primary 3.26 |
+  ///   primary/bg 3.56 | text/secondary 3.29 | secondary/bg 3.53
   static const sereneGreenNight = AppTheme(
     id: 'serene_green_night',
     name: 'Serene Green Night',
-    primary: Color(0xFF86EFAC),
-    secondary: Color(0xFF7DD3FC),
-    text: Color(0xFFF3F4F6),
-    background: Color(0xFF111827),
-    border: Color(0xFF374151),
+    primary: Color(0xFF287848),
+    secondary: Color(0xFF1E7848),
+    text: Color(0xFFB8CEC0),
+    background: Color(0xFF080E18),
+    border: Color(0xFF508070),
     isDark: true,
   );
 
@@ -146,7 +191,7 @@ class AppThemes {
   static const List<AppTheme> all = [
     pastelBlueBreeze,
     calmLavender,
-    sunnyPastelYellow,
+    warmAmber,
     mintyFresh,
     midnightBlue,
     softPurpleNight,

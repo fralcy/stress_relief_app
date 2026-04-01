@@ -93,7 +93,8 @@ class _AchievementsContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.primary.withValues(alpha: 0.08),
+        color: theme.background,
+        border: Border.all(color: theme.primary),
         borderRadius: context.shapes.medium.borderRadius as BorderRadius,
       ),
       child: Row(
@@ -102,12 +103,13 @@ class _AchievementsContent extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: theme.primary,
+              color: theme.background,
               shape: BoxShape.circle,
+              border: Border.all(color: theme.primary, width: 1.5),
             ),
             child: Icon(
               Icons.emoji_events_rounded,
-              color: context.onPrimary,
+              color: theme.primary,
               size: 26,
             ),
           ),
@@ -131,7 +133,7 @@ class _AchievementsContent extends StatelessWidget {
                     value: fraction,
                     minHeight: 8,
                     backgroundColor:
-                        context.onSurfaceVariant.withValues(alpha: 0.15),
+                        theme.border,
                     valueColor: AlwaysStoppedAnimation(theme.primary),
                   ),
                 ),
@@ -178,7 +180,7 @@ class _AchievementsContent extends StatelessWidget {
                   progressText,
                   style: AppTypography.labelSmall(
                     context,
-                    color: context.onSurfaceVariant.withValues(alpha: 0.6),
+                    color: context.theme.text,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -307,28 +309,21 @@ class _AchievementCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = context.theme;
 
-    final iconColor = isUnlocked ? theme.primary : context.onSurfaceVariant;
-    final bgColor = isUnlocked
-        ? theme.primary.withValues(alpha: 0.12)
-        : context.onSurface.withValues(alpha: 0.06);
-    final titleColor =
-        isUnlocked ? theme.text : context.onSurfaceVariant;
-    final descColor = isUnlocked
-        ? context.onSurfaceVariant
-        : context.onSurfaceVariant.withValues(alpha: 0.55);
+    final iconColor = isUnlocked ? theme.primary : theme.border;
+    final titleColor = isUnlocked ? theme.text : theme.border;
+    final descColor = isUnlocked ? context.onSurfaceVariant : theme.border;
+    final borderColor = isUnlocked ? theme.primary : theme.border;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: context.surfaceColor,
+          color: theme.background,
           borderRadius: context.shapes.medium.borderRadius as BorderRadius,
           border: Border.all(
-            color: isUnlocked
-                ? theme.primary.withValues(alpha: 0.25)
-                : context.outlineVariant,
-            width: 1,
+            color: borderColor,
+            width: isUnlocked ? 1.5 : 1.0,
           ),
         ),
         child: Row(
@@ -340,14 +335,13 @@ class _AchievementCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: bgColor,
+                    color: theme.background,
+                    border: Border.all(color: borderColor, width: 1.5),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(achievement.icon,
                       size: 22,
-                      color: isUnlocked
-                          ? iconColor
-                          : iconColor.withValues(alpha: 0.45)),
+                      color: iconColor),
                 ),
                 if (!isUnlocked)
                   Positioned(
@@ -357,13 +351,14 @@ class _AchievementCard extends StatelessWidget {
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: context.onSurfaceVariant.withValues(alpha: 0.35),
+                        color: theme.background,
                         shape: BoxShape.circle,
+                        border: Border.all(color: theme.border, width: 1.5),
                       ),
                       child: Icon(
                         Icons.lock_outline,
                         size: 10,
-                        color: context.surfaceColor,
+                        color: iconColor,
                       ),
                     ),
                   ),
@@ -412,8 +407,9 @@ class _AchievementCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: theme.primary.withValues(alpha: 0.12),
+            color: theme.background,
             shape: BoxShape.circle,
+            border: Border.all(color: theme.primary, width: 1.5),
           ),
           child: Icon(Icons.check_rounded, size: 16, color: theme.primary),
         ),
@@ -438,7 +434,7 @@ class _AchievementCard extends StatelessWidget {
       '+${achievement.pointsReward}',
       style: AppTypography.bodySmall(
         context,
-        color: context.onSurfaceVariant.withValues(alpha: 0.45),
+        color: theme.border,
       ),
     );
   }

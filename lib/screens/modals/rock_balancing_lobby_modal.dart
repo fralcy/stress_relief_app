@@ -16,6 +16,7 @@ import '../../core/constants/avatar_presets.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_modal.dart';
+import '../../core/widgets/app_slider.dart';
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'rock_balancing_modal.dart';
 
@@ -588,7 +589,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           const SizedBox(height: 14),
           Text(l10n.hostsFound,
               style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.6))),
+                  color: theme.border)),
           const SizedBox(height: 8),
           ..._discoveredHosts.map((host) => _buildHostTile(theme, l10n, host)),
         ],
@@ -612,14 +613,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         const SizedBox(height: 20),
         Text(label,
             style: AppTypography.bodyMedium(context,
-                color: theme.text.withValues(alpha: 0.6))),
+                color: theme.border)),
         if (showCancel) ...[
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _cancelAndGoIdle,
             style: ElevatedButton.styleFrom(
-              backgroundColor: theme.border.withValues(alpha: 0.35),
-              foregroundColor: theme.text.withValues(alpha: 0.65),
+              backgroundColor: theme.border,
+              foregroundColor: theme.text,
               minimumSize: const Size(160, 48),
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -693,8 +694,8 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         child: ElevatedButton(
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.border.withValues(alpha: 0.35),
-            foregroundColor: theme.text.withValues(alpha: 0.65),
+            backgroundColor: theme.border,
+            foregroundColor: theme.text,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -757,8 +758,8 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         ElevatedButton(
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.border.withValues(alpha: 0.35),
-            foregroundColor: theme.text.withValues(alpha: 0.65),
+            backgroundColor: theme.border,
+            foregroundColor: theme.text,
             minimumSize: const Size(160, 48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -817,8 +818,8 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         ElevatedButton(
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.border.withValues(alpha: 0.35),
-            foregroundColor: theme.text.withValues(alpha: 0.65),
+            backgroundColor: theme.border,
+            foregroundColor: theme.text,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -890,7 +891,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           const SizedBox(width: 6),
           Text('${players.length}/$kMaxRoomPlayers',
               style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.5))),
+                  color: theme.border)),
         ]),
         const SizedBox(height: 12),
         ...players.map((p) => _buildPlayerTile(theme, l10n, room, p, isHost)),
@@ -899,7 +900,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
             padding: const EdgeInsets.only(top: 4),
             child: Text(l10n.waitingForPlayers,
                 style: AppTypography.bodySmall(context,
-                    color: theme.text.withValues(alpha: 0.5))),
+                    color: theme.border)),
           ),
       ],
     );
@@ -965,7 +966,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
                 color: theme.background,
                 borderRadius: BorderRadius.circular(12),
                 border:
-                    Border.all(color: theme.border.withValues(alpha: 0.5)),
+                    Border.all(color: theme.border),
               ),
               child: Row(children: [
                 SizedBox(
@@ -983,7 +984,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
                 Expanded(
                     child: Text(p.displayName,
                         style: AppTypography.bodyMedium(context,
-                            color: theme.text.withValues(alpha: 0.7)))),
+                            color: theme.text))),
                 GestureDetector(
                   onTap: () => room.approvePlayer(p.id),
                   child: _chip(theme, l10n.approveLabel, Colors.green),
@@ -1004,29 +1005,13 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
       key: _sliderKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${l10n.rockCount}: $_rockCount',
-            style: AppTypography.bodyLarge(context,
-                color: theme.text, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Row(children: [
-          Text('4',
-              style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.5))),
-          Expanded(
-            child: Slider(
-              value: _rockCount.toDouble(),
-              min: 4,
-              max: 20,
-              divisions: 16,
-              activeColor: theme.primary,
-              inactiveColor: theme.border,
-              onChanged: (v) => setState(() => _rockCount = v.round()),
-            ),
-          ),
-          Text('20',
-              style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.5))),
-        ]),
+        AppSlider(
+          label: '${l10n.rockCount}: $_rockCount',
+          value: _rockCount.toDouble(),
+          min: 4,
+          max: 20,
+          onChanged: (v) => setState(() => _rockCount = v.round()),
+        ),
       ],
     );
   }
@@ -1035,7 +1020,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: theme.border,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(label,

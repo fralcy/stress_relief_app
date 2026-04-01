@@ -103,8 +103,8 @@ class _AppCardState extends State<AppCard> {
           onTap: widget.isExpandable ? _toggleExpanded : null,
 
           // M3 state layers for interactive header
-          splashColor: context.onSurface.withValues(alpha: 0.12),
-          highlightColor: context.onSurface.withValues(alpha: 0.08),
+          splashColor: context.theme.border,
+          highlightColor: context.theme.border,
 
           borderRadius: BorderRadius.vertical(
             top: borderRadius.topLeft,

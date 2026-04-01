@@ -81,7 +81,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              theme.primary.withOpacity(0.2),
+              theme.border,
               theme.background,
               theme.background,
             ],
@@ -95,28 +95,12 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
-                  
-                  // Icon
-                  Container(
-                    width: 80,
-                    height: 80,
-                    margin: const EdgeInsets.only(bottom: 32),
-                    decoration: BoxDecoration(
-                      color: theme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: Icon(
-                      Icons.lock_reset,
-                      size: 40,
-                      color: theme.primary,
-                    ),
-                  ),
-                  
+                  const SizedBox(height: 60),
+
                   // Header
                   Text(
                     l10n.forgotPasswordTitle,
-                    style: AppTypography.h1(context, color: theme.text),
+                    style: AppTypography.display(context, color: theme.text),
                     textAlign: TextAlign.center,
                   ),
 
@@ -126,7 +110,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                     _emailSent
                         ? l10n.forgotPasswordEmailSentDescription
                         : l10n.forgotPasswordDescription,
-                    style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)).copyWith(height: 1.4),
+                    style: AppTypography.bodyLarge(context, color: theme.border).copyWith(height: 1.4),
                     textAlign: TextAlign.center,
                   ),
                   
@@ -187,10 +171,10 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: theme.primary.withOpacity(0.1),
+                        color: theme.border,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: theme.primary.withOpacity(0.3),
+                          color: theme.primary,
                         ),
                       ),
                       child: Column(
@@ -208,7 +192,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                           const SizedBox(height: 8),
                           Text(
                             l10n.checkYourInbox,
-                            style: AppTypography.bodyMedium(context, color: theme.text.withOpacity(0.7)).copyWith(height: 1.4),
+                            style: AppTypography.bodyMedium(context, color: theme.text).copyWith(height: 1.4),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -246,7 +230,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                     children: [
                       Text(
                         l10n.rememberPassword,
-                        style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
+                        style: AppTypography.bodyLarge(context, color: theme.border),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
@@ -299,7 +283,7 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
           style: TextStyle(color: theme.text),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: theme.text.withOpacity(0.4)),
+            hintStyle: TextStyle(color: theme.border),
             prefixIcon: Icon(prefixIcon, color: theme.primary),
             filled: true,
             fillColor: theme.background,

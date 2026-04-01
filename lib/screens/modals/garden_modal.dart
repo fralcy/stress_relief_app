@@ -636,7 +636,7 @@ class _GardenModalState extends State<GardenModal>
                 child: Container(
                   height: 3,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.3),
+                    color: theme.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                   child: TweenAnimationBuilder<double>(
@@ -648,7 +648,7 @@ class _GardenModalState extends State<GardenModal>
                       widthFactor: value,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.lightGreen,
+                          color: theme.primary,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -665,7 +665,7 @@ class _GardenModalState extends State<GardenModal>
   Widget _indicator(Color color, IconData icon) => Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.9),
+          color: color,
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 12, color: Colors.white),
@@ -710,7 +710,7 @@ class _GardenModalState extends State<GardenModal>
                   border: Border.all(
                     color: count > 0
                         ? theme.border
-                        : theme.border.withValues(alpha: 0.3),
+                        : theme.border,
                     width: 1.5,
                   ),
                   borderRadius: BorderRadius.circular(8),

@@ -54,7 +54,7 @@ class AppDropdown<T> extends StatelessWidget {
           color: context.onSurfaceVariant,
           size: 24,
         ),
-        iconDisabledColor: context.onSurface.withValues(alpha: 0.38),
+        iconDisabledColor: context.theme.border,
 
         hint: hint != null
             ? Text(

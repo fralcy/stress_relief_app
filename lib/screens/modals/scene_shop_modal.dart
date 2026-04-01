@@ -69,14 +69,16 @@ class _SceneShopModalState extends State<SceneShopModal> {
   Widget _buildPointsDisplay(int currentPoints, AppTheme theme) {
     final l10n = AppLocalizations.of(context);
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.secondary.withValues(alpha: 0.1),
+        color: theme.primary,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.border),
       ),
       child: Text(
         '${l10n.yourPoints}: $currentPoints',
+        textAlign: TextAlign.center,
         style: AppTypography.bodyLarge(context,
           color: theme.text,
           fontWeight: FontWeight.w600,
@@ -212,13 +214,13 @@ class _SceneShopModalState extends State<SceneShopModal> {
           children: [
             Text(
               isExpanded ? l10n.scenePreviewCollapse : l10n.scenePreviewExpand,
-              style: AppTypography.bodySmall(context, color: theme.text.withValues(alpha: 0.6)),
+              style: AppTypography.bodySmall(context, color: theme.text),
             ),
             const SizedBox(width: 4),
             AnimatedRotation(
               turns: isExpanded ? 0.5 : 0.0,
               duration: const Duration(milliseconds: 200),
-              child: Icon(Icons.keyboard_arrow_down, size: 16, color: theme.text.withValues(alpha: 0.6)),
+              child: Icon(Icons.keyboard_arrow_down, size: 16, color: theme.text),
             ),
           ],
         ),
@@ -302,7 +304,7 @@ class _SceneShopModalState extends State<SceneShopModal> {
         Text(
           description,
           style: AppTypography.bodyMedium(context,
-            color: theme.text.withValues(alpha: 0.7),
+            color: theme.text,
           ),
         ),
         

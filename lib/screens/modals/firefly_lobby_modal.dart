@@ -18,6 +18,7 @@ import '../../core/constants/avatar_presets.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_modal.dart';
+import '../../core/widgets/app_slider.dart';
 import '../../core/utils/firefly_world.dart' show FireflyRole;
 import 'firefly_modal.dart';
 
@@ -673,7 +674,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           const SizedBox(height: 14),
           Text(l10n.hostsFound,
               style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.6))),
+                  color: theme.border)),
           const SizedBox(height: 8),
           ..._discoveredHosts.map((h) => _buildHostTile(theme, l10n, h)),
         ],
@@ -697,7 +698,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
         const SizedBox(height: 20),
         Text(label,
             style: AppTypography.bodyMedium(context,
-                color: theme.text.withValues(alpha: 0.6))),
+                color: theme.border)),
         if (showCancel) ...[
           const SizedBox(height: 20),
           _cancelButton(theme, l10n),
@@ -850,30 +851,14 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       key: _sliderKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${l10n.maxFireflyCount}: $_fireflyCount',
-            style: AppTypography.bodyLarge(context,
-                color: theme.text, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Row(children: [
-          Text('5',
-              style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.5))),
-          Expanded(
-            child: Slider(
-              value: _fireflyCount.toDouble(),
-              min: 5,
-              max: 20,
-              divisions: 3,
-              activeColor: theme.primary,
-              inactiveColor: theme.border,
-              onChanged: (v) =>
-                  setState(() => _fireflyCount = (v / 5).round() * 5),
-            ),
-          ),
-          Text('20',
-              style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.5))),
-        ]),
+        AppSlider(
+          label: '${l10n.maxFireflyCount}: $_fireflyCount',
+          value: _fireflyCount.toDouble(),
+          min: 5,
+          max: 20,
+          onChanged: (v) =>
+              setState(() => _fireflyCount = (v / 5).round() * 5),
+        ),
       ],
     );
   }
@@ -885,7 +870,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       children: [
         Text(l10n.selectStartingRole,
             style: AppTypography.bodySmall(context,
-                color: theme.text.withValues(alpha: 0.6),
+                color: theme.border,
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Row(children: [
@@ -930,7 +915,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       children: [
         Text(l10n.selectStartingRole,
             style: AppTypography.bodySmall(context,
-                color: theme.text.withValues(alpha: 0.6),
+                color: theme.border,
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Row(children: [
@@ -965,7 +950,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: selected
-            ? theme.primary.withValues(alpha: 0.12)
+            ? theme.border
             : theme.background,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -975,14 +960,14 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       child: Column(
         children: [
           Icon(icon,
-              color: selected ? theme.primary : theme.text.withValues(alpha: 0.5),
+              color: selected ? theme.primary : theme.border,
               size: 22),
           const SizedBox(height: 4),
           Text(label,
               style: AppTypography.bodySmall(context,
                   color: selected
                       ? theme.primary
-                      : theme.text.withValues(alpha: 0.7))),
+                      : theme.text)),
         ],
       ),
     );
@@ -1018,7 +1003,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           const SizedBox(width: 6),
           Text('${players.length}/4',
               style: AppTypography.bodySmall(context,
-                  color: theme.text.withValues(alpha: 0.5))),
+                  color: theme.border)),
         ]),
         const SizedBox(height: 12),
         ...players.map((p) {
@@ -1097,7 +1082,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
             padding: const EdgeInsets.only(top: 4),
             child: Text(l10n.waitingForPlayers,
                 style: AppTypography.bodySmall(context,
-                    color: theme.text.withValues(alpha: 0.5))),
+                    color: theme.border)),
           ),
       ],
     );
@@ -1110,8 +1095,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
         child: ElevatedButton(
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.border.withValues(alpha: 0.35),
-            foregroundColor: theme.text.withValues(alpha: 0.65),
+            backgroundColor: theme.border,
+            foregroundColor: theme.text,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1125,8 +1110,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
         child: ElevatedButton(
           onPressed: onAction,
           style: ElevatedButton.styleFrom(
-            backgroundColor: onAction != null ? theme.primary : theme.border.withValues(alpha: 0.35),
-            foregroundColor: onAction != null ? context.onPrimary : theme.text.withValues(alpha: 0.38),
+            backgroundColor: onAction != null ? theme.primary : theme.border,
+            foregroundColor: onAction != null ? context.onPrimary : theme.text,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1145,8 +1130,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     return ElevatedButton(
       onPressed: _cancelAndGoIdle,
       style: ElevatedButton.styleFrom(
-        backgroundColor: theme.border.withValues(alpha: 0.35),
-        foregroundColor: theme.text.withValues(alpha: 0.65),
+        backgroundColor: theme.border,
+        foregroundColor: theme.text,
         minimumSize: const Size(160, 48),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1160,7 +1145,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: theme.border,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(label,

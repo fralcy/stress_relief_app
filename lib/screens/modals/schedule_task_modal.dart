@@ -342,8 +342,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         ),
         
         const SizedBox(height: 12),
-        
-        const SizedBox(height: 16),
+
         Row(
           children: [
             Expanded(
@@ -372,18 +371,13 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                 theme: theme,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (_isDebugMode)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppButton(
-                label: l10n.addTask,
-                onPressed: _addTask,
-              ),
-              const SizedBox(width: 12),
+            const SizedBox(width: 8),
+            AppButton(
+              label: l10n.addTask,
+              onPressed: _addTask,
+            ),
+            if (_isDebugMode) ...[
+              const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: _debugTriggerDefaultNotification,
                 icon: const Icon(Icons.bug_report, size: 18),
@@ -398,14 +392,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                 ),
               ),
             ],
-          )
-        else
-          Center(
-            child: AppButton(
-              label: l10n.addTask,
-              onPressed: _addTask,
-            ),
-          ),
+          ],
+        ),
       ],
     );
   }
@@ -653,54 +641,38 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final pendingPoints = ScheduleTaskService.getPendingPoints(_tasks);
     final canClaim = ScheduleTaskService.canClaimToday(profile.lastPointsClaimDate) && pendingPoints > 0;
 
-    return Column(
+    return Row(
       children: [
-        // Hiển thị điểm dự kiến
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Builder(
-              builder: (ctx) => Text(
-                l10n.expectedPoints,
-                style: AppTypography.labelMedium(ctx,
-                  color: theme.text,
-                  fontWeight: FontWeight.w500,
+        Expanded(
+          child: Builder(
+            builder: (ctx) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  canClaim
+                    ? l10n.completedTasks.replaceAll('{count}', '${_completedCount()}')
+                    : profile.lastPointsClaimDate != null
+                      ? l10n.alreadyClaimedToday
+                      : l10n.noCompletedTasks,
+                  style: AppTypography.bodySmall(ctx, color: theme.border),
                 ),
-              ),
-            ),
-            Builder(
-              builder: (ctx) => Text(
-                '$pendingPoints',
-                style: AppTypography.h4(ctx,
-                  color: theme.primary,
+                Text(
+                  '$pendingPoints ${l10n.points}',
+                  style: AppTypography.bodyMedium(ctx,
+                    color: theme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
-        const SizedBox(height: 12),
-        
-        // Button claim điểm
+        const SizedBox(width: 12),
         AppButton(
           label: l10n.endDayAndClaimPoints,
           onPressed: _claimPoints,
           isDisabled: !canClaim,
-        ),
-        
-        const SizedBox(height: 8),
-        
-        // Helper text
-        Builder(
-          builder: (ctx) => Text(
-            canClaim
-              ? '${l10n.completedTasks.replaceAll('{count}', '${_completedCount()}')}'
-              : profile.lastPointsClaimDate != null
-                ? l10n.alreadyClaimedToday
-                : l10n.noCompletedTasks,
-            style: AppTypography.bodySmall(ctx,
-              color: theme.border,
-            ),
-          ),
         ),
       ],
     );

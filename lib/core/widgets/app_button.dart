@@ -12,7 +12,7 @@ import '../constants/app_typography.dart';
 /// States:
 /// - Normal: primary background
 /// - Active/Toggle: secondary background
-/// - Disabled: secondary background with reduced opacity
+/// - Disabled: border background
 class AppButton extends StatelessWidget {
   final IconData? icon;
   final String? label;
@@ -42,9 +42,9 @@ class AppButton extends StatelessWidget {
     Color foregroundColor;
 
     if (isDisabled) {
-      // M3 disabled state colors
-      backgroundColor = context.onSurface.withValues(alpha: 0.12);
-      foregroundColor = context.onSurface.withValues(alpha: 0.38);
+      // Disabled state colors
+      backgroundColor = theme.border;
+      foregroundColor = theme.background;
     } else if (isActive) {
       // Active state uses secondary color
       backgroundColor = theme.secondary;

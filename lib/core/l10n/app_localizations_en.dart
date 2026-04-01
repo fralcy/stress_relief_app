@@ -816,7 +816,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeCalmLavender => 'Calm Lavender';
 
   @override
-  String get themeSunnyPastelYellow => 'Sunny Pastel Yellow';
+  String get themeWarmAmber => 'Warm Amber';
 
   @override
   String get themeMintyFresh => 'Minty Fresh';

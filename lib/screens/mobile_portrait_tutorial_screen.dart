@@ -138,7 +138,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
           // Page indicator text
           Text(
             l10n.tutorialPageOf(_currentPage + 1, _totalPages),
-            style: AppTypography.labelMedium(context, color: theme.text.withOpacity(0.6)),
+            style: AppTypography.labelMedium(context, color: theme.border),
           ),
           const SizedBox(height: 8),
           
@@ -154,13 +154,13 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                   ),
                   height: 6,
                   decoration: BoxDecoration(
-                    color: index <= _currentPage 
-                        ? theme.primary 
-                        : theme.primary.withOpacity(0.2),
+                    color: index <= _currentPage
+                        ? theme.primary
+                        : theme.border,
                     borderRadius: BorderRadius.circular(3),
                     boxShadow: index <= _currentPage ? [
                       BoxShadow(
-                        color: theme.primary.withOpacity(0.3),
+                        color: theme.primary,
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -199,8 +199,9 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: theme.primary.withOpacity(0.1),
+                      color: theme.background,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: theme.border, width: 2),
                     ),
                     child: Center(
                       child: Text(
@@ -232,26 +233,12 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.secondary.withOpacity(0.15),
-                  theme.primary.withOpacity(0.05),
-                ],
-              ),
+              color: theme.background,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: theme.primary.withOpacity(0.3),
+                color: theme.border,
                 width: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.primary.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Builder(
               builder: (context) => Text(
@@ -362,14 +349,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                       height: 50,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.secondary.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
                           ),
-                        ],
-                      ),
                       child: ElevatedButton.icon(
                         onPressed: _previousPage,
                         icon: const Icon(Icons.arrow_back_ios, size: 18),
@@ -384,7 +364,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.secondary,
-                          foregroundColor: theme.text,
+                          foregroundColor: theme.background,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
@@ -405,7 +385,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                   onPressed: _finish,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.border,
-                    foregroundColor: theme.text,
+                    foregroundColor: theme.background,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -432,18 +412,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                 height: 50,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
-                  gradient: LinearGradient(
-                    colors: [theme.primary, theme.primary.withOpacity(0.8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.primary.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  color: theme.primary,
                 ),
                 child: ElevatedButton.icon(
                   onPressed: _currentPage < _totalPages - 1 ? _nextPage : _finish,
@@ -467,7 +436,7 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
-                    foregroundColor: theme.text,
+                    foregroundColor: theme.background,
                     elevation: 0,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(

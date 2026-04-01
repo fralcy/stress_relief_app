@@ -150,7 +150,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              theme.primary.withOpacity(0.2),
+              theme.border,
               theme.background,
               theme.background,
             ],
@@ -177,12 +177,12 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
 
                   Text(
                     l10n.createAccount,
-                    style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
+                    style: AppTypography.bodyLarge(context, color: theme.border),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // Email field
                   _buildTextField(
                     controller: _emailController,
@@ -214,7 +214,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: theme.text.withOpacity(0.5),
+                        color: theme.border,
                       ),
                       onPressed: () {
                         setState(() => _isPasswordVisible = !_isPasswordVisible);
@@ -243,7 +243,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: theme.text.withOpacity(0.5),
+                        color: theme.border,
                       ),
                       onPressed: () {
                         setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
@@ -299,7 +299,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                     children: [
                       Text(
                         l10n.alreadyHaveAccount,
-                        style: AppTypography.bodyLarge(context, color: theme.text.withOpacity(0.6)),
+                        style: AppTypography.bodyLarge(context, color: theme.border),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
@@ -355,7 +355,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
           style: TextStyle(color: theme.text),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: theme.text.withOpacity(0.4)),
+            hintStyle: TextStyle(color: theme.border),
             prefixIcon: Icon(prefixIcon, color: theme.primary),
             suffixIcon: suffixIcon,
             filled: true,
