@@ -98,6 +98,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           TutorialStep(targetKey: _createJoinKey, title: l10n.tutorialRockLobbyRoomTitle,    description: l10n.tutorialRockLobbyRoomDesc,    tag: 'room'),
         ];
     }
+    final theme = context.theme;
     TutorialOverlay(
       context: context,
       steps: steps,
@@ -105,6 +106,22 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
+      tooltipBackgroundColor: theme.background,
+      titleTextColor: theme.text,
+      descriptionTextColor: theme.text,
+      nextButtonStyle: ElevatedButton.styleFrom(
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      skipButtonStyle: TextButton.styleFrom(
+        foregroundColor: theme.text,
+      ),
+      finishButtonStyle: ElevatedButton.styleFrom(
+          backgroundColor: theme.primary,
+          foregroundColor: theme.background,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
     ).show();
   }
 

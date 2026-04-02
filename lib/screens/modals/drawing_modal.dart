@@ -344,6 +344,7 @@ class _DrawingModalState extends State<DrawingModal> {
 
   void _showTutorial() {
     final l10n = AppLocalizations.of(context);
+    final theme = context.theme;
     TutorialOverlay(
       context: context,
       steps: [
@@ -356,6 +357,22 @@ class _DrawingModalState extends State<DrawingModal> {
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
+      tooltipBackgroundColor: theme.background,
+      titleTextColor: theme.text,
+      descriptionTextColor: theme.text,
+      nextButtonStyle: ElevatedButton.styleFrom(
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      skipButtonStyle: TextButton.styleFrom(
+        foregroundColor: theme.text,
+      ),
+      finishButtonStyle: ElevatedButton.styleFrom(
+          backgroundColor: theme.primary,
+          foregroundColor: theme.background,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
     ).show();
   }
 
