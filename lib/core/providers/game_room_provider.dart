@@ -263,6 +263,16 @@ class GameRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Đưa phòng về trạng thái chờ sau khi game kết thúc để chơi lại (host only).
+  void returnToLobby() {
+    if (!isHost || _room == null) return;
+    _room = _room!.copyWith(status: GameRoomStatus.waiting);
+    _gameState = {};
+    _gameResults = null;
+    _broadcastLobbyState();
+    notifyListeners();
+  }
+
   /// Reset room state without sending a leave message (for error/disconnect cleanup).
   void resetRoom() {
     _room = null;

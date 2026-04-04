@@ -121,6 +121,12 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
   // Mascot dialogue methods
   void _showSceneGreeting(SceneType scene) {
     final l10n = AppLocalizations.of(context);
+    final settings = DataManager().sleepSettings;
+    if (SleepGuideService().isSleepTime(settings)) {
+      final dialogue = _dialogueService.getSleepDialogue(l10n);
+      _showDialogue(dialogue, MascotExpression.sleepy);
+      return;
+    }
     final dialogue = _dialogueService.getSceneGreeting(scene, l10n);
     final expression = _dialogueService.getRandomExpression();
     _showDialogue(dialogue, expression);

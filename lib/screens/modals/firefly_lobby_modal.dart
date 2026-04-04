@@ -9,9 +9,9 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
 import '../../core/providers/lan_provider.dart';
 import '../../core/utils/lan/lan_service.dart';
+import '../../core/utils/lan/lan_discovery.dart';
 import '../../core/utils/lan/lan_message.dart';
 import '../../core/utils/lan/game_message.dart';
-import '../../core/utils/lan/lan_host_info.dart';
 import '../../core/utils/lan/game_room.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/constants/avatar_presets.dart';
@@ -356,6 +356,14 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   Future<void> _startHosting() async {
     if (_transitioning) return;
+
+    final localIp = await LanDiscovery.getLocalIp();
+    if (!mounted) return;
+    if (localIp == null) {
+      setState(() => _errorMessage = AppLocalizations.of(context).lanNotConnected);
+      return;
+    }
+
     setState(() { _state = _LobbyState.hostStarting; _errorMessage = null; });
 
     final lan = context.read<LanProvider>();
@@ -589,16 +597,34 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           : defaultRole;
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      Navigator.of(context).pop();
-      FireflyModal.show(context,
-          maxOnScreen: count,
-          fireflySeed: seed,
-          role: role,
-          localToolId: localToolId,
-          playerOrder: playerOrder,
-          allRoles: allRoles);
+      if (_isHost) {
+        await FireflyModal.show(context,
+            maxOnScreen: count,
+            fireflySeed: seed,
+            role: role,
+            localToolId: localToolId,
+            playerOrder: playerOrder,
+            allRoles: allRoles);
+        if (!mounted) return;
+        _gameStarted = false;
+        if (LanService().isActive) {
+          context.read<GameRoomProvider>().returnToLobby();
+          setState(() => _state = _LobbyState.hostLobby);
+        } else {
+          setState(() => _state = _LobbyState.idle);
+        }
+      } else {
+        Navigator.of(context).pop();
+        FireflyModal.show(context,
+            maxOnScreen: count,
+            fireflySeed: seed,
+            role: role,
+            localToolId: localToolId,
+            playerOrder: playerOrder,
+            allRoles: allRoles);
+      }
     });
   }
 
@@ -781,6 +807,10 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           const SizedBox(height: 16),
         ],
         _buildPlayerList(theme, l10n, room),
+        if (currentRoom?.pendingPlayers.isNotEmpty ?? false) ...[
+          const SizedBox(height: 16),
+          _buildPendingList(theme, l10n, room, currentRoom!),
+        ],
         const SizedBox(height: 20),
         _buildFireflyCountConfig(theme, l10n),
         const SizedBox(height: 12),
@@ -966,9 +996,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: selected
-            ? theme.border
-            : theme.background,
+        color: theme.background,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
             color: selected ? theme.primary : theme.border,
@@ -1113,7 +1141,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.border,
-            foregroundColor: theme.text,
+            foregroundColor: theme.background,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1148,7 +1176,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       onPressed: _cancelAndGoIdle,
       style: ElevatedButton.styleFrom(
         backgroundColor: theme.border,
-        foregroundColor: theme.text,
+        foregroundColor: theme.background,
         minimumSize: const Size(160, 48),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1158,12 +1186,62 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     );
   }
 
+  Widget _buildPendingList(AppTheme theme, AppLocalizations l10n,
+      GameRoomProvider room, GameRoom currentRoom) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.pendingApproval,
+            style: AppTypography.bodyMedium(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        ...currentRoom.pendingPlayers.map((p) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.border),
+              ),
+              child: Row(children: [
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Center(
+                    child: Text(
+                      kAvatarPresets[p.avatarIndex
+                          .clamp(0, kAvatarPresets.length - 1)],
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: Text(p.displayName,
+                        style: AppTypography.bodyMedium(context,
+                            color: theme.text))),
+                GestureDetector(
+                  onTap: () => room.approvePlayer(p.id),
+                  child: _chip(theme, l10n.approveLabel, Colors.green),
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => room.kickPlayer(p.id),
+                  child: _chip(theme, l10n.remove, Colors.red),
+                ),
+              ]),
+            )),
+      ],
+    );
+  }
+
   Widget _chip(AppTheme theme, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: theme.border,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.border, width: 1),
       ),
       child: Text(label,
           style: AppTypography.captionSmall(context, color: color)),

@@ -8,8 +8,8 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
 import '../../core/providers/lan_provider.dart';
 import '../../core/utils/lan/lan_service.dart';
+import '../../core/utils/lan/lan_discovery.dart';
 import '../../core/utils/lan/game_message.dart';
-import '../../core/utils/lan/lan_host_info.dart';
 import '../../core/utils/lan/game_room.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/constants/avatar_presets.dart';
@@ -263,6 +263,14 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
 
   Future<void> _startHosting() async {
     if (_transitioning) return;
+
+    final localIp = await LanDiscovery.getLocalIp();
+    if (!mounted) return;
+    if (localIp == null) {
+      setState(() => _errorMessage = AppLocalizations.of(context).lanNotConnected);
+      return;
+    }
+
     setState(() {
       _state = _LobbyState.hostStarting;
       _errorMessage = null;
@@ -498,10 +506,23 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     _gameStarted = true;
     final rockCount = gs['rockCount'] as int? ?? _rockCount;
     final rockSeed = gs['rockSeed'] as int? ?? 0;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    final isHostOrSolo = LanService().role == LanRole.host || !LanService().isActive;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      Navigator.of(context).pop();
-      RockBalancingModal.show(context, rockCount: rockCount, rockSeed: rockSeed);
+      if (isHostOrSolo) {
+        await RockBalancingModal.show(context, rockCount: rockCount, rockSeed: rockSeed);
+        if (!mounted) return;
+        _gameStarted = false;
+        if (LanService().isActive) {
+          context.read<GameRoomProvider>().returnToLobby();
+          setState(() => _state = _LobbyState.hostLobby);
+        } else {
+          setState(() => _state = _LobbyState.idle);
+        }
+      } else {
+        Navigator.of(context).pop();
+        RockBalancingModal.show(context, rockCount: rockCount, rockSeed: rockSeed);
+      }
     });
   }
 
@@ -637,7 +658,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
             onPressed: _cancelAndGoIdle,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.border,
-              foregroundColor: theme.text,
+              foregroundColor: theme.background,
               minimumSize: const Size(160, 48),
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -712,7 +733,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.border,
-            foregroundColor: theme.text,
+            foregroundColor: theme.background,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -776,7 +797,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.border,
-            foregroundColor: theme.text,
+            foregroundColor: theme.background,
             minimumSize: const Size(160, 48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -836,7 +857,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           onPressed: _cancelAndGoIdle,
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.border,
-            foregroundColor: theme.text,
+            foregroundColor: theme.background,
             minimumSize: const Size.fromHeight(48),
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1037,8 +1058,9 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: theme.border,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.border, width: 1),
       ),
       child: Text(label,
           style: AppTypography.captionSmall(context, color: color)),

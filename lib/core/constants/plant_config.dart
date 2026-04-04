@@ -56,14 +56,14 @@ class PlantConfigs {
       id: 'tulip',
       name: 'Tulip',
       growthTimeHours: 80,   // 4 ngày
-      harvestReward: 44,
+      harvestReward: 40,
       seedsFromHarvest: 2,
     ),
     'wheat': PlantConfig(
       id: 'wheat',
       name: 'Wheat',
       growthTimeHours: 60,   // 3 ngày
-      harvestReward: 24,
+      harvestReward: 30,
       seedsFromHarvest: 3,
     ),
     'pumpkin': PlantConfig(
@@ -77,14 +77,14 @@ class PlantConfigs {
       id: 'strawberry',
       name: 'Strawberry',
       growthTimeHours: 100,  // 5 ngày
-      harvestReward: 56,
+      harvestReward: 50,
       seedsFromHarvest: 3,
     ),
     'lettuce': PlantConfig(
       id: 'lettuce',
       name: 'Lettuce',
-      growthTimeHours: 50,   // 2.5 ngày
-      harvestReward: 28,
+      growthTimeHours: 40,   // 2 ngày
+      harvestReward: 20,
       seedsFromHarvest: 2,
     ),
   };
