@@ -373,6 +373,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get rocksStacked => 'Rocks stacked';
   @override String get maxHeightLabel => 'Max height';
 
+  // Paper Ship
+  @override String get paperShip => 'Paper Ship';
+
   // Firefly Catching
   @override String get fireflyCatching => 'Firefly Catching';
   @override String get jar => 'Jar';

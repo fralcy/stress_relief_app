@@ -180,6 +180,9 @@ abstract class AppLocalizations {
   String get rocksStacked;
   String get maxHeightLabel;
 
+  // Paper Ship
+  String get paperShip;
+
   // Firefly Catching
   String get fireflyCatching;
   String get jar;

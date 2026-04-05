@@ -376,6 +376,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get rocksStacked => 'Viên đá xếp lên';
   @override String get maxHeightLabel => 'Chiều cao tối đa';
 
+  // Paper Ship
+  @override String get paperShip => 'Thuyền Giấy';
+
   // Firefly Catching
   @override String get fireflyCatching => 'Hứng Đom Đóm';
   @override String get jar => 'Lọ';
