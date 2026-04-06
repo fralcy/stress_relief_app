@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_theme.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/constants/avatar_presets.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/game_room_provider.dart';
 import '../../core/providers/lan_provider.dart';
@@ -47,18 +50,70 @@ class PaperShipLobbyModal extends StatefulWidget {
   State<PaperShipLobbyModal> createState() => _PaperShipLobbyModalState();
 
   static Future<void> show(BuildContext context) {
+    final modalKey = GlobalKey<_PaperShipLobbyModalState>();
     return AppModal.show(
       context: context,
       title: AppLocalizations.of(context).paperShip,
       maxHeight: MediaQuery.of(context).size.height * 0.92,
       enableDrag: false,
       onClose: () => Navigator.of(context).pop(),
-      content: const PaperShipLobbyModal(),
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
+      content: PaperShipLobbyModal(key: modalKey),
     );
   }
 }
 
 class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
+  // ── Tutorial keys ─────────────────────────────────────────────
+  final GlobalKey _createJoinKey = GlobalKey();
+  final GlobalKey _playerListKey = GlobalKey();
+  final GlobalKey _startKey      = GlobalKey();
+  final GlobalKey _readyKey      = GlobalKey();
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    final List<TutorialStep> steps;
+    switch (_state) {
+      case _LobbyState.hostLobby:
+        steps = [
+          TutorialStep(targetKey: _playerListKey, title: l10n.tutorialRockLobbyPlayersTitle, description: l10n.tutorialRockLobbyPlayersDesc, tag: 'ship_lobby_players'),
+          TutorialStep(targetKey: _startKey,      title: l10n.tutorialRockLobbyStartTitle,   description: l10n.tutorialRockLobbyStartDesc,   tag: 'ship_lobby_start'),
+        ];
+      case _LobbyState.clientLobby:
+        steps = [
+          TutorialStep(targetKey: _playerListKey, title: l10n.tutorialRockLobbyPlayersTitle, description: l10n.tutorialRockLobbyPlayersDesc, tag: 'ship_lobby_players'),
+          TutorialStep(targetKey: _readyKey,      title: l10n.tutorialRockLobbyReadyTitle,   description: l10n.tutorialRockLobbyReadyDesc,   tag: 'ship_lobby_ready'),
+        ];
+      default:
+        steps = [
+          TutorialStep(targetKey: _createJoinKey, title: l10n.tutorialRockLobbyRoomTitle, description: l10n.tutorialRockLobbyRoomDesc, tag: 'ship_lobby_room'),
+        ];
+    }
+    final theme = context.theme;
+    TutorialOverlay(
+      context: context,
+      steps: steps,
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+      tooltipBackgroundColor: theme.background,
+      titleTextColor: theme.text,
+      descriptionTextColor: theme.text,
+      nextButtonStyle: ElevatedButton.styleFrom(
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      skipButtonStyle: TextButton.styleFrom(foregroundColor: theme.text),
+      finishButtonStyle: ElevatedButton.styleFrom(
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    ).show();
+  }
+
   // ── FSM ──────────────────────────────────────────────────────
   _LobbyState _state = _LobbyState.idle;
   bool _transitioning = false;
@@ -217,6 +272,13 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
         _errorMessage = lan.errorMessage ?? 'Failed to start server';
       });
     }
+  }
+
+  void _onStartSolo() {
+    if (_gameStarted) return;
+    SfxService().buttonClick();
+    final seed = math.Random().nextInt(0x7FFFFFFF);
+    _openGame({'seed': seed});
   }
 
   void _onStartGame() {
@@ -428,19 +490,13 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
           setState(() => _state = _LobbyState.idle);
         }
       } else {
-        await PaperShipModal.show(
+        Navigator.of(context).pop();
+        PaperShipModal.show(
           context,
           seed: seed,
           localSlot: localSlot.clamp(1, 4),
           playerOrder: playerOrder,
         );
-        if (!mounted) return;
-        _gameStarted = false;
-        if (LanService().isActive) {
-          setState(() => _state = _LobbyState.clientLobby);
-        } else {
-          setState(() => _state = _LobbyState.disconnected);
-        }
       }
     });
   }
@@ -455,272 +511,467 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     final l10n = AppLocalizations.of(context);
     final room = context.watch<GameRoomProvider>();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: _buildBody(context, theme, l10n, room),
-    );
-  }
-
-  Widget _buildBody(BuildContext context, dynamic theme, AppLocalizations l10n,
-      GameRoomProvider room) {
-    switch (_state) {
-      case _LobbyState.idle:
-        return _buildIdle(theme, l10n);
-      case _LobbyState.hostStarting:
-        return _buildLoading(l10n.startGame);
-      case _LobbyState.hostLobby:
-        return _buildHostLobby(theme, l10n, room);
-      case _LobbyState.clientScanning:
-        return _buildLoading(l10n.scanning);
-      case _LobbyState.clientScanResults:
-        return _buildScanResults(theme, l10n);
-      case _LobbyState.clientConnecting:
-        return _buildLoading(l10n.connecting);
-      case _LobbyState.clientPending:
-        return _buildPending(theme, l10n);
-      case _LobbyState.clientLobby:
-        return _buildClientLobby(theme, l10n, room);
-      case _LobbyState.disconnected:
-        return _buildDisconnected(theme, l10n);
-      case _LobbyState.clientReconnecting:
-        return _buildLoading('${l10n.reconnecting} ($_reconnectAttempt/$_maxReconnectAttempts)');
-      case _LobbyState.syncing:
-        return _buildLoading(l10n.syncing);
-      case _LobbyState.error:
-        return _buildError(theme, l10n);
+    // Client: auto-transition when host starts game
+    if (!_transitioning &&
+        (_state == _LobbyState.clientLobby ||
+            _state == _LobbyState.clientPending) &&
+        room.currentRoom?.status == GameRoomStatus.playing) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _openGame(room.initialGameParams));
     }
+
+    // Client: pending → lobby once approved
+    if (!_transitioning &&
+        _state == _LobbyState.clientPending &&
+        !(room.localPlayer?.isPending ?? true)) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) { if (mounted) setState(() => _state = _LobbyState.clientLobby); });
+    }
+
+    return switch (_state) {
+      _LobbyState.idle             => _buildIdle(theme, l10n),
+      _LobbyState.hostStarting     => _buildSpinner(theme, l10n, label: l10n.startServer),
+      _LobbyState.hostLobby        => _buildHostLobby(theme, l10n, room),
+      _LobbyState.clientScanning   => _buildSpinner(theme, l10n, label: l10n.scanning, showCancel: true),
+      _LobbyState.clientScanResults => _buildScanResults(theme, l10n),
+      _LobbyState.clientConnecting  => _buildSpinner(theme, l10n, label: l10n.connecting, showCancel: true),
+      _LobbyState.clientPending    => _buildClientPending(theme, l10n, room),
+      _LobbyState.clientLobby      => _buildClientLobby(theme, l10n, room),
+      _LobbyState.disconnected     => _buildDisconnected(theme, l10n),
+      _LobbyState.clientReconnecting => _buildSpinner(theme, l10n,
+          label: '${l10n.reconnecting} ($_reconnectAttempt/$_maxReconnectAttempts)',
+          showCancel: true),
+      _LobbyState.syncing          => _buildSpinner(theme, l10n, label: l10n.syncing),
+      _LobbyState.error            => _buildError(theme, l10n),
+    };
   }
 
-  // ── Idle ─────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // State widgets
+  // ─────────────────────────────────────────────────────────────
 
-  Widget _buildIdle(dynamic theme, AppLocalizations l10n) {
+  Widget _buildIdle(AppTheme theme, AppLocalizations l10n) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Spacer(),
-        // Solo play
-        AppButton(
-          label: l10n.singleplayer,
-          onPressed: () {
-            final seed = math.Random().nextInt(0x7FFFFFFF);
-            _openGame({'seed': seed});
-          },
+        // ── Section: Singleplayer ──────────────────────────────
+        Text(l10n.singleplayer,
+            style: AppTypography.bodyMedium(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        AppButton(label: l10n.start, onPressed: _onStartSolo),
+
+        const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
+
+        // ── Section: Multiplayer ───────────────────────────────
+        Column(
+          key: _createJoinKey,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.multiplayer,
+                style: AppTypography.bodyMedium(context,
+                    color: theme.text, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            AppButton(label: l10n.createRoom, onPressed: _startHosting),
+            const SizedBox(height: 10),
+            AppButton(label: l10n.joinGame, onPressed: _doScan),
+          ],
         ),
-        const SizedBox(height: 12),
-        // Host LAN
-        AppButton(
-          label: l10n.createRoom,
-          onPressed: _startHosting,
-          isActive: true,
-        ),
-        const SizedBox(height: 12),
-        // Join LAN
-        AppButton(
-          label: l10n.joinGame,
-          onPressed: _doScan,
-          isActive: true,
-        ),
-        const Spacer(),
-        if (_errorMessage != null)
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 10),
           Text(_errorMessage!,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: theme.error ?? Colors.red)),
-      ],
-    );
-  }
-
-  // ── Loading ───────────────────────────────────────────────────
-
-  Widget _buildLoading(String label) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(label),
+              style: AppTypography.bodySmall(context, color: Colors.redAccent),
+              textAlign: TextAlign.center),
         ],
-      ),
-    );
-  }
-
-  // ── Host lobby ────────────────────────────────────────────────
-
-  Widget _buildHostLobby(dynamic theme, AppLocalizations l10n, GameRoomProvider room) {
-    final players = room.currentRoom?.players ?? [];
-    final allReady = players.where((p) => !p.isHost).every((p) => p.isReady);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(l10n.players,
-            style: AppTypography.bodySmall(context, color: theme.text,
-                fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Expanded(child: _buildPlayerList(players, theme, l10n, isHost: true)),
-        const SizedBox(height: 12),
-        AppButton(
-          label: l10n.startGame,
-          onPressed: (players.isNotEmpty && (allReady || players.length == 1))
-              ? _onStartGame
-              : null,
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _cancelAndGoIdle,
-          child: Text(l10n.cancel, style: TextStyle(color: theme.text)),
-        ),
       ],
     );
   }
 
-  // ── Client lobby ─────────────────────────────────────────────
-
-  Widget _buildClientLobby(dynamic theme, AppLocalizations l10n, GameRoomProvider room) {
-    final players = room.currentRoom?.players ?? [];
-    final local = room.localPlayer;
-    final isReady = local?.isReady ?? false;
-
+  Widget _buildSpinner(AppTheme theme, AppLocalizations l10n,
+      {required String label, bool showCancel = false}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(l10n.players,
-            style: AppTypography.bodySmall(context, color: theme.text,
-                fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Expanded(child: _buildPlayerList(players, theme, l10n, isHost: false)),
-        const SizedBox(height: 12),
-        AppButton(
-          label: isReady ? l10n.notReadyLabel : l10n.readyLabel,
-          onPressed: () {
-            room.setReady(!isReady);
-            SfxService().buttonClick();
-          },
-          isActive: isReady,
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _cancelAndGoIdle,
-          child: Text(l10n.cancel, style: TextStyle(color: theme.text)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayerList(List<dynamic> players, dynamic theme,
-      AppLocalizations l10n, {required bool isHost}) {
-    if (players.isEmpty) {
-      return Center(child: Text(l10n.waitingForPlayers,
-          style: AppTypography.bodySmall(context, color: theme.subText)));
-    }
-    return ListView.builder(
-      itemCount: players.length,
-      itemBuilder: (_, i) {
-        final p = players[i];
-        return ListTile(
-          dense: true,
-          leading: CircleAvatar(
-            radius: 16,
-            backgroundColor: theme.primary.withValues(alpha: 0.15),
-            child: Text(p.displayName.isNotEmpty ? p.displayName[0] : '?',
-                style: TextStyle(color: theme.primary)),
+        const SizedBox(height: 16),
+        CircularProgressIndicator(color: theme.primary),
+        const SizedBox(height: 20),
+        Text(label,
+            style: AppTypography.bodyMedium(context, color: theme.border)),
+        if (showCancel) ...[
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _cancelAndGoIdle,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.border,
+              foregroundColor: theme.background,
+              minimumSize: const Size(160, 48),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(l10n.cancel,
+                style: AppTypography.labelLarge(context,
+                    fontWeight: FontWeight.w600)),
           ),
-          title: Text(p.displayName,
-              style: AppTypography.bodySmall(context, color: theme.text)),
-          trailing: p.isHost
-              ? Text('HOST',
-                  style: AppTypography.bodySmall(context, color: theme.primary))
-              : p.isReady
-                  ? const Icon(Icons.check_circle, color: Colors.green, size: 18)
-                  : const Icon(Icons.radio_button_unchecked, size: 18),
-        );
-      },
+        ],
+        const SizedBox(height: 16),
+      ],
     );
   }
 
-  // ── Scan results ──────────────────────────────────────────────
-
-  Widget _buildScanResults(dynamic theme, AppLocalizations l10n) {
+  Widget _buildScanResults(AppTheme theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(l10n.hostsFound,
-            style: AppTypography.bodySmall(context, color: theme.text,
-                fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _discoveredHosts.length,
-            itemBuilder: (_, i) {
-              final host = _discoveredHosts[i];
-              return Card(
-                child: ListTile(
-                  title: Text(host.displayName),
-                  subtitle: Text('${host.ip}:${host.wsPort}'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                  onTap: () => _connectToHost(host),
-                ),
-              );
-            },
+            style: AppTypography.bodyMedium(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        ..._discoveredHosts.map((host) => _buildHostTile(theme, l10n, host)),
+        const SizedBox(height: 16),
+        _buildButtonRow(theme, l10n, actionLabel: l10n.rescan, onAction: _doScan),
+      ],
+    );
+  }
+
+  Widget _buildHostTile(AppTheme theme, AppLocalizations l10n, LanHostInfo host) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.border),
+      ),
+      child: Row(children: [
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: Text(
+              kAvatarPresets[host.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+              style: const TextStyle(fontSize: 22),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        TextButton(onPressed: _cancelAndGoIdle,
-            child: Text(l10n.cancel, style: TextStyle(color: theme.text))),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            host.displayName.isNotEmpty ? host.displayName : host.ip,
+            style: AppTypography.bodyMedium(context, color: theme.text),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _connectToHost(host),
+          child: _chip(theme, '>', theme.primary),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildHostLobby(AppTheme theme, AppLocalizations l10n, GameRoomProvider room) {
+    final currentRoom = room.currentRoom;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (currentRoom != null) ...[
+          _buildApprovalToggle(theme, l10n, room, currentRoom),
+          const SizedBox(height: 16),
+        ],
+        _buildPlayerList(theme, l10n, room),
+        if (currentRoom?.pendingPlayers.isNotEmpty ?? false) ...[
+          const SizedBox(height: 16),
+          _buildPendingList(theme, l10n, room, currentRoom!),
+        ],
+        const SizedBox(height: 20),
+        _buildButtonRow(theme, l10n,
+          rowKey: _startKey,
+          actionLabel: l10n.startGame,
+          onAction: (room.currentRoom?.allReady ?? false) ? _onStartGame : null,
+        ),
       ],
     );
   }
 
-  // ── Pending ───────────────────────────────────────────────────
-
-  Widget _buildPending(dynamic theme, AppLocalizations l10n) {
+  Widget _buildClientPending(AppTheme theme, AppLocalizations l10n, GameRoomProvider room) {
+    final localPlayer = room.localPlayer;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const CircularProgressIndicator(),
         const SizedBox(height: 16),
-        Text(l10n.pendingApproval, textAlign: TextAlign.center),
+        if (localPlayer != null)
+          Text(
+            kAvatarPresets[localPlayer.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+            style: const TextStyle(fontSize: 40),
+          ),
+        const SizedBox(height: 12),
+        Text(l10n.pendingApproval,
+            style: AppTypography.bodyMedium(context, color: theme.primary)),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: _cancelAndGoIdle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.border,
+            foregroundColor: theme.background,
+            minimumSize: const Size(160, 48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(l10n.cancel,
+              style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600)),
+        ),
         const SizedBox(height: 16),
-        TextButton(onPressed: _cancelAndGoIdle,
-            child: Text(l10n.cancel, style: TextStyle(color: theme.text))),
       ],
     );
   }
 
-  // ── Disconnected ──────────────────────────────────────────────
-
-  Widget _buildDisconnected(dynamic theme, AppLocalizations l10n) {
+  Widget _buildClientLobby(AppTheme theme, AppLocalizations l10n, GameRoomProvider room) {
+    final localPlayer = room.localPlayer;
+    final isReady = localPlayer?.isReady ?? false;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildPlayerList(theme, l10n, room),
+        const SizedBox(height: 20),
+        _buildButtonRow(theme, l10n,
+          rowKey: _readyKey,
+          actionLabel: isReady ? l10n.notReadyLabel : l10n.readyLabel,
+          onAction: () {
+            room.setReady(!isReady);
+            SfxService().buttonClick();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDisconnected(AppTheme theme, AppLocalizations l10n) {
+    final hasIp = LanService().lastHostIp != null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 16),
+        const Icon(Icons.wifi_off, color: Colors.redAccent, size: 40),
+        const SizedBox(height: 12),
         Text(l10n.connectionLost,
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall(context, color: theme.text)),
+            style: AppTypography.bodyLarge(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 20),
+        if (_wasHost)
+          AppButton(label: l10n.restartServer, onPressed: _startHosting)
+        else ...[
+          if (hasIp) ...[
+            AppButton(label: l10n.reconnect, onPressed: _startReconnecting),
+            const SizedBox(height: 8),
+          ],
+          AppButton(label: l10n.joinGame, onPressed: _doScan),
+        ],
         const SizedBox(height: 16),
-        if (!_wasHost)
-          AppButton(label: l10n.reconnect, onPressed: _startReconnecting),
-        const SizedBox(height: 8),
-        TextButton(onPressed: _cancelAndGoIdle,
-            child: Text(l10n.cancel, style: TextStyle(color: theme.text))),
+        ElevatedButton(
+          onPressed: _cancelAndGoIdle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.border,
+            foregroundColor: theme.background,
+            minimumSize: const Size.fromHeight(48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(l10n.cancel,
+              style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600)),
+        ),
+        const SizedBox(height: 16),
       ],
     );
   }
 
-  // ── Error ─────────────────────────────────────────────────────
-
-  Widget _buildError(dynamic theme, AppLocalizations l10n) {
+  Widget _buildError(AppTheme theme, AppLocalizations l10n) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(_errorMessage ?? l10n.syncError,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red)),
         const SizedBox(height: 16),
+        const Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
+        const SizedBox(height: 12),
+        Text(
+          _errorMessage ?? l10n.syncError,
+          style: AppTypography.bodyMedium(context, color: theme.text),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
         AppButton(label: l10n.ok, onPressed: _cancelAndGoIdle),
+        const SizedBox(height: 16),
       ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Shared sub-widgets
+  // ─────────────────────────────────────────────────────────────
+
+  Widget _buildApprovalToggle(AppTheme theme, AppLocalizations l10n,
+      GameRoomProvider room, GameRoom currentRoom) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(l10n.approveJoin,
+              style: AppTypography.bodyMedium(context, color: theme.text)),
+        ),
+        Switch(
+          value: currentRoom.requireApproval,
+          activeThumbColor: theme.primary,
+          onChanged: (_) => room.setRequireApproval(!currentRoom.requireApproval),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlayerList(AppTheme theme, AppLocalizations l10n, GameRoomProvider room) {
+    final players = room.currentRoom?.activePlayers ?? [];
+    final isHost = LanService().role == LanRole.host;
+    return Column(
+      key: _playerListKey,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Text(l10n.players,
+              style: AppTypography.bodyLarge(context,
+                  color: theme.text, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 6),
+          Text('${players.length}/$kMaxRoomPlayers',
+              style: AppTypography.bodySmall(context, color: theme.border)),
+        ]),
+        const SizedBox(height: 12),
+        ...players.map((p) => _buildPlayerTile(theme, l10n, room, p, isHost)),
+        if (players.length < 2)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(l10n.waitingForPlayers,
+                style: AppTypography.bodySmall(context, color: theme.border)),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPlayerTile(AppTheme theme, AppLocalizations l10n,
+      GameRoomProvider room, GamePlayer p, bool isHost) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.border),
+      ),
+      child: Row(children: [
+        Icon(
+          p.isReady ? Icons.check_circle : Icons.radio_button_unchecked,
+          color: p.isReady ? Colors.green : theme.border,
+          size: 20,
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: Text(
+              kAvatarPresets[p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+              style: const TextStyle(fontSize: 22),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+            child: Text(p.displayName,
+                style: AppTypography.bodyMedium(context, color: theme.text))),
+        if (p.isHost)
+          _chip(theme, l10n.lobbyHost, theme.primary)
+        else if (isHost)
+          GestureDetector(
+            onTap: () => room.kickPlayer(p.id),
+            child: _chip(theme, l10n.remove, Colors.red),
+          ),
+      ]),
+    );
+  }
+
+  Widget _buildPendingList(AppTheme theme, AppLocalizations l10n,
+      GameRoomProvider room, GameRoom currentRoom) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.pendingApproval,
+            style: AppTypography.bodyMedium(context,
+                color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        ...currentRoom.pendingPlayers.map((p) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.border),
+              ),
+              child: Row(children: [
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Center(
+                    child: Text(
+                      kAvatarPresets[p.avatarIndex.clamp(0, kAvatarPresets.length - 1)],
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: Text(p.displayName,
+                        style: AppTypography.bodyMedium(context, color: theme.text))),
+                GestureDetector(
+                  onTap: () => room.approvePlayer(p.id),
+                  child: _chip(theme, l10n.approveLabel, Colors.green),
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => room.kickPlayer(p.id),
+                  child: _chip(theme, l10n.remove, Colors.red),
+                ),
+              ]),
+            )),
+      ],
+    );
+  }
+
+  Widget _buildButtonRow(AppTheme theme, AppLocalizations l10n,
+      {required String actionLabel, required VoidCallback? onAction, Key? rowKey}) {
+    return Row(key: rowKey, children: [
+      Expanded(
+        child: ElevatedButton(
+          onPressed: _cancelAndGoIdle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.border,
+            foregroundColor: theme.background,
+            minimumSize: const Size.fromHeight(48),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Text(l10n.cancel,
+              style: AppTypography.labelLarge(context, fontWeight: FontWeight.w600)),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(child: AppButton(label: actionLabel, onPressed: onAction)),
+    ]);
+  }
+
+  Widget _chip(AppTheme theme, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.border, width: 1),
+      ),
+      child: Text(label,
+          style: AppTypography.captionSmall(context, color: color)),
     );
   }
 }

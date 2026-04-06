@@ -24,6 +24,7 @@ import 'modals/garden_modal.dart';
 import 'modals/rock_balancing_lobby_modal.dart';
 import 'modals/firefly_lobby_modal.dart';
 import 'modals/aquarium_modal.dart';
+import 'modals/paper_ship_lobby_modal.dart';
 import 'modals/drawing_modal.dart';
 import 'modals/gallery_modal.dart';
 import 'modals/composing_modal.dart';
@@ -463,6 +464,14 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen> {
             onPressed: () {
               SfxService().buttonClick();
               AquariumModal.show(context);
+            },
+          ),
+          FeatureButton(
+            icon: Icons.sailing,
+            label: l10n.paperShip,
+            onPressed: () {
+              SfxService().buttonClick();
+              PaperShipLobbyModal.show(context);
             },
           ),
         ];
