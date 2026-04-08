@@ -135,6 +135,7 @@ class _PaperShipModalState extends State<PaperShipModal>
       cw: _canvasWidth,
       ch: _canvasHeight,
       seed: widget.seed,
+      playerCount: widget.playerOrder.isEmpty ? 1 : widget.playerOrder.length,
     );
     _worldReady = true;
   }
@@ -249,10 +250,9 @@ class _PaperShipModalState extends State<PaperShipModal>
   // Input
   // ─────────────────────────────────────────────────────────
 
-  void _onTapDown(TapDownDetails details) {
+  void _onPointerDown(PointerDownEvent event) {
     if (!_worldReady) return;
-    final pos = details.localPosition;
-    _spawnLocalWave(pos.dx, pos.dy);
+    _spawnLocalWave(event.localPosition.dx, event.localPosition.dy);
   }
 
   void _spawnLocalWave(double x, double y) {
@@ -303,8 +303,8 @@ class _PaperShipModalState extends State<PaperShipModal>
             children: [
               Text(
                 snap != null
-                    ? '${(snap.distanceTraveled / 100).toStringAsFixed(0)} m'
-                    : '0 m',
+                    ? '${(snap.distanceTraveled / 100).toStringAsFixed(1)} m'
+                    : '0.0 m',
                 style: AppTypography.bodySmall(context,
                     color: theme.primary, fontWeight: FontWeight.bold),
               ),
@@ -345,26 +345,31 @@ class _PaperShipModalState extends State<PaperShipModal>
           ),
         ),
 
-        // ── Canvas ───────────────────────────────────────
+        // ── Canvas — fixed 9:16 play area ────────────────
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (_canvasWidth == 0) {
-                _canvasWidth = constraints.maxWidth;
-                _canvasHeight = constraints.maxHeight;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && !_worldReady) setState(_initWorld);
-                });
-              }
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: 9.0 / 16.0,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  if (_canvasWidth == 0 && constraints.maxWidth > 0) {
+                    _canvasWidth = constraints.maxWidth;
+                    _canvasHeight = constraints.maxHeight;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted && !_worldReady) setState(_initWorld);
+                    });
+                  }
 
-              return GestureDetector(
-                onTapDown: _onTapDown,
-                child: CustomPaint(
-                  size: Size(constraints.maxWidth, constraints.maxHeight),
-                  painter: _PaperShipPainter(snapshot: snap),
-                ),
-              );
-            },
+                  return Listener(
+                    onPointerDown: _onPointerDown,
+                    child: CustomPaint(
+                      size: Size(constraints.maxWidth, constraints.maxHeight),
+                      painter: _PaperShipPainter(snapshot: snap),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ],
@@ -390,7 +395,6 @@ class _PaperShipPainter extends CustomPainter {
   final PaperShipRenderSnapshot? snapshot;
 
   static const Color _waterColor = Color(0xFF5BC8E8);
-  static const Color _waveColor = Color(0xFFFFFFFF);
   static const Color _boatBody = Color(0xFFF5F0E8);
   static const Color _boatStroke = Color(0xFF8D6E63);
   static const Color _wakeColor = Color(0xCCFFFFFF);
@@ -399,6 +403,9 @@ class _PaperShipPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Hard clip — nothing drawn outside the 9:16 canvas bounds
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
     final snap = snapshot;
 
     // ── Layer 1: Background water ─────────────────────────
@@ -449,7 +456,7 @@ class _PaperShipPainter extends CustomPainter {
     // Subtle grass tufts that scroll
     final tuffPaint = Paint()..color = const Color(0xFF388E3C).withValues(alpha: 0.5);
     for (int i = 0; i < 5; i++) {
-      final y = ((i * size.height / 4) - parallax) % size.height;
+      final y = ((i * size.height / 4) + parallax) % size.height;
       canvas.drawCircle(Offset(size.width * 0.025, y), 5, tuffPaint);
       canvas.drawCircle(Offset(size.width * 0.975, y + size.height * 0.1), 5, tuffPaint);
     }
@@ -462,7 +469,7 @@ class _PaperShipPainter extends CustomPainter {
       if (w.opacity < 0.02) continue;
 
       final paint = Paint()
-        ..color = _waveColor.withValues(alpha: w.opacity * 0.7)
+        ..color = w.waveColor.withValues(alpha: w.opacity * 0.7)
         ..style = PaintingStyle.stroke
         ..strokeWidth = w.strokeWidth
         ..strokeCap = StrokeCap.round;
