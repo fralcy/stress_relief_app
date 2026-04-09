@@ -505,6 +505,12 @@ class _PaperShipPainter extends CustomPainter {
           _drawLotus(canvas, o.screenPos, o.visualSize);
         case ObstacleType.seaweed:
           _drawSeaweed(canvas, o.screenPos, o.visualSize);
+        case ObstacleType.log:
+          _drawLog(canvas, o.screenPos, o.visualSize, o.angle, o.halfLength);
+        case ObstacleType.lilyPad:
+          _drawLilyPad(canvas, o.screenPos, o.visualSize);
+        case ObstacleType.whirlpool:
+          _drawWhirlpool(canvas, o.screenPos, o.visualSize, o.phase);
       }
     }
   }
@@ -595,6 +601,92 @@ class _PaperShipPainter extends CustomPainter {
         ..strokeWidth = size * 0.4
         ..strokeCap = StrokeCap.round,
     );
+  }
+
+  // ── New obstacle renderers ────────────────────────────────
+
+  void _drawLog(Canvas canvas, Offset pos, double size, double angle, double halfLen) {
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.rotate(angle);
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset.zero, width: halfLen * 2, height: size * 2),
+      Radius.circular(size),
+    );
+    canvas.drawRRect(rrect, Paint()..color = const Color(0xFF8B5E3C));
+    canvas.drawRRect(rrect, Paint()
+      ..color = const Color(0xFF5C3317)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0);
+
+    // Wood grain lines
+    final grain = Paint()
+      ..color = const Color(0xFF6B4226).withValues(alpha: 0.45)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    for (final dy in [-size * 0.45, 0.0, size * 0.45]) {
+      canvas.drawLine(
+        Offset(-halfLen + size, dy),
+        Offset( halfLen - size, dy),
+        grain,
+      );
+    }
+    canvas.restore();
+  }
+
+  void _drawLilyPad(Canvas canvas, Offset pos, double size) {
+    // Pac-Man-shaped leaf: circle with a ~60° notch at top
+    const notchHalf = math.pi / 6; // 30° each side
+    const startAngle = -math.pi / 2 + notchHalf; // after notch
+    const sweep = 2 * math.pi - 2 * notchHalf;   // 300°
+
+    final path = Path()..moveTo(pos.dx, pos.dy);
+    path.arcTo(Rect.fromCircle(center: pos, radius: size),
+        startAngle, sweep, false);
+    path.close();
+
+    canvas.drawPath(path, Paint()..color = const Color(0xFF4CAF50));
+    canvas.drawPath(path, Paint()
+      ..color = const Color(0xFF2E7D32)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2);
+
+    // Vein lines from center
+    final vein = Paint()
+      ..color = const Color(0xFF2E7D32).withValues(alpha: 0.45)
+      ..strokeWidth = 0.8
+      ..style = PaintingStyle.stroke;
+    for (final da in [-0.18, 0.0, 0.18]) {
+      final a = -math.pi / 2 + math.pi + da; // fan toward base
+      canvas.drawLine(pos,
+          Offset(pos.dx + math.cos(a) * size * 0.8,
+                 pos.dy + math.sin(a) * size * 0.8),
+          vein);
+    }
+  }
+
+  void _drawWhirlpool(Canvas canvas, Offset pos, double size, double phase) {
+    // Three concentric arcs rotating at different speeds
+    for (int ring = 0; ring < 3; ring++) {
+      final r       = size * (0.30 + ring * 0.25);
+      final rot     = phase * (1.5 - ring * 0.3);
+      final opacity = (0.70 - ring * 0.15).clamp(0.1, 0.7);
+      canvas.drawArc(
+        Rect.fromCircle(center: pos, radius: r),
+        rot,
+        math.pi * 1.5, // 270° arc
+        false,
+        Paint()
+          ..color = const Color(0xFF1565C0).withValues(alpha: opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = (3.0 - ring * 0.6).clamp(1.0, 3.0)
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+    // Dark center dot
+    canvas.drawCircle(pos, size * 0.12,
+        Paint()..color = const Color(0xFF0D47A1).withValues(alpha: 0.75));
   }
 
   // ── Layer 6: Wake trail ───────────────────────────────────

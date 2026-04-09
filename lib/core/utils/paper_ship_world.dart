@@ -28,11 +28,17 @@ class ObstacleRenderData {
   final ObstacleType type;
   final Offset screenPos;
   final double visualSize;
+  final double angle;      // rotation — log direction, whirlpool orientation
+  final double halfLength; // px — log capsule visual half-length; 0 for others
+  final double phase;      // animation phase — whirlpool spin (seconds elapsed)
 
   const ObstacleRenderData({
     required this.type,
     required this.screenPos,
     required this.visualSize,
+    this.angle = 0.0,
+    this.halfLength = 0.0,
+    this.phase = 0.0,
   });
 }
 
@@ -58,6 +64,7 @@ class PaperShipRenderSnapshot {
   final List<FoamParticleRenderData> foam;
   final double distanceTraveled;
   final Color skyColor;
+  final Biome currentBiome;
 
   const PaperShipRenderSnapshot({
     required this.boatPos,
@@ -69,6 +76,7 @@ class PaperShipRenderSnapshot {
     required this.foam,
     required this.distanceTraveled,
     required this.skyColor,
+    required this.currentBiome,
   });
 }
 
@@ -197,6 +205,7 @@ class PaperShipWorld {
   // Camera momentum: upward boat velocity is transferred here instead of
   // being discarded, so obstacles continue flying downward after a big wave.
   double _cameraVelocity = 0.0; // px/s, positive = camera scrolling upstream
+  double _elapsedSeconds = 0.0; // total time — used for whirlpool animation phase
 
   final math.Random _rng;
 
@@ -246,6 +255,7 @@ class PaperShipWorld {
   // ── Main step ────────────────────────────────────────────
 
   void step(double dt) {
+    _elapsedSeconds += dt;
     _advanceWaves(dt);
     final totalForce = _computeBoatForce();
     _integrateBoat(dt, totalForce);
@@ -256,6 +266,7 @@ class PaperShipWorld {
   }
 
   void stepClient(double dt) {
+    _elapsedSeconds += dt;
     _advanceFoam(dt);
     _updateBoatAngleSmooth(dt);
     _shakeAmount = (_shakeAmount * math.pow(_shakeDampingBase, dt * 60)).toDouble();
@@ -276,30 +287,31 @@ class PaperShipWorld {
 
   // ── Force computation (screen-space) ─────────────────────
 
+  // Solid obstacles: excludes whirlpool (force-field only, not a blocker)
+  List<ShipObstacle> _solidObstacles() =>
+      _visibleObstacles().where((o) => o.type != ObstacleType.whirlpool).toList();
+
   Offset _computeBoatForce() {
     var total = Offset.zero;
-    final visibleObstacles = _visibleObstacles();
+    final solid = _solidObstacles();
 
     for (final w in _waves) {
       final sigma = _waveSpeedPx * w.age;
       final amplitude = _waveMaxForce * math.exp(-w.age * _waveDampingRate);
       if (amplitude < 0.5) continue;
 
-      // Convert wave to screen coords for force calculation
       final waveScreen = Offset(w.worldX, _scrollOffset - w.worldY);
       final delta = _boatPos - waveScreen;
       final d = delta.distance;
       if (d < 0.1) continue;
 
-      // Gaussian pulse: maximum when ring reaches the boat
       final pulseArg = (d - sigma) / _wavePulseWidth;
       final F = amplitude * math.exp(-0.5 * pulseArg * pulseArg);
       if (F < 0.5) continue;
 
       final dir = delta / d;
-      final mult = _waveForceMultiplier(waveScreen, _boatPos, visibleObstacles);
-      // Upstream bias: F_final = F * (1 + cosθ * 0.5)
-      // cosθ = dot(dir, upstream) = dot(dir, (0,-1)) = -dir.dy
+      final mult = _waveForceMultiplier(waveScreen, _boatPos, solid);
+      // Upstream bias: ×1.5 when pushing up, ×0.5 when pushing down
       final upBias = 1.0 + (-dir.dy) * 0.5;
       total = Offset(
         total.dx + dir.dx * F * mult * upBias,
@@ -307,7 +319,22 @@ class PaperShipWorld {
       );
     }
 
-    // Clamp tổng lực tránh velocity spike
+    // Whirlpool force: tangential spin + slight inward pull
+    for (final o in _visibleObstacles().where(
+        (o) => o.type == ObstacleType.whirlpool)) {
+      final obsScreen = Offset(o.worldX, _scrollOffset - o.worldY);
+      final toBoat = _boatPos - obsScreen;
+      final dist = toBoat.distance;
+      if (dist >= o.radius || dist < 1.0) continue;
+      final strength = (1.0 - dist / o.radius).clamp(0.0, 1.0);
+      // Counterclockwise tangent
+      final tangent = Offset(-toBoat.dy / dist, toBoat.dx / dist);
+      final spin = tangent * (200.0 * strength);
+      final pull = (-toBoat / dist) * (80.0 * strength);
+      total = Offset(total.dx + spin.dx + pull.dx, total.dy + spin.dy + pull.dy);
+    }
+
+    // Clamp total force to avoid velocity spike
     final totalMag = total.distance;
     if (totalMag > _kMaxCombinedForce) {
       total = total / totalMag * _kMaxCombinedForce;
@@ -420,30 +447,50 @@ class PaperShipWorld {
 
   // ── Collision / repulsion (screen coords) ────────────────
 
+  // Closest point on a capsule axis (for log collision)
+  Offset _capsuleClosest(Offset boat, Offset center, double angle, double halfLen) {
+    final axis = Offset(math.cos(angle), math.sin(angle));
+    final toBoat = boat - center;
+    final proj = (toBoat.dx * axis.dx + toBoat.dy * axis.dy)
+        .clamp(-halfLen, halfLen);
+    return center + Offset(axis.dx * proj, axis.dy * proj);
+  }
+
   void _checkBoatObstacleCollision() {
     for (final o in _visibleObstacles()) {
       final obsScreen = Offset(o.worldX, _scrollOffset - o.worldY);
-      final delta = _boatPos - obsScreen;
-      final dist = delta.distance;
+
+      // Whirlpool: force-only, no hard collision — just add shake
+      if (o.type == ObstacleType.whirlpool) {
+        final dist = (_boatPos - obsScreen).distance;
+        if (dist < o.radius) {
+          final proximity = (1.0 - dist / o.radius).clamp(0.0, 1.0);
+          _shakeAmount = (_shakeAmount + proximity * 0.05).clamp(0.0, 6.0);
+        }
+        continue;
+      }
+
+      // Log: capsule hitbox; all others: circle hitbox
+      final closest = (o.type == ObstacleType.log && o.halfLength > 0)
+          ? _capsuleClosest(_boatPos, obsScreen, o.angle, o.halfLength)
+          : obsScreen;
+
+      final delta = _boatPos - closest;
+      final dist  = delta.distance;
       final minDist = o.radius + _boatRadius;
       if (dist < minDist && dist > 0.1) {
         final penetration = minDist - dist;
         final normal = delta / dist;
-
         final repulsion = _stiffness * penetration;
         _boatVelocity = Offset(
           _boatVelocity.dx + normal.dx * repulsion * (1 / 60.0),
           _boatVelocity.dy + normal.dy * repulsion * (1 / 60.0),
         );
-
         _boatPos = Offset(
           _boatPos.dx + normal.dx * penetration * 0.5,
           _boatPos.dy + normal.dy * penetration * 0.5,
         );
-
         _shakeAmount = (_shakeAmount + penetration * _shakeScale).clamp(0.0, 6.0);
-
-        // Contact point in screen coords
         _spawnFoam(_boatPos - normal * _boatRadius);
       }
     }
@@ -582,6 +629,9 @@ class PaperShipWorld {
           type: o.type,
           screenPos: Offset(o.worldX, _scrollOffset - o.worldY),
           visualSize: o.visualSize,
+          angle:      o.angle,
+          halfLength: o.halfLength,
+          phase:      o.type == ObstacleType.whirlpool ? _elapsedSeconds : 0.0,
         )).toList();
 
     final foam = _foam.map((p) => FoamParticleRenderData(
@@ -602,6 +652,7 @@ class PaperShipWorld {
       foam: foam,
       distanceTraveled: _distanceTraveled,
       skyColor: skyColor,
+      currentBiome: _chunks.currentBiome,
     );
   }
 
