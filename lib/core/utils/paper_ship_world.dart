@@ -671,8 +671,8 @@ class PaperShipWorld {
       'by': _boatPos.dy / ch,
       'bvx': _boatVelocity.dx / _maxBoatSpeed,
       'bvy': _boatVelocity.dy / _maxBoatSpeed,
-      'scroll': _scrollOffset,
-      'dist': _distanceTraveled,
+      'scrollN': _scrollOffset / ch,
+      'distN': _distanceTraveled / ch,
       'camV': _cameraVelocity / _maxBoatSpeed,
       'waves': _waves.map((w) => {
             'id': w.id,
@@ -697,8 +697,8 @@ class PaperShipWorld {
     final nvy = (data['bvy'] as num? ?? 0).toDouble();
     _boatVelocity = Offset(nvx * _maxBoatSpeed, nvy * _maxBoatSpeed);
 
-    _scrollOffset = (data['scroll'] as num).toDouble();
-    _distanceTraveled = (data['dist'] as num).toDouble();
+    _scrollOffset = (data['scrollN'] as num).toDouble() * ch;
+    _distanceTraveled = (data['distN'] as num).toDouble() * ch;
     _cameraVelocity = ((data['camV'] as num? ?? 0).toDouble() * _maxBoatSpeed)
         .clamp(0.0, _maxBoatSpeed * 2.0);
 

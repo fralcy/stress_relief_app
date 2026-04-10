@@ -109,7 +109,12 @@ class _RockContactListener extends ContactListener {
 
 class RockPhysicsWorld {
   static const double _fixedDt = 1.0 / 60.0;
-  static const double _groundThickness = 20.0;
+
+  // Ground line as fraction of canvas height from the top (same on all devices).
+  // Previously used a 20px constant which gave different world-space groundYM
+  // on each screen size, causing rocks received from the host to embed into
+  // the client's ground and trigger violent correction impulses.
+  static const double groundFraction = 0.97; // ground at 97 % of canvas height (public for modal)
 
   final double _cw; // canvas width in pixels
   final double _ch; // canvas height in pixels
@@ -123,7 +128,7 @@ class RockPhysicsWorld {
   void Function()? onRockHit;
   void Function()? onRockLand;
 
-  double get groundYPixels => _ch - _groundThickness;
+  double get groundYPixels => _ch * groundFraction;
 
   /// Expose adaptive PPM so the modal can use it for velocity de-normalisation.
   double get pixelsPerMeter => _ppm;
@@ -148,9 +153,9 @@ class RockPhysicsWorld {
   void _setupStaticBodies() {
     final canvasWM = _cw / _ppm;
     final canvasHM = _ch / _ppm;
-    // Ground is at _groundThickness pixels from the bottom in screen coords.
-    // In Forge2D Y-up: groundY_world = groundThickness / _ppm
-    final groundYM = _groundThickness / _ppm;
+    // Ground is at groundFraction of canvas height from top in screen coords.
+    // In Forge2D Y-up: groundY_world = (1 - groundFraction) * 16m
+    final groundYM = (1.0 - groundFraction) * 16.0;
 
     final bodyDef = BodyDef()..type = BodyType.static;
     final staticBody = _world.createBody(bodyDef);
@@ -276,6 +281,7 @@ class RockPhysicsWorld {
         }
       }
 
+      final wasAwake = rock.body.isAwake;
       final dist = (next - tp).length;
       if (dist < 0.016) {
         // ~0.8 px — close enough, snap to target
@@ -287,6 +293,9 @@ class RockPhysicsWorld {
       } else {
         rock.body.setTransform(next, nextAngle);
       }
+      // setTransform always wakes the body; restore sleep state to avoid
+      // continuous jitter on already-settled rocks driven by periodic syncs.
+      if (!wasAwake) rock.body.setAwake(false);
     }
   }
 
@@ -362,10 +371,15 @@ class RockPhysicsWorld {
     if (rock == null) return;
     if (rock.isGrabbedLocally) return;             // local player holds it
     if (rock.body.bodyType == BodyType.kinematic) return; // peer holds it
-    rock.lerpTargetPos = Vector2(
+    final targetPos = Vector2(
       normX * _cw / _ppm,
       (1.0 - normY) * _ch / _ppm,
     );
+    // Skip correction if already within dead-zone — avoids waking sleeping bodies
+    final posError = (rock.body.position - targetPos).length;
+    final angleError = (rock.body.angle - worldAngle).abs();
+    if (posError < 0.025 && angleError < 0.01) return;
+    rock.lerpTargetPos = targetPos;
     rock.lerpTargetAngle = worldAngle;
   }
 

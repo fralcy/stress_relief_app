@@ -149,7 +149,6 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   }
 
   // ── Physics constants ─────────────────────────────────────────
-  static const double _groundThickness = 20.0;
   static const double _fixedDt = 1.0 / 60.0;
 
   // ── Physics world ─────────────────────────────────────────────
@@ -164,7 +163,8 @@ class _RockBalancingModalState extends State<RockBalancingModal>
   // ── Canvas (9:16 aspect, fitted to modal content area) ───────
   double _canvasWidth = 0;
   double _canvasHeight = 0;
-  double get _groundY => _canvasHeight - _groundThickness;
+  double get _groundY => _canvasHeight * RockPhysicsWorld.groundFraction;
+  double get _groundThickness => _canvasHeight - _groundY;
   // Area-coverage model: estimate pyramid layers = sqrt(n) × 1.5,
   // add 2 safety layers, then derive radius from canvas height.
   // Also cap at canvasW/6 so rocks never exceed 1/3 of canvas width.
