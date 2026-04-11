@@ -618,29 +618,36 @@ class _FireflyModalState extends State<FireflyModal>
       children: [
         // ── Info bar ─────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: MediaQuery.of(context).size.height < 700 ? 2 : 6,
+          ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                key: _caughtKey,
-                '${l10n.caught}: ${snap?.totalCaught ?? 0}',
-                style: AppTypography.bodySmall(context,
-                    color: theme.primary, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  key: _caughtKey,
+                  '${l10n.caught}: ${snap?.totalCaught ?? 0}',
+                  style: AppTypography.bodySmall(context,
+                      color: theme.primary, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
               // Brightness toggle (only when current role is lamp, or solo)
               if (_isSolo || _role == FireflyRole.lamp)
                 GestureDetector(
                   key: _brightnessKey,
                   onTap: _toggleBrightness,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    margin: const EdgeInsets.only(left: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: theme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      _lampBrightness < 0.5 ? l10n.attractMode : l10n.repelMode,
+                      _lampBrightness < 0.5 ? l10n.attractShort : l10n.repelShort,
                       style: AppTypography.bodySmall(context, color: theme.primary),
                     ),
                   ),
@@ -651,42 +658,46 @@ class _FireflyModalState extends State<FireflyModal>
                   key: _toolSwitchKey,
                   onTap: _switchTool,
                   child: Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    margin: const EdgeInsets.only(left: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: theme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      _role == FireflyRole.lamp ? l10n.roleLamp : l10n.roleJar,
+                      _role == FireflyRole.lamp ? l10n.lamp : l10n.jar,
                       style: AppTypography.bodySmall(context, color: theme.primary),
                     ),
                   ),
                 ),
               // End game (host LAN or solo)
               if (_isSolo)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: TextButton(
-                    onPressed: _confirmExit,
-                    child: Text(l10n.endGame,
-                        style: TextStyle(color: theme.primary)),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
+                  onPressed: _confirmExit,
+                  child: Text(l10n.endGame,
+                      style: TextStyle(color: theme.primary)),
                 ),
               if (!_isSolo && _isHost)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: TextButton(
-                    onPressed: () {
-                      context.read<GameRoomProvider>().endGame(
-                            {'caughtCount': snap?.totalCaught ?? 0},
-                          );
-                      _onGameEnd({});
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(l10n.endGame,
-                        style: TextStyle(color: theme.primary)),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
+                  onPressed: () {
+                    context.read<GameRoomProvider>().endGame(
+                          {'caughtCount': snap?.totalCaught ?? 0},
+                        );
+                    _onGameEnd({});
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(l10n.endGame,
+                      style: TextStyle(color: theme.primary)),
                 ),
             ],
           ),

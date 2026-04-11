@@ -298,48 +298,42 @@ class _PaperShipModalState extends State<PaperShipModal>
       children: [
         // ── Info bar ─────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: MediaQuery.of(context).size.height < 700 ? 2 : 6,
+          ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                snap != null
-                    ? '${(snap.distanceTraveled / 100).toStringAsFixed(1)} m'
-                    : '0.0 m',
-                style: AppTypography.bodySmall(context,
-                    color: theme.primary, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              // Player dots (LAN)
-              if (!_isSolo)
-                ...List.generate(
-                  widget.playerOrder.length,
-                  (i) => Container(
-                    width: 10,
-                    height: 10,
-                    margin: const EdgeInsets.only(left: 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _slotColor(i + 1),
-                    ),
-                  ),
+              Expanded(
+                child: Text(
+                  snap != null
+                      ? '${(snap.distanceTraveled / 100).toStringAsFixed(1)} m'
+                      : '0.0 m',
+                  style: AppTypography.bodySmall(context,
+                      color: theme.primary, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ),
               // End game
               if (_isSolo || _isHost)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: TextButton(
-                    onPressed: () {
-                      if (!_isSolo) {
-                        context.read<GameRoomProvider>().endGame(
-                          {'dist': snap?.distanceTraveled.toInt() ?? 0},
-                        );
-                        _onGameEnd({});
-                      }
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(l10n.endGame,
-                        style: TextStyle(color: theme.primary)),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
+                  onPressed: () {
+                    if (!_isSolo) {
+                      context.read<GameRoomProvider>().endGame(
+                        {'dist': snap?.distanceTraveled.toInt() ?? 0},
+                      );
+                      _onGameEnd({});
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(l10n.endGame,
+                      style: TextStyle(color: theme.primary)),
                 ),
             ],
           ),
@@ -376,15 +370,6 @@ class _PaperShipModalState extends State<PaperShipModal>
     );
   }
 
-  Color _slotColor(int slot) {
-    const colors = [
-      Color(0xFF4FC3F7), // blue
-      Color(0xFFAED581), // green
-      Color(0xFFFFB74D), // orange
-      Color(0xFFF48FB1), // pink
-    ];
-    return colors[(slot - 1).clamp(0, colors.length - 1)];
-  }
 }
 
 // ──────────────────────────────────────────────────────────────

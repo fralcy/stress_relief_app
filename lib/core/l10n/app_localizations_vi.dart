@@ -386,6 +386,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get caught => 'Đã bắt';
   @override String get attractMode => 'Thu hút';
   @override String get repelMode => 'Xua đuổi';
+  @override String get attractShort => 'Hút';
+  @override String get repelShort => 'Đẩy';
   @override String get maxFireflyCount => 'Số đom đóm tối đa trên màn hình';
   @override String get roleJar => 'Người cầm lọ';
   @override String get roleLamp => 'Người cầm đèn';

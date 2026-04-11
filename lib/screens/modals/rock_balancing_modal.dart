@@ -766,17 +766,28 @@ class _RockBalancingModalState extends State<RockBalancingModal>
         // ── Info bar ───────────────────────────────────────────
         Padding(
           key: _infoBarKey,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          padding: EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: MediaQuery.of(context).size.height < 700 ? 2 : 6,
+          ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                '${l10n.record}: ${(_bestHeight / _canvasHeight * 100).toStringAsFixed(1)} cm',
-                style: AppTypography.bodySmall(context,
-                    color: theme.primary, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  '${l10n.record}: ${(_bestHeight / _canvasHeight * 100).toStringAsFixed(1)} cm',
+                  style: AppTypography.bodySmall(context,
+                      color: theme.primary, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
               if (_isHost && !_gameEnded)
                 TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   onPressed: () {
                     context.read<GameRoomProvider>().endGame(
                           {'bestHeight': _bestHeight},

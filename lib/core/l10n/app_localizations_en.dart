@@ -383,6 +383,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get caught => 'Caught';
   @override String get attractMode => 'Attract';
   @override String get repelMode => 'Repel';
+  @override String get attractShort => 'Attract';
+  @override String get repelShort => 'Repel';
   @override String get maxFireflyCount => 'Max fireflies on screen';
   @override String get roleJar => 'Jar holder';
   @override String get roleLamp => 'Lamp holder';

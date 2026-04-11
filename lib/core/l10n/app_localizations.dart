@@ -190,6 +190,8 @@ abstract class AppLocalizations {
   String get caught;
   String get attractMode;
   String get repelMode;
+  String get attractShort;
+  String get repelShort;
   String get maxFireflyCount;
   String get roleJar;
   String get roleLamp;
