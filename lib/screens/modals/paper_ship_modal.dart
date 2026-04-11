@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
+import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -44,6 +45,7 @@ class PaperShipModal extends StatefulWidget {
   }) {
     final h = MediaQuery.of(context).size.height * 0.95;
     final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_PaperShipModalState>();
     return AppModal.show(
       context: context,
       title: l10n.paperShip,
@@ -51,6 +53,7 @@ class PaperShipModal extends StatefulWidget {
       minHeight: h,
       scrollable: false,
       enableDrag: false,
+      onHelpPressed: () => modalKey.currentState?._showTutorial(),
       onClose: () {
         showDialog(
           context: context,
@@ -73,6 +76,7 @@ class PaperShipModal extends StatefulWidget {
         );
       },
       content: PaperShipModal(
+        key: modalKey,
         seed: seed,
         localSlot: localSlot,
         playerOrder: playerOrder,
@@ -83,6 +87,54 @@ class PaperShipModal extends StatefulWidget {
 
 class _PaperShipModalState extends State<PaperShipModal>
     with TickerProviderStateMixin {
+
+  // ── Tutorial keys ─────────────────────────────────────────
+  final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey _infoBarKey = GlobalKey();
+
+  void _showTutorial() {
+    final l10n = AppLocalizations.of(context);
+    final theme = context.theme;
+    TutorialOverlay(
+      context: context,
+      steps: [
+        TutorialStep(
+          targetKey: _canvasKey,
+          title: l10n.tutorialPaperShipGameCanvasTitle,
+          description: _isSolo
+              ? l10n.tutorialPaperShipGameCanvasSoloDesc
+              : l10n.tutorialPaperShipGameCanvasDesc,
+          tag: 'paper_ship_canvas',
+        ),
+        TutorialStep(
+          targetKey: _infoBarKey,
+          title: l10n.tutorialPaperShipGameInfoTitle,
+          description: l10n.tutorialPaperShipGameInfoDesc,
+          tag: 'paper_ship_info',
+        ),
+      ],
+      nextText: l10n.tutorialNext,
+      skipText: l10n.tutorialSkip,
+      finshText: l10n.tutorialGotIt,
+      onComplete: () => SfxService().buttonClick(),
+      tooltipBackgroundColor: theme.background,
+      titleTextColor: theme.text,
+      descriptionTextColor: theme.text,
+      nextButtonStyle: ElevatedButton.styleFrom(
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      skipButtonStyle: TextButton.styleFrom(
+        foregroundColor: theme.text,
+      ),
+      finishButtonStyle: ElevatedButton.styleFrom(
+        backgroundColor: theme.primary,
+        foregroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    ).show();
+  }
 
   // ── Physics ───────────────────────────────────────────────
   static const double _fixedDt = 1.0 / 60.0;
@@ -298,6 +350,7 @@ class _PaperShipModalState extends State<PaperShipModal>
       children: [
         // ── Info bar ─────────────────────────────────────
         Padding(
+          key: _infoBarKey,
           padding: EdgeInsets.symmetric(
             horizontal: 12,
             vertical: MediaQuery.of(context).size.height < 700 ? 2 : 6,
@@ -308,8 +361,8 @@ class _PaperShipModalState extends State<PaperShipModal>
               Expanded(
                 child: Text(
                   snap != null
-                      ? '${(snap.distanceTraveled / 100).toStringAsFixed(1)} m'
-                      : '0.0 m',
+                      ? '${(_canvasHeight > 0 ? snap.distanceTraveled / _canvasHeight * 100 : 0.0).toStringAsFixed(1)} cm'
+                      : '0.0 cm',
                   style: AppTypography.bodySmall(context,
                       color: theme.primary, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
@@ -326,7 +379,7 @@ class _PaperShipModalState extends State<PaperShipModal>
                   onPressed: () {
                     if (!_isSolo) {
                       context.read<GameRoomProvider>().endGame(
-                        {'dist': snap?.distanceTraveled.toInt() ?? 0},
+                        {'dist': _canvasHeight > 0 ? (snap?.distanceTraveled ?? 0) / _canvasHeight * 100 : 0.0},
                       );
                       _onGameEnd({});
                     }
@@ -355,6 +408,7 @@ class _PaperShipModalState extends State<PaperShipModal>
                   }
 
                   return Listener(
+                    key: _canvasKey,
                     onPointerDown: _onPointerDown,
                     child: CustomPaint(
                       size: Size(constraints.maxWidth, constraints.maxHeight),

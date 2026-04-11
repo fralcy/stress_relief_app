@@ -1027,6 +1027,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tutorialFireflyGameSwitchTitle => 'Đổi vai trò';
   @override
   String get tutorialFireflyGameSwitchDesc => 'Chạm để hoán đổi giữa Đèn và Lọ. Hãy phối hợp với đồng đội để có chiến thuật tốt nhất.';
+  @override String get tutorialPaperShipGameCanvasTitle => 'Tạo sóng';
+  @override String get tutorialPaperShipGameCanvasSoloDesc => 'Chạm vào màn hình để tạo sóng đẩy thuyền đi lên. Chạm nhiều chỗ cùng lúc để tạo nhiều sóng hơn.';
+  @override String get tutorialPaperShipGameCanvasDesc => 'Chạm để tạo sóng đẩy thuyền. Mỗi người chơi đóng góp sóng — cùng nhau đưa thuyền đi càng xa càng tốt!';
+  @override String get tutorialPaperShipGameInfoTitle => 'Khoảng cách';
+  @override String get tutorialPaperShipGameInfoDesc => 'Khoảng cách thuyền đã đi được hiển thị ở đây.';
 
   @override
 

@@ -1024,6 +1024,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialFireflyGameSwitchTitle => 'Switch Role';
   @override
   String get tutorialFireflyGameSwitchDesc => 'Tap here to swap between the Lamp and Jar. Coordinate with your team for the best strategy.';
+  @override String get tutorialPaperShipGameCanvasTitle => 'Create Waves';
+  @override String get tutorialPaperShipGameCanvasSoloDesc => 'Tap the screen to create waves that push the ship upstream. Tap multiple spots at once for more waves.';
+  @override String get tutorialPaperShipGameCanvasDesc => 'Tap to create waves and push the ship. Everyone contributes waves — work together to go as far as possible!';
+  @override String get tutorialPaperShipGameInfoTitle => 'Distance';
+  @override String get tutorialPaperShipGameInfoDesc => 'The distance your paper ship has traveled is shown here.';
 
   @override
 

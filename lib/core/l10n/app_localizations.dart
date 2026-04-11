@@ -447,6 +447,11 @@ abstract class AppLocalizations {
   String get tutorialFireflyGameBrightnessDesc;
   String get tutorialFireflyGameSwitchTitle;
   String get tutorialFireflyGameSwitchDesc;
+  String get tutorialPaperShipGameCanvasTitle;
+  String get tutorialPaperShipGameCanvasSoloDesc;
+  String get tutorialPaperShipGameCanvasDesc;
+  String get tutorialPaperShipGameInfoTitle;
+  String get tutorialPaperShipGameInfoDesc;
 
   // Breathing Exercise
   String get breathing;
