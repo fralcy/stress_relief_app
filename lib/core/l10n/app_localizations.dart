@@ -526,6 +526,7 @@ abstract class AppLocalizations {
   String get sleepThisWeek;
 
   // ==================== PROFILE ====================
+  String get menu;
   String get menuProfile;
   String get editProfile;
   String get chooseAvatar;

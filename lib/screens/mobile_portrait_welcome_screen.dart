@@ -115,8 +115,11 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
     
     return Scaffold(
       backgroundColor: theme.background,
-      body: SafeArea(
-        child: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: SafeArea(
+            child: Column(
           children: [
             // Progress indicator
             _buildProgressIndicator(theme),
@@ -134,7 +137,9 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildProgressIndicator(AppTheme theme) {

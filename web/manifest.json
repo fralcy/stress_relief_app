@@ -6,7 +6,7 @@
     "background_color": "#FFFFFF",
     "theme_color": "#4CAF50",
     "description": "A stress relief and relaxation app to help you find peace.",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

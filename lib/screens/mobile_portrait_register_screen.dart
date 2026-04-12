@@ -8,7 +8,7 @@ import '../../core/utils/data_manager.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/navigation_service.dart';
 import '../../core/providers/score_provider.dart';
-import 'mobile_portrait_screen.dart';
+import 'responsive_screen.dart';
 
 /// Mobile Portrait Register Screen
 /// 
@@ -119,7 +119,7 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
         if (mounted) {
           NavigationService.navigateAndClearStack(
             context,
-            const MobilePortraitScreen(),
+            const ResponsiveScreen(),
           );
         }
       }
@@ -159,8 +159,11 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Form(
+                  key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -325,7 +328,9 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildTextField({

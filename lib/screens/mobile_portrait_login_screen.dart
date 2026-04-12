@@ -9,7 +9,7 @@ import '../../core/utils/sync_service.dart';
 import '../../core/utils/navigation_service.dart';
 import '../../core/providers/score_provider.dart';
 import 'mobile_portrait_register_screen.dart';
-import 'mobile_portrait_screen.dart';
+import 'responsive_screen.dart';
 import 'mobile_portrait_forgot_password_screen.dart';
 
 /// Mobile Portrait Login Screen
@@ -127,7 +127,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         // Navigate to main app screen
         NavigationService.navigateAndClearStack(
           context,
-          const MobilePortraitScreen(),
+          const ResponsiveScreen(),
         );
       }
     } catch (e) {
@@ -166,7 +166,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         // Navigate to main app screen
         NavigationService.navigateAndClearStack(
           context,
-          const MobilePortraitScreen(),
+          const ResponsiveScreen(),
         );
       }
     } catch (e) {
@@ -206,7 +206,7 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         await Future.delayed(const Duration(milliseconds: 500));
         NavigationService.navigateAndClearStack(
           context,
-          const MobilePortraitScreen(),
+          const ResponsiveScreen(),
         );
       }
     } catch (e) {
@@ -252,8 +252,11 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Form(
+                  key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -428,7 +431,9 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildTextField({

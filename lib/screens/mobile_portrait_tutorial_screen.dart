@@ -92,7 +92,10 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
         centerTitle: true,
         automaticallyImplyLeading: widget.isFromMainScreen,
       ),
-      body: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
         children: [
           // Progress indicator
           _buildProgressIndicator(theme, l10n),
@@ -117,7 +120,9 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
           _buildNavigationControls(theme, l10n),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildProgressIndicator(AppTheme theme, AppLocalizations l10n) {

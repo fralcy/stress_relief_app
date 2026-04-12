@@ -90,8 +90,11 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Form(
+                  key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -256,7 +259,9 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildTextField({

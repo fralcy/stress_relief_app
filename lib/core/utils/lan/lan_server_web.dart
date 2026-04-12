@@ -13,6 +13,7 @@ class LanServer {
 
   Future<void> start({int port = 8765}) async {}
   Future<void> stop() async {}
+  Future<void> closeClient(String socketId) async {}
   void broadcast(LanMessage msg) {}
   void sendTo(String clientId, LanMessage msg) {}
   void dispose() {}

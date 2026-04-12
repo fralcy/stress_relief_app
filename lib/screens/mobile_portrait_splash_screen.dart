@@ -3,7 +3,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_typography.dart';
 import '../core/utils/navigation_service.dart';
 import 'mobile_portrait_welcome_screen.dart';
-import 'mobile_portrait_screen.dart';
+import 'responsive_screen.dart';
 
 /// Mobile Portrait Splash Screen
 /// 
@@ -64,7 +64,7 @@ class _MobilePortraitSplashScreenState extends State<MobilePortraitSplashScreen>
         targetScreen = const MobilePortraitWelcomeScreen();
         break;
       case '/main':
-        targetScreen = const MobilePortraitScreen();
+        targetScreen = const ResponsiveScreen();
         break;
       default:
         targetScreen = const MobilePortraitWelcomeScreen();

@@ -1225,6 +1225,9 @@ class AppLocalizationsVi extends AppLocalizations {
   // ==================== PROFILE ====================
 
   @override
+  @override
+  String get menu => 'Menu';
+  @override
   String get menuProfile => 'Hồ sơ';
 
   @override
