@@ -447,20 +447,61 @@ class ChunkManager {
   double _worldFrontY = 0.0;
   final List<ShipObstacle> _obstacles = [];
 
-  int _biomeIndex  = 0; // which biome cycle (advances after all presets used)
-  int _biomePreset = 0; // preset index within current biome (0–9)
-  int _chunkTotal  = 0; // total chunks generated
+  // ── Shuffle-bag state ─────────────────────────────────────────
+  // Seeded RNG ensures host and client produce identical sequences.
+  late final math.Random _rng;
+
+  // Per-biome bags of remaining preset indices (0–9). Refilled and
+  // re-shuffled whenever a bag empties.
+  final Map<Biome, List<int>> _bags = {};
+
+  Biome _currentBiome = Biome.marsh;
+
+  // Alternates: true = emit preset, false = emit procedural then switch biome.
+  bool _isPresetTurn = true;
+
+  // Monotonic counter used only to seed procedural generation.
+  int _proceduralCount = 0;
 
   static const int _presetsPerBiome = 10;
-  static const int _proceduralEvery = 3; // every Nth chunk is procedural
 
-  Biome get currentBiome => Biome.values[_biomeIndex % Biome.values.length];
+  Biome get currentBiome => _currentBiome;
 
   ChunkManager({
     required this.canvasWidth,
     required this.canvasHeight,
     required this.seed,
-  });
+  }) {
+    _rng = math.Random(seed);
+    // Random starting biome (deterministic via seed).
+    _currentBiome = Biome.values[_rng.nextInt(Biome.values.length)];
+    // Pre-fill bags for all biomes.
+    for (final biome in Biome.values) {
+      _bags[biome] = _shuffledBag(biome);
+    }
+  }
+
+  // Returns a freshly shuffled list of preset indices [0, _presetsPerBiome).
+  List<int> _shuffledBag(Biome biome) {
+    final bag = List.generate(_presetsPerBiome, (i) => i);
+    for (int i = bag.length - 1; i > 0; i--) {
+      final j = _rng.nextInt(i + 1);
+      final tmp = bag[i]; bag[i] = bag[j]; bag[j] = tmp;
+    }
+    return bag;
+  }
+
+  // Draws the next preset index for [biome], refilling the bag if empty.
+  int _drawPreset(Biome biome) {
+    if (_bags[biome]!.isEmpty) _bags[biome] = _shuffledBag(biome);
+    return _bags[biome]!.removeLast();
+  }
+
+  // Picks a random biome that is not the current one.
+  Biome _pickNextBiome() {
+    final others = Biome.values.where((b) => b != _currentBiome).toList();
+    return others[_rng.nextInt(others.length)];
+  }
 
   List<ShipObstacle> get allObstacles => _obstacles;
 
@@ -478,28 +519,25 @@ class ChunkManager {
   }
 
   void _generateNext() {
-    final bool isProcedural =
-        (_chunkTotal % _proceduralEvery == _proceduralEvery - 1);
     final ChunkDef def;
 
-    if (isProcedural) {
-      def = PaperShipChunkLibrary.generateProcedural(
-          seed, _chunkTotal, currentBiome);
+    if (_isPresetTurn) {
+      // Preset from current biome's shuffle bag.
+      final biomeOffset = _currentBiome.index * _presetsPerBiome;
+      def = PaperShipChunkLibrary.presets[biomeOffset + _drawPreset(_currentBiome)];
     } else {
-      final biomeOffset = (_biomeIndex % Biome.values.length) * _presetsPerBiome;
-      final presetIdx   = biomeOffset + (_biomePreset % _presetsPerBiome);
-      def = PaperShipChunkLibrary.presets[presetIdx];
-      _biomePreset++;
-      if (_biomePreset >= _presetsPerBiome) {
-        _biomePreset = 0;
-        _biomeIndex++;
-      }
+      // Procedural chunk closes out the current biome, then we switch.
+      def = PaperShipChunkLibrary.generateProcedural(
+          seed, _proceduralCount, _currentBiome);
+      _proceduralCount++;
+      _currentBiome = _pickNextBiome();
     }
+
+    _isPresetTurn = !_isPresetTurn;
 
     final chunkHeight = def.heightFraction * canvasHeight;
     _instantiateChunk(def, _worldFrontY, chunkHeight);
     _worldFrontY += chunkHeight;
-    _chunkTotal++;
   }
 
   void _instantiateChunk(ChunkDef def, double startY, double chunkHeight) {
