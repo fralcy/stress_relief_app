@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Claude Code local settings
+.claude/
+
 # Symbolication related
 app.*.symbols
 
