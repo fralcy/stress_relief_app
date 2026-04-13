@@ -2,21 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'lan_message.dart';
+import 'lan_transport.dart';
 
-/// WebSocket server chạy trên Android/desktop (host mode).
+/// WebSocket server for Android/desktop (host mode).
 ///
-/// Dùng [dart:io] HttpServer + WebSocketTransformer.
-/// Mỗi client kết nối được gán một [clientId] nội bộ duy nhất.
-///
-/// Usage:
-/// ```dart
-/// final server = LanServer();
-/// await server.start(port: 8765);
-/// server.events.listen((event) { ... });
-/// server.broadcast(LanMessage.data('host', {'key': 'value'}));
-/// await server.stop();
-/// ```
-class LanServer {
+/// Uses [dart:io] HttpServer + WebSocketTransformer.
+/// Each connecting client is assigned a unique internal [clientId].
+class LanServer implements LanServerBase {
   HttpServer? _server;
   int _port = 8765;
 
@@ -30,29 +22,35 @@ class LanServer {
   // Getters
   // ----------------------------------------------------------
 
+  @override
   int get port => _port;
+
+  @override
   bool get isRunning => _server != null;
 
-  /// Stream các event nhận được từ bất kỳ client nào.
+  @override
+  LanTransportType get type => LanTransportType.websocket;
+
+  @override
   Stream<LanIncomingEvent> get events => _controller.stream;
 
-  /// Danh sách clientId của các kết nối hiện tại.
+  @override
   List<String> get connectedClientIds => List.unmodifiable(_clients.keys);
 
   // ----------------------------------------------------------
   // Lifecycle
   // ----------------------------------------------------------
 
-  /// Khởi động WebSocket server trên [port].
-  /// No-op nếu server đang chạy.
-  Future<void> start({int port = 8765}) async {
+  /// Start WebSocket server on [port]. [roomId] is ignored on Android.
+  @override
+  Future<void> start({int port = 8765, String? roomId}) async {
     if (_server != null) return;
     _port = port;
     _server = await HttpServer.bind(InternetAddress.anyIPv4, _port);
     _server!.listen(_handleRequest);
   }
 
-  /// Đóng tất cả kết nối và dừng server.
+  @override
   Future<void> stop() async {
     for (final ws in _clients.values) {
       try {
@@ -64,6 +62,7 @@ class LanServer {
     _server = null;
   }
 
+  @override
   void dispose() {
     stop();
     _controller.close();
@@ -73,7 +72,7 @@ class LanServer {
   // Messaging
   // ----------------------------------------------------------
 
-  /// Gửi [msg] đến tất cả client đang kết nối.
+  @override
   void broadcast(LanMessage msg) {
     final json = msg.toJsonString();
     for (final entry in _clients.entries) {
@@ -81,12 +80,20 @@ class LanServer {
     }
   }
 
-  /// Gửi [msg] đến một client cụ thể theo [clientId].
+  @override
   void sendTo(String clientId, LanMessage msg) {
     final ws = _clients[clientId];
-    if (ws != null) {
-      _safeSend(clientId, ws, msg.toJsonString());
-    }
+    if (ws != null) _safeSend(clientId, ws, msg.toJsonString());
+  }
+
+  @override
+  Future<void> closeClient(String clientId) async {
+    final ws = _clients[clientId];
+    if (ws == null) return;
+    _clients.remove(clientId);
+    try {
+      await ws.close(WebSocketStatus.goingAway);
+    } catch (_) {}
   }
 
   // ----------------------------------------------------------
@@ -126,16 +133,6 @@ class LanServer {
       onError: (_) => _clients.remove(clientId),
       cancelOnError: true,
     );
-  }
-
-  /// Force-closes a specific client socket (zombie player cleanup).
-  Future<void> closeClient(String clientId) async {
-    final ws = _clients[clientId];
-    if (ws == null) return;
-    _clients.remove(clientId);
-    try {
-      await ws.close(WebSocketStatus.goingAway);
-    } catch (_) {}
   }
 
   void _safeSend(String clientId, WebSocket ws, String json) {

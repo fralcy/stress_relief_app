@@ -18,6 +18,9 @@ class LanDiscovery {
 
   RawDatagramSocket? _advertisingSocket;
 
+  /// Always null on Android — room IDs are a WebRTC/PWA concept.
+  String? get advertisedRoomId => null;
+
   // ----------------------------------------------------------
   // Host mode: lắng nghe request và phản hồi
   // ----------------------------------------------------------

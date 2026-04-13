@@ -4,19 +4,20 @@ import 'lan_message.dart';
 import 'lan_server.dart';
 import 'lan_client.dart';
 import 'lan_discovery.dart';
+import 'lan_transport.dart';
 
 // ============================================================
 // LanRole
 // ============================================================
 
 enum LanRole {
-  /// Chưa kết nối, không ở vai trò nào.
+  /// Not connected, no active role.
   none,
 
-  /// Thiết bị này là host — đang chạy WebSocket server.
+  /// This device is the host.
   host,
 
-  /// Thiết bị này là client — đang kết nối đến một host.
+  /// This device is a client connected to a host.
   client,
 }
 
@@ -24,50 +25,53 @@ enum LanRole {
 // LanService — singleton orchestrator
 // ============================================================
 
-/// Điều phối toàn bộ LAN networking: discovery, server, client.
+/// Orchestrates LAN networking: discovery, server, client.
 ///
-/// Singleton pattern giống [DataManager], [SfxService].
-/// Sống suốt vòng đời app — không cần khởi tạo trước.
+/// Singleton — lives for the entire app lifecycle.
 ///
-/// Usage (host):
+/// On Android: WebSocket transport (UDP discovery + WS server/client).
+/// On PWA: WebRTC transport (Firebase RTDB discovery + WebRTC host/client).
+///
+/// The game protocol layer ([GameMessage], [GameRoomProvider]) is transport-
+/// agnostic — it only sees [incomingEvents] and calls [sendMessage].
+///
+/// Usage (Android host):
 /// ```dart
 /// await LanService().startHosting(displayName: 'My Phone');
 /// LanService().incomingEvents.listen((e) { ... });
-/// LanService().broadcastMessage(LanMessage.data('host', {'key': 'val'}));
 /// await LanService().stopHosting();
 /// ```
 ///
-/// Usage (client — Android):
+/// Usage (PWA host):
 /// ```dart
-/// final hosts = await LanService().discoverHosts();
-/// await LanService().connect(hosts.first);
-/// LanService().incomingEvents.listen((e) { ... });
-/// LanService().sendMessage(LanMessage.data('me', {'action': 'join'}));
-/// await LanService().disconnect();
+/// await LanService().startHosting(displayName: 'Thinh');
+/// print(LanService().roomId); // e.g. 'pp-thinh-4271'
 /// ```
 ///
-/// Usage (client — PWA):
+/// Usage (PWA client):
 /// ```dart
-/// await LanService().connectByAddress('192.168.1.100', 8765);
+/// await LanService().connectByRoomId('pp-thinh-4271');
 /// ```
 class LanService {
   static final LanService _instance = LanService._internal();
   factory LanService() => _instance;
   LanService._internal();
 
-  final _server = LanServer();
-  final _client = LanClient();
+  // Typed as base classes so no dynamic casts are needed anywhere.
+  final LanServerBase _server = LanServer();
+  final LanClientBase _client = LanClient();
   final _discovery = LanDiscovery();
 
   LanRole _role = LanRole.none;
   String? _localIp;
   String? _lastHostIp;
   int _lastHostPort = 8765;
+  String? _roomId; // WebRTC room ID (PWA host mode only)
 
   StreamSubscription? _serverSub;
   StreamSubscription? _clientSub;
 
-  // Unified stream tồn tại suốt vòng đời app (không close)
+  // Unified stream — lives for the entire app lifetime (never closed).
   final StreamController<LanIncomingEvent> _incomingController =
       StreamController<LanIncomingEvent>.broadcast();
 
@@ -77,116 +81,148 @@ class LanService {
 
   LanRole get role => _role;
 
-  /// `true` nếu server đang chạy (host) hoặc client đang kết nối.
+  /// Transport type in use (websocket on Android, webrtc on PWA).
+  LanTransportType get transportType => _server.type;
+
+  /// True if the server is running (host) or client is connected.
   bool get isActive {
     if (_role == LanRole.host) return _server.isRunning;
     if (_role == LanRole.client) return _client.isConnected;
     return false;
   }
 
-  /// Danh sách clientId đang kết nối (host only).
+  /// Connected client IDs (host only).
   List<String> get connectedClientIds => _server.connectedClientIds;
 
-  /// Địa chỉ IP WiFi của thiết bị này (được set khi startHosting).
+  /// Local WiFi IP (Android host only; null on PWA).
   String? get localIp => _localIp;
 
-  /// IP and port of the last host this device connected to as a client.
+  /// Last host IP / room ID this device connected to as a client.
   String? get lastHostIp => _lastHostIp;
   int get lastHostPort => _lastHostPort;
+
+  /// WebRTC room ID (PWA host mode only; null otherwise).
+  String? get roomId => _roomId;
 
   /// Fires once when the client connection drops unexpectedly.
   Stream<void> get connectionLost => _client.onDisconnected;
 
-  /// Unified stream nhận tất cả event từ server hoặc client.
+  /// Unified stream of all incoming events.
   ///
-  /// Trên host: mỗi event có [LanIncomingEvent.clientId] là UUID của client.
-  /// Trên client: mỗi event có [LanIncomingEvent.clientId] == `'host'`.
+  /// Host: each event carries the internal socket/peer ID as clientId.
+  /// Client: each event has clientId == 'host'.
   Stream<LanIncomingEvent> get incomingEvents => _incomingController.stream;
 
   // ----------------------------------------------------------
-  // Host API (Android only — no-op nếu kIsWeb)
+  // Host API
   // ----------------------------------------------------------
 
-  /// Bắt đầu host: khởi động WebSocket server và quảng bá UDP.
+  /// Start hosting.
   ///
-  /// Nếu đang ở role khác, tự động dừng trước.
-  /// No-op trên web (kIsWeb).
+  /// On Android: starts WebSocket server + UDP advertising.
+  /// On PWA: starts WebRTC host + writes room to Firebase RTDB.
+  ///
+  /// Auto-stops any previous role first.
   Future<void> startHosting({
     String? displayName,
     int avatarIndex = 0,
     int port = 8765,
   }) async {
-    if (kIsWeb) return;
-    await _resetRole();
+    if (kIsWeb) {
+      // ── PWA / WebRTC path ───────────────────────────────
+      await _resetRole();
+      final name = displayName ?? 'PeacePal Host';
+      await _discovery.startAdvertising(name, 0, avatarIndex: avatarIndex);
+      _roomId = _discovery.advertisedRoomId;
+      await _server.start(port: 0, roomId: _roomId);
+      _role = LanRole.host;
+      _serverSub = _server.events.listen((event) {
+        if (!_incomingController.isClosed) _incomingController.add(event);
+      });
+      return;
+    }
 
+    // ── Android / WebSocket path ────────────────────────────
+    await _resetRole();
     _localIp = await LanDiscovery.getLocalIp();
     final name = displayName ?? _localIp ?? 'PeacePal Host';
-
     await _server.start(port: port);
     await _discovery.startAdvertising(name, port, avatarIndex: avatarIndex);
     _role = LanRole.host;
-
-    // Pipe server events vào unified stream
     _serverSub = _server.events.listen((event) {
-      if (!_incomingController.isClosed) {
-        _incomingController.add(event);
-      }
+      if (!_incomingController.isClosed) _incomingController.add(event);
     });
   }
 
-  /// Dừng host và giải phóng resource.
+  /// Stop hosting and release all resources.
   Future<void> stopHosting() async {
     if (_role != LanRole.host) return;
     await _serverSub?.cancel();
     _serverSub = null;
     await _discovery.stopAdvertising();
     await _server.stop();
+    _roomId = null;
     _role = LanRole.none;
   }
 
   // ----------------------------------------------------------
-  // Client API (Android + PWA)
+  // Client API
   // ----------------------------------------------------------
 
-  /// Quét mạng LAN để tìm host đang quảng bá.
+  /// Scan for hosts on the LAN.
   ///
-  /// Trả về danh sách rỗng trên web (PWA không hỗ trợ UDP broadcast).
+  /// Android: UDP broadcast scan.
+  /// PWA: one-shot fetch of active rooms from Firebase RTDB.
   Future<List<LanHostInfo>> discoverHosts({
     Duration timeout = const Duration(seconds: 3),
-  }) async {
-    if (kIsWeb) return const [];
+  }) {
     return _discovery.scanForHosts(timeout: timeout);
   }
 
-  /// Kết nối đến host từ kết quả [discoverHosts].
+  /// Connect to a discovered host.
   Future<void> connect(LanHostInfo host) async {
     await connectByAddress(host.ip, host.wsPort);
   }
 
-  /// Kết nối trực tiếp bằng IP và port — dùng cho PWA (nhập tay).
+  /// Connect by address.
   ///
-  /// Nếu đang ở role khác, tự động dừng trước.
+  /// On PWA, [ip] carries the room ID and [port] is 0 — automatically
+  /// redirects to [connectByRoomId].
   Future<void> connectByAddress(String ip, int port) async {
+    if (kIsWeb) {
+      await connectByRoomId(ip);
+      return;
+    }
     await _resetRole();
     _lastHostIp = ip;
     _lastHostPort = port;
     await _client.connect(ip, port);
-
-    if (!_client.isConnected) return; // connect thất bại
-
+    if (!_client.isConnected) return;
     _role = LanRole.client;
-
-    // Wrap LanMessage thành LanIncomingEvent với clientId = 'host'
     _clientSub = _client.messages.listen((msg) {
       if (!_incomingController.isClosed) {
-        _incomingController.add(
-          LanIncomingEvent(clientId: 'host', message: msg),
-        );
+        _incomingController.add(LanIncomingEvent(clientId: 'host', message: msg));
       }
     });
   }
 
-  /// Ngắt kết nối khỏi host.
+  /// Connect to a PWA WebRTC host by room ID (PWA client only).
+  Future<void> connectByRoomId(String roomId) async {
+    if (!kIsWeb) return;
+    await _resetRole();
+    _lastHostIp = roomId; // reused for reconnect logic
+    _lastHostPort = 0;
+    await _client.connectByRoomId(roomId);
+    if (!_client.isConnected) return;
+    _role = LanRole.client;
+    _clientSub = _client.messages.listen((msg) {
+      if (!_incomingController.isClosed) {
+        _incomingController.add(LanIncomingEvent(clientId: 'host', message: msg));
+      }
+    });
+  }
+
+  /// Disconnect from the host.
   Future<void> disconnect() async {
     if (_role != LanRole.client) return;
     await _clientSub?.cancel();
@@ -199,9 +235,9 @@ class LanService {
   // Messaging
   // ----------------------------------------------------------
 
-  /// Gửi [msg]:
-  /// - Host: broadcast đến tất cả, hoặc [sendTo] nếu [LanMessage.targetId] != null.
-  /// - Client: gửi đến host.
+  /// Send [msg]:
+  /// - Host: broadcast, or unicast if [LanMessage.targetId] is set.
+  /// - Client: send to host.
   void sendMessage(LanMessage msg) {
     switch (_role) {
       case LanRole.host:
@@ -218,21 +254,18 @@ class LanService {
     }
   }
 
-  /// Force-close a specific client socket by server-internal socketId (host only).
+  /// Force-close a specific client by ID (host only).
   Future<void> closeClient(String socketId) => _server.closeClient(socketId);
 
-  /// Broadcast [msg] đến tất cả client (host only).
+  /// Broadcast [msg] to all clients (host only).
   void broadcastMessage(LanMessage msg) {
-    if (_role == LanRole.host) {
-      _server.broadcast(msg);
-    }
+    if (_role == LanRole.host) _server.broadcast(msg);
   }
 
   // ----------------------------------------------------------
   // Internal helpers
   // ----------------------------------------------------------
 
-  /// Dừng role hiện tại trước khi chuyển sang role mới.
   Future<void> _resetRole() async {
     if (_role == LanRole.host) await stopHosting();
     if (_role == LanRole.client) await disconnect();
