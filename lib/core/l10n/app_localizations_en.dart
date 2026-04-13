@@ -1226,6 +1226,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reload => 'Reload';
   @override
+  String get roomCode => 'Room Code';
+  @override
+  String get enterRoomCode => 'Enter room code manually';
+  @override
+  String get activeRooms => 'Active Rooms';
+  @override
   String get menu => 'Menu';
   @override
   String get menuProfile => 'Profile';

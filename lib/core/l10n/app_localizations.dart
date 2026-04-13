@@ -528,6 +528,9 @@ abstract class AppLocalizations {
   // ==================== PWA ====================
   String get newVersionAvailable;
   String get reload;
+  String get roomCode;
+  String get enterRoomCode;
+  String get activeRooms;
 
   // ==================== PROFILE ====================
   String get menu;

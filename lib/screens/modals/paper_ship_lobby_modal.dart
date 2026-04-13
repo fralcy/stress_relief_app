@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -125,6 +127,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
   bool _wasHost = false;
   int _reconnectAttempt = 0;
   static const int _maxReconnectAttempts = 3;
+  final TextEditingController _roomIdController = TextEditingController();
 
   // ── Subscriptions / timers ───────────────────────────────────
   StreamSubscription<LobbyErrorType>? _errorSub;
@@ -155,6 +158,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     _snapshotAckSub?.cancel();
     _fullSnapshotSub?.cancel();
     _syncTimeoutTimer?.cancel();
+    _roomIdController.dispose();
     super.dispose();
   }
 
@@ -245,11 +249,13 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
 
   Future<void> _startHosting() async {
     if (_transitioning) return;
-    final localIp = await LanDiscovery.getLocalIp();
-    if (!mounted) return;
-    if (localIp == null) {
-      setState(() => _errorMessage = AppLocalizations.of(context).lanNotConnected);
-      return;
+    if (!kIsWeb) {
+      final localIp = await LanDiscovery.getLocalIp();
+      if (!mounted) return;
+      if (localIp == null) {
+        setState(() => _errorMessage = AppLocalizations.of(context).lanNotConnected);
+        return;
+      }
     }
 
     setState(() {
@@ -306,7 +312,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     if (!mounted) return;
 
     final hosts = lan.discoveredHosts;
-    if (hosts.isEmpty) {
+    if (hosts.isEmpty && !kIsWeb) {
       setState(() {
         _state = _LobbyState.idle;
         _errorMessage = AppLocalizations.of(context).lanNotConnected;
@@ -620,6 +626,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
   }
 
   Widget _buildScanResults(AppTheme theme, AppLocalizations l10n) {
+    if (kIsWeb) return _buildWebScanResults(theme, l10n);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -631,6 +638,130 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
         const SizedBox(height: 16),
         _buildButtonRow(theme, l10n, actionLabel: l10n.rescan, onAction: _doScan),
       ],
+    );
+  }
+
+  Widget _buildWebScanResults(AppTheme theme, AppLocalizations l10n) {
+    final lan = context.read<LanProvider>();
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.activeRooms,
+              style: AppTypography.bodyMedium(context,
+                  color: theme.text, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          StreamBuilder<List<LanHostInfo>>(
+            stream: lan.roomStream,
+            builder: (context, snapshot) {
+              final hosts = snapshot.data ?? _discoveredHosts;
+              if (hosts.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    l10n.scanning,
+                    style: AppTypography.bodySmall(context, color: theme.border),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }
+              return Column(
+                children: hosts
+                    .map((h) => _buildHostTile(theme, l10n, h))
+                    .toList(),
+              );
+            },
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(),
+          ),
+          Text(l10n.enterRoomCode,
+              style: AppTypography.bodySmall(context, color: theme.border)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _roomIdController,
+                style: AppTypography.bodyMedium(context, color: theme.text),
+                decoration: InputDecoration(
+                  hintText: 'pp-name-1234',
+                  hintStyle: AppTypography.bodyMedium(context, color: theme.border),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: theme.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: theme.border),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () {
+                final code = _roomIdController.text.trim();
+                if (code.isEmpty) return;
+                _connectToHost(LanHostInfo(
+                  ip: code,
+                  wsPort: 0,
+                  displayName: code,
+                  avatarIndex: 0,
+                ));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primary,
+                foregroundColor: theme.background,
+                minimumSize: const Size(64, 48),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(l10n.joinGame,
+                  style: AppTypography.labelLarge(context,
+                      fontWeight: FontWeight.w600)),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          _buildButtonRow(theme, l10n, actionLabel: l10n.rescan, onAction: _doScan),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoomCodeDisplay(AppTheme theme, AppLocalizations l10n) {
+    final roomId = context.read<LanProvider>().roomId ?? '...';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.primary),
+      ),
+      child: Row(children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.roomCode,
+                  style: AppTypography.bodySmall(context, color: theme.border)),
+              const SizedBox(height: 2),
+              Text(roomId,
+                  style: AppTypography.bodyMedium(context,
+                      color: theme.primary, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.copy, size: 18),
+          color: theme.border,
+          tooltip: 'Copy',
+          onPressed: () =>
+              Clipboard.setData(ClipboardData(text: roomId)),
+        ),
+      ]),
     );
   }
 
@@ -674,6 +805,10 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (kIsWeb) ...[
+          _buildRoomCodeDisplay(theme, l10n),
+          const SizedBox(height: 16),
+        ],
         if (currentRoom != null) ...[
           _buildApprovalToggle(theme, l10n, room, currentRoom),
           const SizedBox(height: 16),

@@ -1229,6 +1229,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get reload => 'Tải lại';
   @override
+  String get roomCode => 'Mã phòng';
+  @override
+  String get enterRoomCode => 'Nhập mã phòng thủ công';
+  @override
+  String get activeRooms => 'Phòng đang mở';
+  @override
   String get menu => 'Menu';
   @override
   String get menuProfile => 'Hồ sơ';

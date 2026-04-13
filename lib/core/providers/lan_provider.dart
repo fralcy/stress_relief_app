@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/lan/lan_service.dart';
 import '../utils/lan/lan_message.dart';
 import '../utils/lan/lan_discovery.dart';
+import '../utils/lan/lan_transport.dart';
+import '../utils/lan/webrtc_signaling.dart';
 
 // ============================================================
 // LanConnectionStatus
@@ -71,6 +74,33 @@ class LanProvider extends ChangeNotifier {
   /// Địa chỉ IP WiFi của thiết bị (host: dùng để hiển thị "Join at: ...").
   String? get localIp => LanService().localIp;
 
+  /// WebRTC room ID (PWA host mode only; null otherwise).
+  String? get roomId => LanService().roomId;
+
+  /// Transport type in use (websocket on Android, webrtc on PWA).
+  LanTransportType get transportType => LanService().transportType;
+
+  /// Live stream of nearby WebRTC rooms (PWA only).
+  ///
+  /// Filters out stale rooms (> 30 min) and the current user's own room.
+  /// Returns an empty stream on Android.
+  Stream<List<LanHostInfo>> get roomStream {
+    if (!kIsWeb) return const Stream.empty();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    return WebRtcSignaling.roomStream(currentUid: uid).map(
+      (rooms) => rooms
+          .map(
+            (r) => LanHostInfo(
+              ip: r.roomId,
+              wsPort: 0,
+              displayName: r.displayName,
+              avatarIndex: r.avatarIndex,
+            ),
+          )
+          .toList(),
+    );
+  }
+
   /// Unified stream event — delegate thẳng từ [LanService].
   Stream<LanIncomingEvent> get incomingEvents => LanService().incomingEvents;
 
@@ -78,10 +108,8 @@ class LanProvider extends ChangeNotifier {
   // Host actions
   // ----------------------------------------------------------
 
-  /// Khởi động host mode.
-  /// No-op trên web (kIsWeb).
+  /// Khởi động host mode (Android: WebSocket; PWA: WebRTC).
   Future<void> startHosting({String? displayName, int avatarIndex = 0}) async {
-    if (kIsWeb) return;
     _setStatus(LanConnectionStatus.hosting);
     try {
       await LanService().startHosting(displayName: displayName, avatarIndex: avatarIndex);
@@ -126,6 +154,11 @@ class LanProvider extends ChangeNotifier {
   /// Kết nối trực tiếp bằng IP và port (dùng cho PWA — nhập tay).
   Future<void> connectByAddress(String ip, int port) async {
     await _doConnect(() => LanService().connectByAddress(ip, port));
+  }
+
+  /// Kết nối đến PWA host bằng room ID (PWA client only).
+  Future<void> connectByRoomId(String roomId) async {
+    await _doConnect(() => LanService().connectByRoomId(roomId));
   }
 
   Future<void> _doConnect(Future<void> Function() connectFn) async {
