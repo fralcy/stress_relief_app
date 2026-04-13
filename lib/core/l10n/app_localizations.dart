@@ -525,6 +525,10 @@ abstract class AppLocalizations {
   String get sleepLastWeek;
   String get sleepThisWeek;
 
+  // ==================== PWA ====================
+  String get newVersionAvailable;
+  String get reload;
+
   // ==================== PROFILE ====================
   String get menu;
   String get menuProfile;

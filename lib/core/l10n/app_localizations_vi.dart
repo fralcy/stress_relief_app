@@ -1225,6 +1225,9 @@ class AppLocalizationsVi extends AppLocalizations {
   // ==================== PROFILE ====================
 
   @override
+  String get newVersionAvailable => 'Có phiên bản mới';
+  @override
+  String get reload => 'Tải lại';
   @override
   String get menu => 'Menu';
   @override

@@ -1222,6 +1222,9 @@ class AppLocalizationsEn extends AppLocalizations {
   // ==================== PROFILE ====================
 
   @override
+  String get newVersionAvailable => 'New version available';
+  @override
+  String get reload => 'Reload';
   @override
   String get menu => 'Menu';
   @override
