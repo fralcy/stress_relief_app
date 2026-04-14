@@ -107,6 +107,12 @@ class LanService {
   /// Fires once when the client connection drops unexpectedly.
   Stream<void> get connectionLost => _client.onDisconnected;
 
+  /// Live stream of active WebRTC rooms (PWA only; empty on Android).
+  Stream<List<LanHostInfo>> get roomStream => _discovery.roomStream();
+
+  /// Pre-warm Firebase Auth so the first RTDB op doesn't incur sign-in delay.
+  Future<void> prepareForMultiplayer() => _discovery.prepareForMultiplayer();
+
   /// Unified stream of all incoming events.
   ///
   /// Host: each event carries the internal socket/peer ID as clientId.

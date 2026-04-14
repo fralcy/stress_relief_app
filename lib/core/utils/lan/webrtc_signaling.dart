@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -221,13 +222,57 @@ class WebRtcSignaling {
 
   // ── Static room management ────────────────────────────────
 
+  static const Duration _staleDuration = Duration(minutes: 30);
+
+  /// Ensures Firebase Auth has a current user before any RTDB operation.
+  /// Signs in anonymously if not already authenticated.
+  static Future<void> ensureAuth() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInAnonymously();
+    }
+  }
+
+  /// Delete RTDB rooms in one pass:
+  /// - Own rooms (by uid): always removed before re-hosting.
+  /// - Stale rooms (> [_staleDuration]): removed regardless of owner
+  ///   — requires write permission on `$roomId` in security rules.
+  ///   Failures for other users' rooms are silently ignored.
+  static Future<void> cleanupOwnRooms() async {
+    await ensureAuth();
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final snapshot = await FirebaseDatabase.instance.ref('lan_rooms').get();
+    if (!snapshot.exists || snapshot.value == null) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final map = Map<String, dynamic>.from(snapshot.value as Map);
+
+    for (final entry in map.entries) {
+      final hostInfo = (entry.value as Map?)?['host_info'] as Map?;
+      final entryUid = hostInfo?['uid'] as String?;
+      final createdAt = (hostInfo?['createdAt'] as num?)?.toInt() ?? 0;
+      final isOwnRoom = entryUid == uid;
+      final isStale = now - createdAt > _staleDuration.inMilliseconds;
+
+      if (isOwnRoom || isStale) {
+        try {
+          await FirebaseDatabase.instance
+              .ref('lan_rooms/${entry.key}')
+              .remove();
+        } catch (_) {
+          // Silently ignore permission errors for other users' rooms.
+        }
+      }
+    }
+  }
+
   /// Write host metadata to RTDB when a PWA starts hosting.
   static Future<void> writeHostInfo(
     String roomId, {
     required String displayName,
     required int avatarIndex,
-    required String uid,
   }) async {
+    await cleanupOwnRooms(); // ensures auth + removes stale rooms from previous sessions
+    final uid = FirebaseAuth.instance.currentUser!.uid;
     await FirebaseDatabase.instance.ref('lan_rooms/$roomId/host_info').set({
       'displayName': displayName,
       'avatarIndex': avatarIndex,
@@ -252,6 +297,7 @@ class WebRtcSignaling {
 
   /// One-shot read of all active rooms.
   static Future<List<WebRtcRoomInfo>> fetchRooms() async {
+    await ensureAuth();
     final snapshot =
         await FirebaseDatabase.instance.ref('lan_rooms').get();
     if (!snapshot.exists || snapshot.value == null) return [];
@@ -267,17 +313,16 @@ class WebRtcSignaling {
 
   /// Live stream of active rooms — used by UI for real-time room list.
   ///
-  /// Filters out entries older than 30 minutes and the caller's own [currentUid].
+  /// Filters out stale entries (> [_staleDuration]) and the caller's own room.
   static Stream<List<WebRtcRoomInfo>> roomStream({required String currentUid}) {
-    return FirebaseDatabase.instance
+    return Stream.fromFuture(ensureAuth()).asyncExpand((_) =>
+      FirebaseDatabase.instance
         .ref('lan_rooms')
         .onValue
         .map((event) {
       if (!event.snapshot.exists || event.snapshot.value == null) return [];
 
       final now = DateTime.now().millisecondsSinceEpoch;
-      const thirtyMin = 30 * 60 * 1000;
-
       final map = Map<String, dynamic>.from(event.snapshot.value as Map);
       final rooms = <WebRtcRoomInfo>[];
       for (final entry in map.entries) {
@@ -285,35 +330,38 @@ class WebRtcSignaling {
           entry.key,
           Map<dynamic, dynamic>.from(entry.value as Map),
         );
-        // Filter own room and stale entries
         final hostUid =
             ((entry.value as Map)['host_info'] as Map?)?['uid'] as String?;
         if (hostUid == currentUid) continue;
-        if (now - info.createdAt > thirtyMin) continue;
+        if (now - info.createdAt > _staleDuration.inMilliseconds) continue;
         rooms.add(info);
       }
       return rooms;
-    });
+    }));
   }
 
-  /// Remove stale rooms older than 30 minutes (fallback GC).
+  /// Remove stale rooms older than [_staleDuration] (client-side GC fallback).
+  ///
+  /// Called during [LanDiscovery.scanForHosts]. Complemented by
+  /// [cleanupOwnRooms] which runs this same pruning pass on every host start.
   static Future<void> pruneStaleRooms() async {
+    await ensureAuth();
     final snapshot =
         await FirebaseDatabase.instance.ref('lan_rooms').get();
     if (!snapshot.exists || snapshot.value == null) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    const thirtyMin = 30 * 60 * 1000;
     final map = Map<String, dynamic>.from(snapshot.value as Map);
 
     for (final entry in map.entries) {
-      final hostInfo =
-          ((entry.value as Map)['host_info'] as Map?);
+      final hostInfo = (entry.value as Map?)?['host_info'] as Map?;
       final createdAt = (hostInfo?['createdAt'] as num?)?.toInt() ?? 0;
-      if (now - createdAt > thirtyMin) {
-        await FirebaseDatabase.instance
-            .ref('lan_rooms/${entry.key}')
-            .remove();
+      if (now - createdAt > _staleDuration.inMilliseconds) {
+        try {
+          await FirebaseDatabase.instance
+              .ref('lan_rooms/${entry.key}')
+              .remove();
+        } catch (_) {}
       }
     }
   }

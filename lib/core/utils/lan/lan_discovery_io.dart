@@ -18,8 +18,15 @@ class LanDiscovery {
 
   RawDatagramSocket? _advertisingSocket;
 
+
   /// Always null on Android — room IDs are a WebRTC/PWA concept.
   String? get advertisedRoomId => null;
+
+  /// No-op on Android — room stream is a WebRTC/PWA concept.
+  Stream<List<LanHostInfo>> roomStream() => const Stream.empty();
+
+  /// No-op on Android — auth pre-warm is a WebRTC/PWA concept.
+  Future<void> prepareForMultiplayer() async {}
 
   // ----------------------------------------------------------
   // Host mode: lắng nghe request và phản hồi

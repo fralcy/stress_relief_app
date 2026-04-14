@@ -36,12 +36,10 @@ class LanDiscovery {
     int avatarIndex = 0,
   }) async {
     _currentRoomId = generateRoomId(displayName);
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
     await WebRtcSignaling.writeHostInfo(
       _currentRoomId!,
       displayName: displayName,
       avatarIndex: avatarIndex,
-      uid: uid,
     );
   }
 
@@ -76,6 +74,24 @@ class LanDiscovery {
           ),
         )
         .toList();
+  }
+
+  /// Pre-warm Firebase Auth so the first RTDB operation doesn't incur sign-in delay.
+  Future<void> prepareForMultiplayer() => WebRtcSignaling.ensureAuth();
+
+  /// Live stream of active rooms, filtered by own uid and stale entries.
+  Stream<List<LanHostInfo>> roomStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    return WebRtcSignaling.roomStream(currentUid: uid).map(
+      (rooms) => rooms
+          .map((r) => LanHostInfo(
+                ip: r.roomId,
+                wsPort: 0,
+                displayName: r.displayName,
+                avatarIndex: r.avatarIndex,
+              ))
+          .toList(),
+    );
   }
 
   // ----------------------------------------------------------

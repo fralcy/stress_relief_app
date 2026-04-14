@@ -145,6 +145,7 @@ class LanServer implements LanServerBase {
     // Enforce max player limit — silent reject: host simply does not respond,
     // so the client times out on watchForAnswer() after 15 s.
     if (_peers.length >= kMaxRoomPlayers) return;
+    await WebRtcSignaling.ensureAuth();
 
     // Reserve the slot immediately to prevent race with concurrent joins.
     _peers[clientPeerId] = _WebRtcPeer.placeholder();
@@ -221,10 +222,11 @@ class LanServer implements LanServerBase {
 
       // Replace the placeholder with the real peer.
       _peers[clientPeerId] = peer;
-    } catch (_) {
+    } catch (e) {
       _peers.remove(clientPeerId);
       await pc?.close();
       await signaling.close();
+      rethrow;
     }
   }
 }

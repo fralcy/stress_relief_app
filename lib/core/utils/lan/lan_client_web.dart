@@ -93,6 +93,7 @@ class LanClient implements LanClientBase {
     _status = LanClientStatus.connecting;
     _lastError = null;
 
+    await WebRtcSignaling.ensureAuth();
     final clientPeerId = _generatePeerId();
     _signaling = WebRtcSignaling(
       roomId: roomId,

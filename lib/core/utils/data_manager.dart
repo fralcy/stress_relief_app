@@ -1,4 +1,6 @@
+import 'dart:math';
 import '../../models/index.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'auth_service.dart';
 import 'encryption_util.dart';
@@ -128,26 +130,36 @@ class DataManager {
     _isInitialized = true;
   }
   
+  /// Generate a unique session ID for web users who are not logged in.
+  /// On web, Hive uses IndexedDB which is isolated per browser context
+  /// (normal vs incognito), so this ID is stable within a session but
+  /// unique across different browser contexts — preventing player ID
+  /// collisions in WebRTC multiplayer.
+  static String _generateWebUserId() {
+    final suffix = Random().nextInt(999999999).toRadixString(36);
+    return 'web_${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}_$suffix';
+  }
+
   /// Initialize user data based on current mode (first_launch/guest/logged_in)
   Future<void> _initializeUserData() async {
     final userMode = await _authService.userMode;
     final userId = await _authService.userId;
-    
+
     if (_userProfileHive.isEmpty) {
       UserProfile defaultProfile;
-      
+
       switch (userMode) {
         case 'first_launch':
           defaultProfile = UserProfile.initial(
-            id: 'initial_user',
+            id: kIsWeb ? _generateWebUserId() : 'initial_user',
             username: 'new_user',
             email: 'initial@example.com',
-            name: '',
+            name: 'Player',
           );
           break;
         case 'guest':
           defaultProfile = UserProfile.initial(
-            id: 'guest_user',
+            id: kIsWeb ? _generateWebUserId() : 'guest_user',
             username: 'guest',
             email: 'guest@example.com',
             name: 'Player',
@@ -155,7 +167,7 @@ class DataManager {
           break;
         case 'debug':
           defaultProfile = UserProfile.initial(
-            id: 'debug_user',
+            id: kIsWeb ? _generateWebUserId() : 'debug_user',
             username: 'debug',
             email: 'debug@example.com',
             name: 'Player',

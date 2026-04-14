@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier;
 import '../utils/lan/lan_service.dart';
 import '../utils/lan/lan_message.dart';
 import '../utils/lan/lan_discovery.dart';
 import '../utils/lan/lan_transport.dart';
-import '../utils/lan/webrtc_signaling.dart';
 
 // ============================================================
 // LanConnectionStatus
@@ -84,22 +82,10 @@ class LanProvider extends ChangeNotifier {
   ///
   /// Filters out stale rooms (> 30 min) and the current user's own room.
   /// Returns an empty stream on Android.
-  Stream<List<LanHostInfo>> get roomStream {
-    if (!kIsWeb) return const Stream.empty();
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    return WebRtcSignaling.roomStream(currentUid: uid).map(
-      (rooms) => rooms
-          .map(
-            (r) => LanHostInfo(
-              ip: r.roomId,
-              wsPort: 0,
-              displayName: r.displayName,
-              avatarIndex: r.avatarIndex,
-            ),
-          )
-          .toList(),
-    );
-  }
+  Stream<List<LanHostInfo>> get roomStream => LanService().roomStream;
+
+  /// Pre-warm Firebase Auth when the multiplayer lobby opens.
+  Future<void> prepareForMultiplayer() => LanService().prepareForMultiplayer();
 
   /// Unified stream event — delegate thẳng từ [LanService].
   Stream<LanIncomingEvent> get incomingEvents => LanService().incomingEvents;

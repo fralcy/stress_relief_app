@@ -148,7 +148,10 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _resumeState());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LanProvider>().prepareForMultiplayer();
+      _resumeState();
+    });
   }
 
   @override

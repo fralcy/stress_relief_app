@@ -211,6 +211,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LanProvider>().prepareForMultiplayer();
       _resumeState();
       _subscribeRoleChanges();
     });
