@@ -97,7 +97,7 @@ class _DesktopLandscapeSplashScreenState
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: Image.asset(
-              'assets/images/desktop_splash.png',
+              'assets/images/desktop_splash.webp',
               height: double.infinity,
               fit: BoxFit.fitHeight,
               errorBuilder: (context, error, stackTrace) {

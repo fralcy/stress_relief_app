@@ -101,7 +101,7 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   assets:
-    # Images
+    # Images (WebP)
     - assets/images/scenes/default/
     - assets/images/scenes/forest/
     - assets/images/scenes/beach/
@@ -115,7 +115,6 @@ flutter:
     - assets/images/aquarium/
     - assets/images/rock_balancing/
     - assets/images/firefly/
-    - assets/images/app_icon.png
     - assets/images/
     # Audio - BGM
     - assets/audio/bgm/lofi_beats.mp3

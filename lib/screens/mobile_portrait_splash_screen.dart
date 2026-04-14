@@ -103,7 +103,7 @@ class _MobilePortraitSplashScreenState extends State<MobilePortraitSplashScreen>
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: Image.asset(
-              'assets/images/mobile_splash.png',
+              'assets/images/mobile_splash.webp',
               width: double.infinity,
               fit: BoxFit.fitWidth,
               errorBuilder: (context, error, stackTrace) {
