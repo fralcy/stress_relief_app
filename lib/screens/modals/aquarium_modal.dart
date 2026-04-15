@@ -55,6 +55,12 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   final AuthService _authService = AuthService();
   final _random = Random();
 
+  double _tankSize = 0;
+
+  /// Fish image size scales with the tank — ~12 % of tank width, clamped 32–64 px.
+  double get _fishDisplaySize =>
+      _tankSize > 0 ? (_tankSize * 0.12).clamp(32.0, 64.0) : 48.0;
+
   final GlobalKey _tankKey = GlobalKey();
   final GlobalKey _fishShopKey = GlobalKey();
 
@@ -87,9 +93,9 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   }
 
   void _updateFishAnimations() {
-    final containerSize = MediaQuery.of(context).size.width;
-    const fishSize = 48.0;
-    final maxCoord = containerSize - fishSize;
+    if (_tankSize == 0) return;
+    final fishSize = _fishDisplaySize;
+    final maxCoord = _tankSize - fishSize;
 
     for (int i = 0; i < _fishAnimations.length; i++) {
       final anim = _fishAnimations[i];
@@ -135,13 +141,13 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   }
 
   void _initializeFishAnimations() {
+    if (_tankSize == 0) return;
     _fishAnimations.clear();
-    final containerSize = MediaQuery.of(context).size.width;
-    const fishSize = 48.0;
+    final fishSize = _fishDisplaySize;
 
     for (int i = 0; i < _progress.fishes.length; i++) {
       final fish = _progress.fishes[i];
-      final pos = AquariumService.getRandomPosition(containerSize - fishSize, containerSize - fishSize);
+      final pos = AquariumService.getRandomPosition(_tankSize - fishSize, _tankSize - fishSize);
       _fishAnimations.add(_FishAnimationData(
         currentX: pos['x']!,
         currentY: pos['y']!,
@@ -179,11 +185,12 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
   }
 
   Future<void> _feedFish(int index, Fish fish, _FishAnimationData anim) async {
-    final double maxCoord = MediaQuery.of(context).size.width - 48.0;
+    final fishSize = _fishDisplaySize;
+    final double maxCoord = _tankSize - fishSize;
 
-    final double landX = (anim.targetX + 24 + (_random.nextDouble() - 0.5) * 16).clamp(4, maxCoord + 44);
+    final double landX = (anim.targetX + fishSize / 2 + (_random.nextDouble() - 0.5) * 16).clamp(4, maxCoord + fishSize - 4);
     final double startY = anim.targetY - 50;
-    final double landY = (anim.targetY + 16).clamp(0, maxCoord + 44);
+    final double landY = (anim.targetY + fishSize / 3).clamp(0, maxCoord + fishSize - 4);
 
     final updatedFish = AquariumService.feedFish(fish);
     final newFishes = List<Fish>.from(_progress.fishes);
@@ -213,8 +220,8 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
       if (!mounted) return;
       setState(() {
         feedAnim.phase = 1;
-        anim.targetX = (landX - 24).clamp(0, maxCoord);
-        anim.targetY = (landY - 24).clamp(0, maxCoord);
+        anim.targetX = (landX - fishSize / 2).clamp(0, maxCoord);
+        anim.targetY = (landY - fishSize / 2).clamp(0, maxCoord);
       });
 
       feedAnim.cleanupTimer = Timer(const Duration(milliseconds: 900), () {
@@ -248,8 +255,8 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     final coinAnim = _CoinAnimState(
       controller: coinController,
       points: claimable,
-      x: anim.targetX + 24,
-      y: anim.targetY + 24,
+      x: anim.targetX + _fishDisplaySize / 2,
+      y: anim.targetY + _fishDisplaySize / 2,
     );
 
     setState(() {
@@ -292,8 +299,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     setState(() {
       final newFishes = List<Fish>.from(_progress.fishes)..add(Fish(type: fishType));
       _progress = _progress.copyWith(fishes: newFishes);
-      final containerSize = MediaQuery.of(context).size.width;
-      final pos = AquariumService.getRandomPosition(containerSize - 48, containerSize - 48);
+      final pos = AquariumService.getRandomPosition(_tankSize - _fishDisplaySize, _tankSize - _fishDisplaySize);
       _fishAnimations.add(_FishAnimationData(
         currentX: pos['x']!,
         currentY: pos['y']!,
@@ -479,28 +485,43 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Semantics(
-                      image: true,
-                      label: 'Aquarium tank background',
-                      child: Image.asset(
-                        AssetLoader.getTankAsset(
-                          DataManager().userSettings.currentScenes[2].sceneSet,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final newSize = constraints.maxWidth;
+                  if (_tankSize != newSize) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() {
+                          _tankSize = newSize;
+                          _initializeFishAnimations();
+                        });
+                      }
+                    });
+                  }
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Semantics(
+                          image: true,
+                          label: 'Aquarium tank background',
+                          child: Image.asset(
+                            AssetLoader.getTankAsset(
+                              DataManager().userSettings.currentScenes[2].sceneSet,
+                            ),
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        fit: BoxFit.cover,
                       ),
-                    ),
-                  ),
-                  ..._buildAnimatedFish(),
-                  ..._buildFeedParticles(),
-                  ..._buildCoinAnimations(),
-                ],
+                      if (_tankSize > 0) ..._buildAnimatedFish(),
+                      ..._buildFeedParticles(),
+                      ..._buildCoinAnimations(),
+                    ],
+                  );
+                },
               ),
             ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -539,18 +560,21 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
           ? const Duration(milliseconds: 1000)
           : AquariumService.getFishMovementDuration(fish);
 
+      final fishSize = _fishDisplaySize;
+      final hitboxSize = fishSize * 1.5;
+      final hitboxOffset = fishSize * 0.25;
       fishWidgets.add(
         AnimatedPositioned(
           duration: moveDuration,
           curve: Curves.easeInOut,
-          left: anim.targetX - 12, // hitbox 72x72, cá căn giữa tại 12+24=36
-          top: anim.targetY - 12,
+          left: anim.targetX - hitboxOffset,
+          top: anim.targetY - hitboxOffset,
           child: GestureDetector(
             onTap: () => _onTapFish(i),
             behavior: HitTestBehavior.opaque,
             child: SizedBox(
-              width: 72,
-              height: 72,
+              width: hitboxSize,
+              height: hitboxSize,
               child: AnimatedScale(
                 duration: const Duration(milliseconds: 500),
                 scale: anim.targetScale,
@@ -568,8 +592,8 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                           label: '${_getFishName(fish.type)} fish',
                           child: Image.asset(
                             AssetLoader.getFishAsset(fish.type),
-                            width: 48,
-                            height: 48,
+                            width: fishSize,
+                            height: fishSize,
                           ),
                         ),
                       ),
@@ -601,8 +625,8 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
                     // Progress bar phía dưới cá
                     Positioned(
                       bottom: 2,
-                      left: 12,
-                      right: 12,
+                      left: hitboxOffset,
+                      right: hitboxOffset,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(2),
                         child: LinearProgressIndicator(
@@ -621,7 +645,7 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
             ),
           ),
         ),
-      );
+        );
     }
 
     return fishWidgets;

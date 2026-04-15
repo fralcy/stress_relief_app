@@ -288,6 +288,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inventory => 'INVENTORY';
+  @override String get plantCarrot => 'Carrot';
+  @override String get plantTomato => 'Tomato';
+  @override String get plantCorn => 'Corn';
+  @override String get plantSunflower => 'Sunflower';
+  @override String get plantRose => 'Rose';
+  @override String get plantTulip => 'Tulip';
+  @override String get plantWheat => 'Wheat';
+  @override String get plantPumpkin => 'Pumpkin';
+  @override String get plantStrawberry => 'Strawberry';
+  @override String get plantLettuce => 'Lettuce';
 
   // Aquarium
   @override
@@ -942,7 +952,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   // Tutorial - Aquarium
   @override
-  String get tutorialAquariumTankDesc => 'Tap directly on each fish to interact! The 🍞 icon means the fish is hungry — tap to feed it. The 🪙 icon means coins are waiting — tap to collect. The small bar below each fish shows its 20-hour cycle progress.';
+  String get tutorialAquariumTankDesc => 'Tap directly on each fish to interact! The 🍞 icon means the fish is hungry — tap to feed it. The ✅ icon means points are ready to collect — tap to claim. The small bar below each fish shows its 20-hour cycle progress.';
 
   @override
   String get tutorialAquariumShopTitle => 'Fish Shop';

@@ -291,6 +291,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get inventory => 'KHO ĐỒ';
+  @override String get plantCarrot => 'Cà rốt';
+  @override String get plantTomato => 'Cà chua';
+  @override String get plantCorn => 'Ngô';
+  @override String get plantSunflower => 'Hoa hướng dương';
+  @override String get plantRose => 'Hoa hồng';
+  @override String get plantTulip => 'Hoa tulip';
+  @override String get plantWheat => 'Lúa mì';
+  @override String get plantPumpkin => 'Bí ngô';
+  @override String get plantStrawberry => 'Dâu tây';
+  @override String get plantLettuce => 'Xà lách';
 
   // Aquarium
   @override
@@ -945,7 +955,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   // Tutorial - Aquarium
   @override
-  String get tutorialAquariumTankDesc => 'Nhấn trực tiếp vào từng con cá để tương tác! Biểu tượng 🍞 nghĩa là cá đang đói — nhấn để cho ăn. Biểu tượng 🪙 nghĩa là có điểm chờ nhận — nhấn để nhận. Thanh nhỏ phía dưới mỗi cá cho thấy tiến trình chu kỳ 20 giờ.';
+  String get tutorialAquariumTankDesc => 'Nhấn trực tiếp vào từng con cá để tương tác! Biểu tượng 🍞 nghĩa là cá đang đói — nhấn để cho ăn. Biểu tượng ✅ nghĩa là có điểm sẵn sàng nhận — nhấn để nhận. Thanh nhỏ phía dưới mỗi cá cho thấy tiến trình chu kỳ 20 giờ.';
 
   @override
   String get tutorialAquariumShopTitle => 'Cửa hàng cá';

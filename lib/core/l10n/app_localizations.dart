@@ -126,6 +126,16 @@ abstract class AppLocalizations {
   // Garden
   String get gardenTitle;
   String get inventory;
+  String get plantCarrot;
+  String get plantTomato;
+  String get plantCorn;
+  String get plantSunflower;
+  String get plantRose;
+  String get plantTulip;
+  String get plantWheat;
+  String get plantPumpkin;
+  String get plantStrawberry;
+  String get plantLettuce;
 
   // Aquarium
   String get fish;

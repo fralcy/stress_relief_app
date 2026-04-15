@@ -189,13 +189,31 @@ class GardenService {
     final cell = plots[row][col];
     if (cell.plantType == null || !cell.needsWater) return null;
 
+    final now = DateTime.now();
     final newPlots = List<List<PlantCell>>.from(
       plots.map((row) => List<PlantCell>.from(row))
     );
 
+    // Tính thời gian tăng trưởng thực tế tích lũy đến lúc tưới (không tính
+    // khoảng thời gian khô hạn vượt quá 20h). Cập nhật plantedAt thành một
+    // "virtual start" sao cho calculateGrowthStage tiếp tục đúng từ mức hiện tại.
+    DateTime newPlantedAt = cell.plantedAt ?? now;
+    if (cell.plantedAt != null) {
+      final timeSincePlanted = now.difference(cell.plantedAt!);
+      final timeSinceWatered = now.difference(cell.lastWatered);
+      if (timeSinceWatered.inHours >= 20) {
+        final effectiveMinutes = timeSincePlanted.inMinutes
+            - timeSinceWatered.inMinutes
+            + 20 * 60;
+        newPlantedAt = now.subtract(
+            Duration(minutes: effectiveMinutes.clamp(0, timeSincePlanted.inMinutes)));
+      }
+    }
+
     newPlots[row][col] = cell.copyWith(
       needsWater: false,
-      lastWatered: DateTime.now(),
+      lastWatered: now,
+      plantedAt: newPlantedAt,
     );
 
     return newPlots;

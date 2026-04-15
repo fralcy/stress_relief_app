@@ -512,7 +512,7 @@ class _GardenModalState extends State<GardenModal>
                       final row = index ~/ 4;
                       final col = index % 4;
                       return _buildPlotCell(
-                          row, col, _progress.plots[row][col], theme);
+                          row, col, _progress.plots[row][col], theme, cellSize);
                     },
                   ),
                 );
@@ -526,11 +526,12 @@ class _GardenModalState extends State<GardenModal>
 
   // ==================== PLOT CELL ====================
 
-  Widget _buildPlotCell(int row, int col, PlantCell cell, AppTheme theme) {
+  Widget _buildPlotCell(int row, int col, PlantCell cell, AppTheme theme, double cellSize) {
     final key = '$row-$col';
     final effectType = _cellEffects[key];
     final animCtrl = _getCellAnimCtrl(row, col);
 
+    final plantSize = (cellSize * 0.55).clamp(32.0, 72.0);
     return Container(
       decoration: const BoxDecoration(color: Color(0xFF8B7355)),
       child: Stack(
@@ -548,8 +549,8 @@ class _GardenModalState extends State<GardenModal>
                         child: Image.asset(
                           AssetLoader.getPlantAsset(
                               cell.plantType!, cell.growthStage),
-                          width: 40,
-                          height: 40,
+                          width: plantSize,
+                          height: plantSize,
                           errorBuilder: (_, _, _) => Text(
                             GardenService.getPlantIcon(cell.plantType!),
                             style: const TextStyle(fontSize: 24),
@@ -584,8 +585,8 @@ class _GardenModalState extends State<GardenModal>
               child: AnimatedBuilder(
                 animation: animCtrl,
                 builder: (_, _) => Container(
-                  width: 40 * (1 + animCtrl.value),
-                  height: 40 * (1 + animCtrl.value),
+                  width: plantSize * (1 + animCtrl.value),
+                  height: plantSize * (1 + animCtrl.value),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
@@ -766,27 +767,19 @@ class _GardenModalState extends State<GardenModal>
   // ==================== HELPERS ====================
 
   String _getPlantName(String plantType) {
+    final l10n = AppLocalizations.of(context);
     switch (plantType.toLowerCase()) {
-      case 'carrot':
-        return 'Carrot';
-      case 'tomato':
-        return 'Tomato';
-      case 'corn':
-        return 'Corn';
-      case 'sunflower':
-        return 'Sunflower';
-      case 'rose':
-        return 'Rose';
-      case 'tulip':
-        return 'Tulip';
-      case 'wheat':
-        return 'Wheat';
-      case 'pumpkin':
-        return 'Pumpkin';
-      case 'strawberry':
-        return 'Strawberry';
-      default:
-        return plantType;
+      case 'carrot':     return l10n.plantCarrot;
+      case 'tomato':     return l10n.plantTomato;
+      case 'corn':       return l10n.plantCorn;
+      case 'sunflower':  return l10n.plantSunflower;
+      case 'rose':       return l10n.plantRose;
+      case 'tulip':      return l10n.plantTulip;
+      case 'wheat':      return l10n.plantWheat;
+      case 'pumpkin':    return l10n.plantPumpkin;
+      case 'strawberry': return l10n.plantStrawberry;
+      case 'lettuce':    return l10n.plantLettuce;
+      default:           return plantType;
     }
   }
 }

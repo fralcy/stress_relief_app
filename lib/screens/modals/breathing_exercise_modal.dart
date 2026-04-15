@@ -403,6 +403,7 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
 
   Future<void> _stopSession() async {
     _timer?.cancel();
+    if (!mounted) return;
     setState(() => _isActive = false);
 
     // Save session if at least 30s
