@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_theme.dart';
@@ -321,11 +322,19 @@ class _MobilePortraitTutorialScreenState extends State<MobilePortraitTutorialScr
   }
 
   Widget _buildCoopLanPage(AppTheme theme, AppLocalizations l10n) {
+    final platformLine = kIsWeb
+        ? l10n.tutorialPlayTogetherDescWeb
+        : l10n.tutorialPlayTogetherDescNative;
+    final base = l10n.tutorialPlayTogetherDesc;
+    final idx = base.indexOf('\n');
+    final content = idx >= 0
+        ? '${base.substring(0, idx)}\n$platformLine\n\n${base.substring(idx + 1)}'
+        : '$base\n$platformLine';
     return _buildPageScaffold(
       theme: theme,
       l10n: l10n,
-      title: l10n.tutorialLifestyleSupportTitle,
-      content: l10n.tutorialLifestyleSupportDesc,
+      title: l10n.tutorialPlayTogetherTitle,
+      content: content,
       emoji: '🤝',
     );
   }

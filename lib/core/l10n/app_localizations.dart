@@ -317,8 +317,10 @@ abstract class AppLocalizations {
   String get tutorialOverviewDesc;
   String get tutorialTipPrefix;
   String get tutorialTipSuffix;
-  String get tutorialLifestyleSupportTitle;
-  String get tutorialLifestyleSupportDesc;
+  String get tutorialPlayTogetherTitle;
+  String get tutorialPlayTogetherDesc;
+  String get tutorialPlayTogetherDescNative;
+  String get tutorialPlayTogetherDescWeb;
   String get tutorialRewardingTitle;
   String get tutorialRewardingDesc;
   String get tutorialCreativeTitle;

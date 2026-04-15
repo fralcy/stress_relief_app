@@ -579,7 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidEmail => 'Invalid email';
 
   @override
-  String get letsGetStarted => 'Let\'s get started!';
+  String get letsGetStarted => 'Get started!';
 
   @override
   String get welcomeBack => 'Welcome back!';
@@ -709,22 +709,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialTipSuffix => 'icon in the top-left corner for detailed guidance while using each feature.';
 
   @override
-  String get tutorialLifestyleSupportTitle => 'Co-op LAN Games';
+  String get tutorialPlayTogetherTitle => 'Play With Friends';
 
   @override
-  String get tutorialLifestyleSupportDesc => 'Connect with friends over local Wi-Fi. Team up for a rock-stacking balance challenge, or cooperate to catch fireflies — one holds the jar while the other guides the way. Join the fun from your living room!';
+  String get tutorialPlayTogetherDesc => 'Enjoy co-op games with friends — no account required. Three games to choose from: balance a rock tower together, catch fireflies cooperatively, or guide a single paper boat upstream.';
 
   @override
-  String get tutorialRewardingTitle => 'Mini-games & Rewards';
+  String get tutorialPlayTogetherDescNative => 'Connect to the same Wi-Fi, then start or join a room.';
 
   @override
-  String get tutorialRewardingDesc => 'Earn points through relaxing activities: tending your garden or raising fish. Use your rewards to unlock stunning new backgrounds for your rooms in the Decor Shop.';
+  String get tutorialPlayTogetherDescWeb => 'Share a room code — friends can join from anywhere, no shared network needed.';
+
+  @override
+  String get tutorialRewardingTitle => 'Periodic Point-Collection Games';
+
+  @override
+  String get tutorialRewardingDesc => 'Earn points through relaxing activities: tend your garden or raise fish in the aquarium. Use your rewards to unlock new room backgrounds in the Scene Shop.';
 
   @override
   String get tutorialCreativeTitle => 'Creative Space';
 
   @override
-  String get tutorialCreativeDesc => 'Unleash your creativity in the Art Room with a vibrant palette and personal gallery. Visit the Music Room to compose soothing melodies by arranging notes and selecting unique instruments.';
+  String get tutorialCreativeDesc => 'Unleash your creativity in the Art Room with a vibrant palette and personal gallery. Visit the Music Room to compose your own melodies using a range of instruments.';
 
   @override
   String get tutorialPrevious => 'Previous';

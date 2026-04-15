@@ -125,15 +125,17 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         }
         
         // Navigate to main app screen
-        NavigationService.navigateAndClearStack(
-          context,
-          const ResponsiveScreen(),
-        );
+        if (mounted) {
+          NavigationService.navigateAndClearStack(
+            context,
+            const ResponsiveScreen(),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        
+
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

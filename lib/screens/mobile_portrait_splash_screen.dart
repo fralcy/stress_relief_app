@@ -40,7 +40,7 @@ class _MobilePortraitSplashScreenState extends State<MobilePortraitSplashScreen>
     
     _controller.forward();
     
-    // Navigate sau 2.5 giây
+    // Navigate sau 1.5 giây
     _navigateAfterDelay();
   }
 
@@ -57,6 +57,8 @@ class _MobilePortraitSplashScreenState extends State<MobilePortraitSplashScreen>
     // Xác định màn hình đích dựa trên trạng thái user
     final navigationService = NavigationService();
     final targetRoute = await navigationService.getInitialRoute();
+
+    if (!mounted) return;
     
     Widget targetScreen;
     switch (targetRoute) {

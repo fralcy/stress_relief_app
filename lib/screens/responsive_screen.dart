@@ -14,7 +14,8 @@ class ResponsiveScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 720 &&
-            constraints.maxWidth > constraints.maxHeight;
+            constraints.maxWidth > constraints.maxHeight &&
+            constraints.maxHeight >= 600;
         if (isDesktop) {
           return const DesktopLandscapeScreen();
         }

@@ -126,9 +126,18 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             
             // Content
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: _buildStepContent(theme),
+              child: GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity! < -300) {
+                    _nextStep();
+                  } else if (details.primaryVelocity! > 300) {
+                    _previousStep();
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _buildStepContent(theme),
+                ),
               ),
             ),
             
@@ -144,65 +153,51 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
 
   Widget _buildProgressIndicator(AppTheme theme) {
     final l10n = AppLocalizations.of(context);
+    final labels = [l10n.language, l10n.theme, l10n.audio, l10n.menuProfile];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        children: [
-          // Step labels
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStepLabel(l10n.language, 0, theme),
-              _buildStepLabel(l10n.theme, 1, theme),
-              _buildStepLabel(l10n.audio, 2, theme),
-              _buildStepLabel(l10n.menuProfile, 3, theme),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Progress bar
-          Row(
-            children: List.generate(4, (index) {
-              final isActive = index == _currentStep;
-              final isCompleted = index < _currentStep;
-
-              return Expanded(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: 4,
-                  margin: EdgeInsets.only(right: index < 3 ? 8 : 0),
-                  decoration: BoxDecoration(
-                    color: isActive || isCompleted
-                        ? theme.primary
-                        : theme.border,
-                    borderRadius: BorderRadius.circular(2),
-                    boxShadow: isActive ? [
-                      BoxShadow(
-                        color: theme.primary,
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+      child: Row(
+        children: List.generate(4, (index) {
+          final isActive = index == _currentStep;
+          final isCompleted = index < _currentStep;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: index < 3 ? 8 : 0),
+              child: Column(
+                children: [
+                  Builder(
+                    builder: (context) => Text(
+                      labels[index],
+                      style: AppTypography.bodySmall(context,
+                        color: isActive || isCompleted ? theme.primary : theme.border,
+                        fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.normal,
                       ),
-                    ] : null,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildStepLabel(String label, int stepIndex, AppTheme theme) {
-    final isActive = stepIndex == _currentStep;
-    final isCompleted = stepIndex < _currentStep;
-
-    return Builder(
-      builder: (context) => Text(
-        label,
-        style: AppTypography.bodySmall(context,
-          color: isActive || isCompleted ? theme.primary : theme.border,
-          fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.normal,
-        ),
+                  const SizedBox(height: 8),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isActive || isCompleted ? theme.primary : theme.border,
+                      borderRadius: BorderRadius.circular(2),
+                      boxShadow: isActive ? [
+                        BoxShadow(
+                          color: theme.primary,
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ] : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -752,7 +747,8 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: theme.border,
+                  color: theme.background,
+                  border: Border.all(color: theme.border, width: 1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(

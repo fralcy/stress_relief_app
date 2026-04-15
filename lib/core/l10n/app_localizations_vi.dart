@@ -712,22 +712,28 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tutorialTipSuffix => 'ở góc trên bên trái để xem hướng dẫn chi tiết khi sử dụng chúng.';
 
   @override
-  String get tutorialLifestyleSupportTitle => 'Kết nối bạn bè (LAN)';
+  String get tutorialPlayTogetherTitle => 'Chơi Cùng Bạn Bè';
 
   @override
-  String get tutorialLifestyleSupportDesc => 'Gắn kết hơn khi chơi cùng bạn bè qua mạng Wi-Fi nội bộ. Cùng nhau chinh phục thử thách xếp đá cân bằng, hoặc phối hợp bắt đom đóm — một người giữ lọ, một người dẫn đường. Bắt đầu ngay tại phòng khách!';
+  String get tutorialPlayTogetherDesc => 'Cùng chơi hợp tác với bạn bè — không cần đăng nhập. Ba trò chơi: xếp đá cân bằng, bắt đom đóm hợp tác, và đưa thuyền giấy ngược dòng.';
 
   @override
-  String get tutorialRewardingTitle => 'Mini-game & Phần thưởng';
+  String get tutorialPlayTogetherDescNative => 'Kết nối cùng mạng Wi-Fi, tạo hoặc tham gia phòng.';
 
   @override
-  String get tutorialRewardingDesc => 'Tích lũy điểm thưởng qua các hoạt động thư giãn: chăm sóc vườn cây xanh mát hay nuôi cá trong bể. Dùng điểm để thay đổi diện mạo mới cho ngôi nhà tại Cửa hàng không gian.';
+  String get tutorialPlayTogetherDescWeb => 'Chia sẻ mã phòng — bạn bè có thể tham gia từ bất kỳ đâu, không cần cùng mạng.';
+
+  @override
+  String get tutorialRewardingTitle => 'Trò chơi Tích điểm định kỳ';
+
+  @override
+  String get tutorialRewardingDesc => 'Tích lũy điểm thưởng qua các hoạt động thư giãn hàng ngày: chăm sóc vườn cây hay cá trong bể. Dùng điểm để mở khóa bối cảnh mới cho các phòng tại Cửa hàng bối cảnh.';
 
   @override
   String get tutorialCreativeTitle => 'Không gian Sáng tạo';
 
   @override
-  String get tutorialCreativeDesc => 'Thỏa sức sáng tạo tại Phòng tranh với bảng màu rực rỡ và lưu giữ tác phẩm tại thư viện riêng. Ghé thăm Phòng nhạc để tự tay soạn những giai điệu chữa lành từ các nhạc cụ độc đáo.';
+  String get tutorialCreativeDesc => 'Thỏa sức sáng tạo tại Phòng tranh với bảng màu rực rỡ và lưu giữ tác phẩm tại thư viện riêng. Ghé thăm Phòng nhạc để tự tay soạn giai điệu riêng với nhiều nhạc cụ đa dạng.';
 
   @override
   String get tutorialPrevious => 'Trước';
