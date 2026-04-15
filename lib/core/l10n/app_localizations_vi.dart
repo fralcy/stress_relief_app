@@ -375,6 +375,15 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get endGame => 'Kết thúc';
   @override String get rocksStacked => 'Viên đá xếp lên';
   @override String get maxHeightLabel => 'Chiều cao tối đa';
+  @override String get failedToStartServer => 'Không thể khởi động phòng';
+  @override String get connectionFailed => 'Kết nối thất bại';
+  @override String get syncTimeout => 'Hết thời gian đồng bộ — vui lòng thử lại';
+  @override String get playerLeft => 'Một người chơi đã rời phòng';
+  @override String get gameLoading => 'Đang tải trò chơi...';
+  @override String get tapToReplay => 'Chơi lại';
+  @override String get connectingToRoom => 'Đang kết nối...';
+  @override String get pendingApprovalShort => 'Đang chờ host...';
+  @override String get syncingGame => 'Đang đồng bộ...';
 
   // Paper Ship
   @override String get paperShip => 'Thuyền Giấy';

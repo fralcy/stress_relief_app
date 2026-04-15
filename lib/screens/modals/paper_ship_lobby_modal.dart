@@ -278,7 +278,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     } else {
       setState(() {
         _state = _LobbyState.error;
-        _errorMessage = lan.errorMessage ?? 'Failed to start server';
+        _errorMessage = lan.errorMessage ?? AppLocalizations.of(context).failedToStartServer;
       });
     }
   }
@@ -344,7 +344,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     } else {
       setState(() {
         _state = _LobbyState.error;
-        _errorMessage = lan.errorMessage ?? 'Connection failed';
+        _errorMessage = lan.errorMessage ?? AppLocalizations.of(context).connectionFailed;
       });
     }
   }
@@ -423,7 +423,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
         if (!mounted || _state != _LobbyState.syncing) return;
         setState(() {
           _state = _LobbyState.error;
-          _errorMessage = 'Sync timeout';
+          _errorMessage = AppLocalizations.of(context).syncTimeout;
         });
       });
     });
@@ -499,13 +499,16 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
           setState(() => _state = _LobbyState.idle);
         }
       } else {
-        Navigator.of(context).pop();
-        PaperShipModal.show(
+        await PaperShipModal.show(
           context,
           seed: seed,
           localSlot: localSlot.clamp(1, 4),
           playerOrder: playerOrder,
         );
+        if (!mounted) return;
+        _gameStarted = false;
+        setState(() => _state =
+            LanService().isActive ? _LobbyState.clientLobby : _LobbyState.idle);
       }
     });
   }
@@ -543,14 +546,14 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
       _LobbyState.hostLobby        => _buildHostLobby(theme, l10n, room),
       _LobbyState.clientScanning   => _buildSpinner(theme, l10n, label: l10n.scanning, showCancel: true),
       _LobbyState.clientScanResults => _buildScanResults(theme, l10n),
-      _LobbyState.clientConnecting  => _buildSpinner(theme, l10n, label: l10n.connecting, showCancel: true),
+      _LobbyState.clientConnecting  => _buildSpinner(theme, l10n, label: l10n.connectingToRoom, showCancel: true),
       _LobbyState.clientPending    => _buildClientPending(theme, l10n, room),
       _LobbyState.clientLobby      => _buildClientLobby(theme, l10n, room),
       _LobbyState.disconnected     => _buildDisconnected(theme, l10n),
       _LobbyState.clientReconnecting => _buildSpinner(theme, l10n,
           label: '${l10n.reconnecting} ($_reconnectAttempt/$_maxReconnectAttempts)',
           showCancel: true),
-      _LobbyState.syncing          => _buildSpinner(theme, l10n, label: l10n.syncing),
+      _LobbyState.syncing          => _buildSpinner(theme, l10n, label: l10n.syncingGame),
       _LobbyState.error            => _buildError(theme, l10n),
     };
   }
@@ -843,7 +846,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
             style: const TextStyle(fontSize: 40),
           ),
         const SizedBox(height: 12),
-        Text(l10n.pendingApproval,
+        Text(l10n.pendingApprovalShort,
             style: AppTypography.bodyMedium(context, color: theme.primary)),
         const SizedBox(height: 20),
         ElevatedButton(

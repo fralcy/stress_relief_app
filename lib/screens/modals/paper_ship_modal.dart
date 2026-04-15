@@ -254,6 +254,14 @@ class _PaperShipModalState extends State<PaperShipModal>
         if (!_isHost) {
           setState(() => _world.applyHostSnapshot(data));
         }
+      case 'playerLeft':
+      case 'bye':
+        if (!_gameEnded && mounted) {
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.playerLeft)),
+          );
+        }
     }
   }
 
@@ -327,13 +335,58 @@ class _PaperShipModalState extends State<PaperShipModal>
   // Game end
   // ─────────────────────────────────────────────────────────
 
-  void _onGameEnd(Map<String, dynamic> _) {
+  void _onGameEnd(Map<String, dynamic> data) {
     if (_gameEnded || !mounted) return;
     setState(() => _gameEnded = true);
-    if (!_isHost) {
-      WidgetsBinding.instance.addPostFrameCallback(
-          (_) { if (mounted) Navigator.of(context).pop(); });
-    }
+    final dist = (data['dist'] as num?)?.toDouble()
+        ?? (_worldReady && _canvasHeight > 0
+            ? (_world.buildRenderData().distanceTraveled / _canvasHeight * 100)
+            : 0.0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      final theme = context.theme;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          backgroundColor: theme.background,
+          title: Text(l10n.paperShip,
+              style: AppTypography.bodyLarge(context,
+                  color: theme.text, fontWeight: FontWeight.bold)),
+          content: Text(
+            '${dist.toStringAsFixed(1)} cm',
+            style: AppTypography.bodyMedium(context, color: theme.text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context)
+                  ..pop()
+                  ..pop();
+              },
+              child: Text(l10n.ok, style: TextStyle(color: theme.primary)),
+            ),
+            if (_isSolo)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // close dialog
+                  setState(() {
+                    _gameEnded = false;
+                    _worldReady = false;
+                    _canvasWidth = 0;
+                    _canvasHeight = 0;
+                    _lastTick = null;
+                    _accumulator = 0.0;
+                  });
+                },
+                child: Text(l10n.tapToReplay,
+                    style: TextStyle(color: theme.primary)),
+              ),
+          ],
+        ),
+      );
+    });
   }
 
   // ─────────────────────────────────────────────────────────
@@ -369,7 +422,7 @@ class _PaperShipModalState extends State<PaperShipModal>
                 ),
               ),
               // End game
-              if (_isSolo || _isHost)
+              if ((_isSolo || _isHost) && !_gameEnded)
                 TextButton(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -377,13 +430,13 @@ class _PaperShipModalState extends State<PaperShipModal>
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   onPressed: () {
+                    final dist = _canvasHeight > 0
+                        ? (snap?.distanceTraveled ?? 0) / _canvasHeight * 100
+                        : 0.0;
                     if (!_isSolo) {
-                      context.read<GameRoomProvider>().endGame(
-                        {'dist': _canvasHeight > 0 ? (snap?.distanceTraveled ?? 0) / _canvasHeight * 100 : 0.0},
-                      );
-                      _onGameEnd({});
+                      context.read<GameRoomProvider>().endGame({'dist': dist});
                     }
-                    Navigator.of(context).pop();
+                    _onGameEnd({'dist': dist});
                   },
                   child: Text(l10n.endGame,
                       style: TextStyle(color: theme.primary)),
@@ -405,6 +458,21 @@ class _PaperShipModalState extends State<PaperShipModal>
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted && !_worldReady) setState(_initWorld);
                     });
+                  }
+
+                  if (!_worldReady) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: theme.primary),
+                          const SizedBox(height: 12),
+                          Text(l10n.gameLoading,
+                              style: AppTypography.bodySmall(context,
+                                  color: theme.border)),
+                        ],
+                      ),
+                    );
                   }
 
                   return Listener(

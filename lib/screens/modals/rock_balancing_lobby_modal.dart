@@ -297,7 +297,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     } else {
       setState(() {
         _state = _LobbyState.error;
-        _errorMessage = lan.errorMessage ?? 'Failed to start server';
+        _errorMessage = lan.errorMessage ?? AppLocalizations.of(context).failedToStartServer;
       });
     }
   }
@@ -359,7 +359,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     } else {
       setState(() {
         _state = _LobbyState.error;
-        _errorMessage = lan.errorMessage ?? 'Connection failed';
+        _errorMessage = lan.errorMessage ?? AppLocalizations.of(context).connectionFailed;
       });
     }
   }
@@ -456,7 +456,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
         if (!mounted || _state != _LobbyState.syncing) return;
         setState(() {
           _state = _LobbyState.error;
-          _errorMessage = 'Sync timeout — host failed to send game state';
+          _errorMessage = AppLocalizations.of(context).syncTimeout;
         });
       });
     });
@@ -529,8 +529,11 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           setState(() => _state = _LobbyState.idle);
         }
       } else {
-        Navigator.of(context).pop();
-        RockBalancingModal.show(context, rockCount: rockCount, rockSeed: rockSeed);
+        await RockBalancingModal.show(context, rockCount: rockCount, rockSeed: rockSeed);
+        if (!mounted) return;
+        _gameStarted = false;
+        setState(() => _state =
+            LanService().isActive ? _LobbyState.clientLobby : _LobbyState.idle);
       }
     });
   }
@@ -583,7 +586,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
       _LobbyState.clientScanResults =>
         _buildScanResults(theme, l10n),
       _LobbyState.clientConnecting => _buildSpinner(theme, l10n,
-          label: l10n.connecting, showCancel: true),
+          label: l10n.connectingToRoom, showCancel: true),
       _LobbyState.clientPending => _buildClientPending(theme, l10n, room),
       _LobbyState.clientLobby => _buildClientLobby(theme, l10n, room),
       _LobbyState.disconnected => _buildDisconnected(theme, l10n),
@@ -591,7 +594,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
           label: '${l10n.reconnecting} ($_reconnectAttempt/$_maxReconnectAttempts)',
           showCancel: true),
       _LobbyState.syncing => _buildSpinner(theme, l10n,
-          label: l10n.syncing),
+          label: l10n.syncingGame),
       _LobbyState.error => _buildError(theme, l10n),
     };
   }
@@ -915,7 +918,7 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
             style: const TextStyle(fontSize: 40),
           ),
         const SizedBox(height: 12),
-        Text(l10n.pendingApproval,
+        Text(l10n.pendingApprovalShort,
             style: AppTypography.bodyMedium(context, color: theme.primary)),
         const SizedBox(height: 20),
         ElevatedButton(

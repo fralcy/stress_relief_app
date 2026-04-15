@@ -179,6 +179,15 @@ abstract class AppLocalizations {
   String get endGame;
   String get rocksStacked;
   String get maxHeightLabel;
+  String get failedToStartServer;
+  String get connectionFailed;
+  String get syncTimeout;
+  String get playerLeft;
+  String get gameLoading;
+  String get tapToReplay;
+  String get connectingToRoom;
+  String get pendingApprovalShort;
+  String get syncingGame;
 
   // Paper Ship
   String get paperShip;

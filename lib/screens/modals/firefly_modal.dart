@@ -398,6 +398,12 @@ class _FireflyModalState extends State<FireflyModal>
         if (toolId != null && _worldReady) {
           setState(() => _world.removeTool(toolId));
         }
+        if (!_gameEnded && mounted) {
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.playerLeft)),
+          );
+        }
     }
   }
 
@@ -483,13 +489,38 @@ class _FireflyModalState extends State<FireflyModal>
   // Game end
   // ─────────────────────────────────────────────────────────
 
-  void _onGameEnd(Map<String, dynamic> _) {
+  void _onGameEnd(Map<String, dynamic> data) {
     if (_gameEnded || !mounted) return;
     setState(() => _gameEnded = true);
-    if (!_isHost) {
-      WidgetsBinding.instance.addPostFrameCallback(
-          (_) { if (mounted) Navigator.of(context).pop(); });
-    }
+    final caughtCount = (data['caughtCount'] as num?)?.toInt()
+        ?? (_worldReady ? _world.buildRenderData().totalCaught : 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      final theme = context.theme;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          backgroundColor: theme.background,
+          title: Text(l10n.fireflyCatching,
+              style: AppTypography.bodyLarge(context,
+                  color: theme.text, fontWeight: FontWeight.bold)),
+          content: Text(
+            '${l10n.caught}: $caughtCount',
+            style: AppTypography.bodyMedium(context, color: theme.text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context)
+                ..pop()
+                ..pop(),
+              child: Text(l10n.ok, style: TextStyle(color: theme.primary)),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   void _confirmExit() {
@@ -682,7 +713,7 @@ class _FireflyModalState extends State<FireflyModal>
                   child: Text(l10n.endGame,
                       style: TextStyle(color: theme.primary)),
                 ),
-              if (!_isSolo && _isHost)
+              if (!_isSolo && _isHost && !_gameEnded)
                 TextButton(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -690,11 +721,11 @@ class _FireflyModalState extends State<FireflyModal>
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   onPressed: () {
+                    final caught = snap?.totalCaught ?? 0;
                     context.read<GameRoomProvider>().endGame(
-                          {'caughtCount': snap?.totalCaught ?? 0},
+                          {'caughtCount': caught},
                         );
-                    _onGameEnd({});
-                    Navigator.of(context).pop();
+                    _onGameEnd({'caughtCount': caught});
                   },
                   child: Text(l10n.endGame,
                       style: TextStyle(color: theme.primary)),
@@ -713,6 +744,21 @@ class _FireflyModalState extends State<FireflyModal>
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted && !_worldReady) setState(_initWorld);
                 });
+              }
+
+              if (!_worldReady) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: theme.primary),
+                      const SizedBox(height: 12),
+                      Text(l10n.gameLoading,
+                          style: AppTypography.bodySmall(context,
+                              color: theme.border)),
+                    ],
+                  ),
+                );
               }
 
               Widget canvas = Stack(

@@ -386,7 +386,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     } else {
       setState(() {
         _state = _LobbyState.error;
-        _errorMessage = lan.errorMessage ?? 'Failed to start server';
+        _errorMessage = lan.errorMessage ?? AppLocalizations.of(context).failedToStartServer;
       });
     }
   }
@@ -459,7 +459,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     } else {
       setState(() {
         _state = _LobbyState.error;
-        _errorMessage = lan.errorMessage ?? 'Connection failed';
+        _errorMessage = lan.errorMessage ?? AppLocalizations.of(context).connectionFailed;
       });
     }
   }
@@ -520,7 +520,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       LanService().sendMessage(GameMessage.snapshotRequest(_localUid));
       _syncTimeoutTimer = Timer(const Duration(seconds: 5), () {
         if (!mounted || _state != _LobbyState.syncing) return;
-        setState(() { _state = _LobbyState.error; _errorMessage = 'Sync timeout'; });
+        setState(() { _state = _LobbyState.error; _errorMessage = AppLocalizations.of(context).syncTimeout; });
       });
     });
 
@@ -623,14 +623,17 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           setState(() => _state = _LobbyState.idle);
         }
       } else {
-        Navigator.of(context).pop();
-        FireflyModal.show(context,
+        await FireflyModal.show(context,
             maxOnScreen: count,
             fireflySeed: seed,
             role: role,
             localToolId: localToolId,
             playerOrder: playerOrder,
             allRoles: allRoles);
+        if (!mounted) return;
+        _gameStarted = false;
+        setState(() => _state =
+            LanService().isActive ? _LobbyState.clientLobby : _LobbyState.idle);
       }
     });
   }
@@ -678,15 +681,15 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
           label: l10n.scanning, showCancel: true),
       _LobbyState.clientScanResults => _buildScanResults(theme, l10n),
       _LobbyState.clientConnecting => _buildSpinner(theme, l10n,
-          label: l10n.connecting, showCancel: true),
+          label: l10n.connectingToRoom, showCancel: true),
       _LobbyState.clientPending => _buildSpinner(theme, l10n,
-          label: l10n.pendingApproval, showCancel: true),
+          label: l10n.pendingApprovalShort, showCancel: true),
       _LobbyState.clientLobby => _buildClientLobby(theme, l10n, room),
       _LobbyState.disconnected => _buildDisconnected(theme, l10n),
       _LobbyState.clientReconnecting => _buildSpinner(theme, l10n,
           label: '${l10n.reconnecting} ($_reconnectAttempt/$_maxReconnectAttempts)',
           showCancel: true),
-      _LobbyState.syncing => _buildSpinner(theme, l10n, label: l10n.syncing),
+      _LobbyState.syncing => _buildSpinner(theme, l10n, label: l10n.syncingGame),
       _LobbyState.error => _buildError(theme, l10n),
     };
   }

@@ -372,6 +372,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get endGame => 'End game';
   @override String get rocksStacked => 'Rocks stacked';
   @override String get maxHeightLabel => 'Max height';
+  @override String get failedToStartServer => 'Failed to start server';
+  @override String get connectionFailed => 'Connection failed';
+  @override String get syncTimeout => 'Sync timeout — please try again';
+  @override String get playerLeft => 'A player left the game';
+  @override String get gameLoading => 'Loading game...';
+  @override String get tapToReplay => 'Play Again';
+  @override String get connectingToRoom => 'Connecting...';
+  @override String get pendingApprovalShort => 'Waiting for host...';
+  @override String get syncingGame => 'Syncing game...';
 
   // Paper Ship
   @override String get paperShip => 'Paper Ship';

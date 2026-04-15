@@ -424,6 +424,15 @@ class _RockBalancingModalState extends State<RockBalancingModal>
           setState(() => _bestHeight = bh);
           _triggerCelebration();
         }
+
+      case 'playerLeft':
+      case 'bye':
+        if (!_gameEnded && mounted) {
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.playerLeft)),
+          );
+        }
     }
   }
 
@@ -816,6 +825,21 @@ class _RockBalancingModalState extends State<RockBalancingModal>
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted && !_physicsReady) setState(_generateRocks);
                 });
+              }
+
+              if (!_physicsReady) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: theme.primary),
+                      const SizedBox(height: 12),
+                      Text(l10n.gameLoading,
+                          style: AppTypography.bodySmall(context,
+                              color: theme.border)),
+                    ],
+                  ),
+                );
               }
 
               return Center(
