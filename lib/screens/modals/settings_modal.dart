@@ -140,7 +140,7 @@ class _SettingsModalState extends State<SettingsModal> {
       await context.read<AchievementProvider>().retroactiveCheck(score);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text(result),
           duration: const Duration(seconds: 3),
@@ -150,10 +150,10 @@ class _SettingsModalState extends State<SettingsModal> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
-      
-      ScaffoldMessenger.of(context).showSnackBar(
+
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
-          content: Text('Sync failed: $e'),
+          content: Text('${l10n.syncFailed}: $e'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           backgroundColor: context.colorScheme.error,
@@ -172,7 +172,7 @@ class _SettingsModalState extends State<SettingsModal> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.logout),
-        content: Text('Bạn có chắc chắn muốn đăng xuất? Dữ liệu sẽ được đồng bộ và xóa khỏi thiết bị.'),
+        content: Text(l10n.logoutConfirmContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -200,7 +200,7 @@ class _SettingsModalState extends State<SettingsModal> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text('Đang đồng bộ và đăng xuất...'),
+            Text(l10n.syncingAndLoggingOut),
           ],
         ),
       ),
@@ -223,19 +223,19 @@ class _SettingsModalState extends State<SettingsModal> {
         const MobilePortraitLoginScreen(),
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đăng xuất thành công'),
-          duration: Duration(seconds: 3),
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.logoutSuccessful),
+          duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
-          content: Text('Logout failed: $e'),
+          content: Text('${l10n.logoutFailed}: $e'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           backgroundColor: errorColor,
@@ -262,8 +262,8 @@ class _SettingsModalState extends State<SettingsModal> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exit Debug Mode'),
-        content: const Text('Bạn có chắc chắn muốn thoát? Dữ liệu sẽ được xóa và trở về màn hình chào mừng.'),
+        title: Text(l10n.exitDebugModeTitle),
+        content: Text(l10n.exitDebugModeConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -272,7 +272,7 @@ class _SettingsModalState extends State<SettingsModal> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: errorColor),
-            child: const Text('Exit'),
+            child: Text(l10n.exitDebugModeButton),
           ),
         ],
       ),
@@ -285,13 +285,13 @@ class _SettingsModalState extends State<SettingsModal> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (context) => AlertDialog(
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Đang xóa dữ liệu và thoát...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(l10n.clearingDataAndExiting),
           ],
         ),
       ),
@@ -313,19 +313,19 @@ class _SettingsModalState extends State<SettingsModal> {
         const MobilePortraitWelcomeScreen(),
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã thoát debug mode'),
-          duration: Duration(seconds: 2),
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.debugModeExited),
+          duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
-          content: Text('Exit failed: $e'),
+          content: Text('${l10n.operationFailed}: $e'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           backgroundColor: errorColor,

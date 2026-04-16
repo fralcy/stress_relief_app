@@ -12,6 +12,9 @@ class NavigationService {
   static final NavigationService _instance = NavigationService._internal();
   factory NavigationService() => _instance;
   NavigationService._internal();
+
+  /// Global key for showing snackbars above all overlays (including modal bottom sheets).
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
   
   final AuthService _authService = AuthService();
   

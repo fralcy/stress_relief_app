@@ -101,6 +101,7 @@ class _ProfileContentState extends State<_ProfileContent> {
           controller: _nameCtrl,
           style: AppTypography.bodyMedium(context, color: theme.text),
           decoration: InputDecoration(
+            filled: false,
             labelText: l10n.name,
             labelStyle: AppTypography.bodySmall(context,
                 color: theme.text),

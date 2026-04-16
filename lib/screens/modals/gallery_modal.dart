@@ -75,7 +75,7 @@ class _GalleryModalState extends State<GalleryModal> {
     if (_paintings.isEmpty) {
       return Center(
         child: Text(
-          'Không có tranh nào',
+          l10n.noPaintingsYet,
           style: TextStyle(color: theme.text),
         ),
       );

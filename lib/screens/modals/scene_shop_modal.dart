@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/providers/scene_provider.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/utils/scene_shop_service.dart';
+import '../../core/utils/navigation_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/constants/app_assets.dart';
 import '../../models/scene_models.dart';
@@ -33,33 +35,24 @@ class SceneShopModal extends StatefulWidget {
 }
 
 class _SceneShopModalState extends State<SceneShopModal> {
-  final Set<SceneSet> _expandedSets = {};
-
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    
+
     return Consumer2<SceneProvider, ScoreProvider>(
       builder: (context, sceneProvider, scoreProvider, child) {
-        // Create fresh service instance with current providers for reactive updates
         final shopService = SceneShopService(
           sceneProvider: sceneProvider,
           scoreProvider: scoreProvider,
         );
         final collections = shopService.getSceneCollections();
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Points display
             _buildPointsDisplay(scoreProvider.currentPoints, theme),
-            
             const SizedBox(height: 20),
-            
-            // Collections list - rebuild each time for reactive state
-            ...collections.map((collection) => 
-              _buildCollectionCard(collection, theme)
-            ),
+            ...collections.map((c) => _buildCollectionCard(c, theme)),
           ],
         );
       },
@@ -80,45 +73,24 @@ class _SceneShopModalState extends State<SceneShopModal> {
         '${l10n.yourPoints}: $currentPoints',
         textAlign: TextAlign.center,
         style: AppTypography.bodyLarge(context,
-          color: theme.text,
-          fontWeight: FontWeight.w600,
-        ),
+            color: theme.text, fontWeight: FontWeight.w600),
       ),
     );
   }
 
   Widget _buildCollectionCard(SceneCollectionInfo collection, AppTheme theme) {
     final l10n = AppLocalizations.of(context);
-    String collectionName;
-    
-    // Map scene sets to localized names
-    switch (collection.sceneSet) {
-      case SceneSet.defaultSet:
-        collectionName = l10n.cozyHome;
-        break;
-      case SceneSet.forest:
-        collectionName = l10n.forest;
-        break;
-      case SceneSet.beach:
-        collectionName = l10n.beach;
-        break;
-      case SceneSet.peachBlossom:
-        collectionName = l10n.peachBlossom;
-        break;
-      case SceneSet.desert:
-        collectionName = l10n.desert;
-        break;
-      case SceneSet.cosmic:
-        collectionName = l10n.cosmic;
-        break;
-      case SceneSet.castle:
-        collectionName = l10n.castle;
-        break;
-      case SceneSet.winter:
-        collectionName = l10n.winter;
-        break;
-    }
-    
+    final collectionName = switch (collection.sceneSet) {
+      SceneSet.defaultSet  => l10n.cozyHome,
+      SceneSet.forest      => l10n.forest,
+      SceneSet.beach       => l10n.beach,
+      SceneSet.peachBlossom => l10n.peachBlossom,
+      SceneSet.desert      => l10n.desert,
+      SceneSet.cosmic      => l10n.cosmic,
+      SceneSet.castle      => l10n.castle,
+      SceneSet.winter      => l10n.winter,
+    };
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: AppCard(
@@ -130,247 +102,92 @@ class _SceneShopModalState extends State<SceneShopModal> {
   }
 
   Widget _buildCollectionContent(SceneCollectionInfo collection, AppTheme theme) {
-    final isExpanded = _expandedSets.contains(collection.sceneSet);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Living room preview thumbnail
-        _buildLivingRoomPreview(collection),
+        // Slider with left/right arrows — covers all 5 rooms
+        _CollectionPreviewSlider(scenes: AppAssets.sceneAssets[collection.sceneSet]!),
 
         const SizedBox(height: 12),
 
-        // Description and price info
         _buildCollectionInfo(collection, theme),
 
         const SizedBox(height: 16),
 
-        // Action buttons
         _buildActionButtons(collection, theme),
-
-        const SizedBox(height: 4),
-
-        Divider(color: theme.border, height: 1),
-
-        // Expand toggle
-        _buildExpandToggle(collection, theme, isExpanded),
-
-        // Remaining 4 rooms grid (animated)
-        AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          child: isExpanded
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: _buildRoomsGrid(collection),
-                )
-              : const SizedBox.shrink(),
-        ),
       ],
-    );
-  }
-
-  Widget _buildLivingRoomPreview(SceneCollectionInfo collection) {
-    final path = AppAssets.sceneAssets[collection.sceneSet]![SceneType.livingRoom]!;
-    return AspectRatio(
-      aspectRatio: 1,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          path,
-          fit: BoxFit.cover,
-          errorBuilder: (_, e, stack) => _buildImagePlaceholder(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePlaceholder() {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Container(
-        color: Colors.grey.shade200,
-        child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400, size: 32),
-      ),
-    );
-  }
-
-  Widget _buildExpandToggle(SceneCollectionInfo collection, AppTheme theme, bool isExpanded) {
-    final l10n = AppLocalizations.of(context);
-    return InkWell(
-      onTap: () {
-        setState(() {
-          if (isExpanded) {
-            _expandedSets.remove(collection.sceneSet);
-          } else {
-            _expandedSets.add(collection.sceneSet);
-          }
-        });
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              isExpanded ? l10n.scenePreviewCollapse : l10n.scenePreviewExpand,
-              style: AppTypography.bodySmall(context, color: theme.text),
-            ),
-            const SizedBox(width: 4),
-            AnimatedRotation(
-              turns: isExpanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Icon(Icons.keyboard_arrow_down, size: 16, color: theme.text),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoomsGrid(SceneCollectionInfo collection) {
-    final scenes = AppAssets.sceneAssets[collection.sceneSet]!;
-    final types = [SceneType.garden, SceneType.aquarium, SceneType.paintingRoom, SceneType.musicRoom];
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildRoomThumbnail(scenes[types[0]]!)),
-            const SizedBox(width: 6),
-            Expanded(child: _buildRoomThumbnail(scenes[types[1]]!)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(child: _buildRoomThumbnail(scenes[types[2]]!)),
-            const SizedBox(width: 6),
-            Expanded(child: _buildRoomThumbnail(scenes[types[3]]!)),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRoomThumbnail(String path) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          path,
-          fit: BoxFit.cover,
-          errorBuilder: (_, e, stack) => _buildImagePlaceholder(),
-        ),
-      ),
     );
   }
 
   Widget _buildCollectionInfo(SceneCollectionInfo collection, AppTheme theme) {
     final l10n = AppLocalizations.of(context);
-    String description;
-    
-    // Map scene sets to localized descriptions
-    switch (collection.sceneSet) {
-      case SceneSet.defaultSet:
-        description = l10n.cozyHomeDesc;
-        break;
-      case SceneSet.forest:
-        description = l10n.forestDesc;
-        break;
-      case SceneSet.beach:
-        description = l10n.beachDesc;
-        break;
-      case SceneSet.peachBlossom:
-        description = l10n.peachBlossomDesc;
-        break;
-      case SceneSet.winter:
-        description = l10n.winterDesc;
-        break;
-      case SceneSet.desert:
-        description = l10n.desertDesc;
-        break;
-      case SceneSet.cosmic:
-        description = l10n.cosmicDesc;
-        break;
-      case SceneSet.castle:
-        description = l10n.castleDesc;
-        break;
-    }
-    
+    final description = switch (collection.sceneSet) {
+      SceneSet.defaultSet   => l10n.cozyHomeDesc,
+      SceneSet.forest       => l10n.forestDesc,
+      SceneSet.beach        => l10n.beachDesc,
+      SceneSet.peachBlossom => l10n.peachBlossomDesc,
+      SceneSet.winter       => l10n.winterDesc,
+      SceneSet.desert       => l10n.desertDesc,
+      SceneSet.cosmic       => l10n.cosmicDesc,
+      SceneSet.castle       => l10n.castleDesc,
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           description,
-          style: AppTypography.bodyMedium(context,
-            color: theme.text,
-          ),
+          style: AppTypography.bodyMedium(context, color: theme.text),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         if (collection.isFree) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: context.secondaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              AppLocalizations.of(context).free,
-              style: AppTypography.bodySmall(context,
-                color: context.onSecondaryContainer,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ] else ...[
+          _buildBadge(l10n.free),
+        ] else if (!collection.isUnlocked) ...[
           Row(
             children: [
-              if (!collection.isUnlocked) ...[
+              Text(
+                '${collection.price} ${l10n.points}',
+                style: AppTypography.bodyLarge(context,
+                    color: theme.primary, fontWeight: FontWeight.bold),
+              ),
+              if (!collection.canAfford) ...[
+                const SizedBox(width: 8),
                 Text(
-                  '${collection.price} ${AppLocalizations.of(context).points}',
-                  style: AppTypography.bodyLarge(context,
-                    color: theme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (!collection.canAfford) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    '(${AppLocalizations.of(context).notEnoughPoints})',
-                    style: AppTypography.bodySmall(context,
-                      color: context.colorScheme.error,
-                    ),
-                  ),
-                ],
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: context.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    AppLocalizations.of(context).ownedBadge,
-                    style: AppTypography.bodySmall(context,
-                      color: context.onSecondaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  '(${l10n.notEnoughPoints})',
+                  style: AppTypography.bodySmall(context,
+                      color: context.colorScheme.error),
                 ),
               ],
             ],
           ),
+        ] else ...[
+          _buildBadge(l10n.ownedBadge),
         ],
       ],
     );
   }
 
+  Widget _buildBadge(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: context.secondaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.bodySmall(context,
+            color: context.onSecondaryContainer, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
   Widget _buildActionButtons(SceneCollectionInfo collection, AppTheme theme) {
+    final l10n = AppLocalizations.of(context);
+
     if (collection.isCurrentSet) {
-      // Already using this set
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -380,35 +197,29 @@ class _SceneShopModalState extends State<SceneShopModal> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.check_circle,
-              color: context.onSecondaryContainer,
-              size: 16,
-            ),
+            Icon(Icons.check_circle,
+                color: context.onSecondaryContainer, size: 16),
             const SizedBox(width: 8),
             Text(
-              AppLocalizations.of(context).currentlyUsing,
+              l10n.currentlyUsing,
               style: AppTypography.bodyMedium(context,
-                color: context.onSecondaryContainer,
-                fontWeight: FontWeight.w500,
-              ),
+                  color: context.onSecondaryContainer,
+                  fontWeight: FontWeight.w500),
             ),
           ],
         ),
       );
     } else if (collection.isUnlocked) {
-      // Can switch to this set
       return AppButton(
         icon: Icons.palette,
-        label: AppLocalizations.of(context).useCollection,
+        label: l10n.useCollection,
         onPressed: () => _handleUseCollection(collection),
         width: double.infinity,
       );
     } else {
-      // Need to buy this set
       return AppButton(
         icon: Icons.shopping_cart,
-        label: collection.isFree ? AppLocalizations.of(context).free : AppLocalizations.of(context).buyCollection,
+        label: collection.isFree ? l10n.free : l10n.buyCollection,
         onPressed: () => _handlePurchaseCollection(collection),
         isDisabled: !collection.canAfford && !collection.isFree,
         width: double.infinity,
@@ -416,38 +227,234 @@ class _SceneShopModalState extends State<SceneShopModal> {
     }
   }
 
-
-
   Future<void> _handlePurchaseCollection(SceneCollectionInfo collection) async {
+    final l10n = AppLocalizations.of(context);
     try {
       final sceneProvider = Provider.of<SceneProvider>(context, listen: false);
       final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
-      final shopService = SceneShopService(
+      await SceneShopService(
         sceneProvider: sceneProvider,
         scoreProvider: scoreProvider,
+      ).purchaseSceneCollection(collection.sceneSet);
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.purchaseSuccessful),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-      
-      await shopService.purchaseSceneCollection(collection.sceneSet);
-      // Providers will automatically notify listeners and update UI
-      // No manual setState needed due to Consumer2 watching providers
     } catch (e) {
-      // Silent fail for performance
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.purchaseFailed}: $e'),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
     }
   }
 
   Future<void> _handleUseCollection(SceneCollectionInfo collection) async {
+    final l10n = AppLocalizations.of(context);
     try {
       final sceneProvider = Provider.of<SceneProvider>(context, listen: false);
       final scoreProvider = Provider.of<ScoreProvider>(context, listen: false);
-      final shopService = SceneShopService(
+      await SceneShopService(
         sceneProvider: sceneProvider,
         scoreProvider: scoreProvider,
-      );
-      
-      await shopService.useSceneCollection(collection.sceneSet);
+      ).useSceneCollection(collection.sceneSet);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      // Silent fail for performance
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.operationFailed}: $e'),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Slider with arrow navigation and auto-advance for scene collection previews
+// ---------------------------------------------------------------------------
+
+class _CollectionPreviewSlider extends StatefulWidget {
+  final Map<SceneType, String> scenes;
+
+  const _CollectionPreviewSlider({required this.scenes});
+
+  @override
+  State<_CollectionPreviewSlider> createState() =>
+      _CollectionPreviewSliderState();
+}
+
+class _CollectionPreviewSliderState extends State<_CollectionPreviewSlider> {
+  static const _roomOrder = [
+    SceneType.livingRoom,
+    SceneType.garden,
+    SceneType.aquarium,
+    SceneType.paintingRoom,
+    SceneType.musicRoom,
+  ];
+
+  late final PageController _pageController;
+  late Timer _timer;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      _pageController.animateToPage(
+        (_currentPage + 1) % _roomOrder.length,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  /// Navigate to a specific page and reset the auto-advance countdown.
+  void _goTo(int page) {
+    _timer.cancel();
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+    _startTimer();
+  }
+
+  void _prev() => _goTo((_currentPage - 1 + _roomOrder.length) % _roomOrder.length);
+  void _next() => _goTo((_currentPage + 1) % _roomOrder.length);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context);
+
+    final roomLabels = [
+      l10n.livingRoom,
+      l10n.garden,
+      l10n.aquarium,
+      l10n.paintingRoom,
+      l10n.musicRoom,
+    ];
+
+    return Column(
+      children: [
+        // Image pager — no overlay
+        AspectRatio(
+          aspectRatio: 1,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+              itemCount: _roomOrder.length,
+              itemBuilder: (context, index) {
+                final path = widget.scenes[_roomOrder[index]];
+                if (path == null) return _placeholder();
+                return Image.asset(
+                  path,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, e, s) => _placeholder(),
+                );
+              },
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Controls row: [←]  dots + room name  [→]
+        Row(
+          children: [
+            _ArrowButton(icon: Icons.chevron_left_rounded, onTap: _prev),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Dot indicators
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_roomOrder.length, (i) {
+                      final active = i == _currentPage;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: active ? 14 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: active ? theme.primary : theme.border,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 4),
+                  // Room name
+                  Text(
+                    roomLabels[_currentPage],
+                    style: AppTypography.bodySmall(context,
+                        color: theme.text.withValues(alpha: 0.6)),
+                  ),
+                ],
+              ),
+            ),
+            _ArrowButton(icon: Icons.chevron_right_rounded, onTap: _next),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _placeholder() => Container(
+        color: Colors.grey.shade200,
+        child: Icon(Icons.image_not_supported_outlined,
+            color: Colors.grey.shade400, size: 32),
+      );
+}
+
+// Semi-transparent arrow button overlaid on the image
+class _ArrowButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ArrowButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Center(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: theme.primary,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: context.onPrimary, size: 22),
+        ),
+      ),
+    );
   }
 }

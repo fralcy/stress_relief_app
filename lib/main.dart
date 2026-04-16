@@ -23,6 +23,7 @@ import 'firebase_options.dart';
 
 // Import splash screen
 import 'screens/responsive_splash_screen.dart';
+import 'core/utils/navigation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -126,6 +127,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final appTheme = context.watch<ThemeProvider>().currentTheme;
 
     return MaterialApp(
+      scaffoldMessengerKey: NavigationService.scaffoldMessengerKey,
       title: 'PeacePal - Stress Relief App',
 
       // Material 3 Theme with full M3 support

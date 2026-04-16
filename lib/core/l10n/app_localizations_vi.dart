@@ -469,7 +469,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get selectInstrument => 'CHỌN NHẠC CỤ';
   
   @override
-  String get notes => 'NỐT NHẠC (chạm để đặt lên timeline)';
+  String get notes => 'NỐT NHẠC (chọn loại nốt và chạm lên dòng thời gian để đặt vào)';
   
   @override
   String get note => 'Nốt';
@@ -1261,6 +1261,39 @@ class AppLocalizationsVi extends AppLocalizations {
   String get enterRoomCode => 'Nhập mã phòng thủ công';
   @override
   String get activeRooms => 'Phòng đang mở';
+
+  // ==================== GROUP F — settings / shop / gallery ====================
+  @override
+  String get logoutConfirmContent => 'Bạn có chắc chắn muốn đăng xuất? Dữ liệu sẽ được đồng bộ và xóa khỏi thiết bị.';
+  @override
+  String get syncingAndLoggingOut => 'Đang đồng bộ và đăng xuất…';
+  @override
+  String get logoutSuccessful => 'Đăng xuất thành công';
+  @override
+  String get logoutFailed => 'Đăng xuất thất bại';
+  @override
+  String get exitDebugModeTitle => 'Thoát chế độ debug';
+  @override
+  String get exitDebugModeConfirm => 'Bạn có chắc chắn? Toàn bộ dữ liệu sẽ bị xóa và trở về màn hình chào mừng.';
+  @override
+  String get exitDebugModeButton => 'Thoát';
+  @override
+  String get clearingDataAndExiting => 'Đang xóa dữ liệu và thoát…';
+  @override
+  String get debugModeExited => 'Đã thoát chế độ debug';
+  @override
+  String get syncFailed => 'Đồng bộ thất bại';
+  @override
+  String get operationFailed => 'Thao tác thất bại';
+  @override
+  String get purchaseSuccessful => 'Đã mở khóa cảnh!';
+  @override
+  String get purchaseFailed => 'Mua thất bại';
+  @override
+  String get noPaintingsYet => 'Chưa có tranh nào';
+  @override
+  String get noTracksYet => 'Chưa có đoạn nhạc nào';
+
   @override
   String get menu => 'Menu';
   @override

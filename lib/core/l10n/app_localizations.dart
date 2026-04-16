@@ -583,6 +583,29 @@ abstract class AppLocalizations {
   /// Returns the localized description for the given achievement [id].
   String achievementDescription(String id);
 
+  // ==================== GROUP F — settings / shop / gallery ====================
+
+  // Settings — account action dialogs & snackbars
+  String get logoutConfirmContent;
+  String get syncingAndLoggingOut;
+  String get logoutSuccessful;
+  String get logoutFailed;
+  String get exitDebugModeTitle;
+  String get exitDebugModeConfirm;
+  String get exitDebugModeButton;
+  String get clearingDataAndExiting;
+  String get debugModeExited;
+  String get syncFailed;
+  String get operationFailed;
+
+  // Scene Shop — purchase / activation feedback
+  String get purchaseSuccessful;
+  String get purchaseFailed;
+
+  // Gallery / Library — empty states
+  String get noPaintingsYet;
+  String get noTracksYet;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

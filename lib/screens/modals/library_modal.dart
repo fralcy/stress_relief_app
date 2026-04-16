@@ -78,7 +78,7 @@ class _LibraryModalState extends State<LibraryModal> {
     if (_tracks.isEmpty) {
       return Center(
         child: Text(
-          'Không có đoạn nhạc nào',
+          l10n.noTracksYet,
           style: TextStyle(color: theme.text),
         ),
       );

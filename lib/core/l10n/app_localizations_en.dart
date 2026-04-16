@@ -1259,6 +1259,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterRoomCode => 'Enter room code manually';
   @override
   String get activeRooms => 'Active Rooms';
+
+  // ==================== GROUP F — settings / shop / gallery ====================
+  @override
+  String get logoutConfirmContent => 'Are you sure you want to log out? Your data will be synced and removed from this device.';
+  @override
+  String get syncingAndLoggingOut => 'Syncing and logging out…';
+  @override
+  String get logoutSuccessful => 'Logged out successfully';
+  @override
+  String get logoutFailed => 'Logout failed';
+  @override
+  String get exitDebugModeTitle => 'Exit Debug Mode';
+  @override
+  String get exitDebugModeConfirm => 'Are you sure? All local data will be deleted and you will return to the welcome screen.';
+  @override
+  String get exitDebugModeButton => 'Exit';
+  @override
+  String get clearingDataAndExiting => 'Clearing data and exiting…';
+  @override
+  String get debugModeExited => 'Exited debug mode';
+  @override
+  String get syncFailed => 'Sync failed';
+  @override
+  String get operationFailed => 'Operation failed';
+  @override
+  String get purchaseSuccessful => 'Scene unlocked!';
+  @override
+  String get purchaseFailed => 'Purchase failed';
+  @override
+  String get noPaintingsYet => 'No paintings yet';
+  @override
+  String get noTracksYet => 'No tracks yet';
+
   @override
   String get menu => 'Menu';
   @override
