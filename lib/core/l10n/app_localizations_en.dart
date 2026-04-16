@@ -184,16 +184,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expectedPoints => 'Expected points';
 
   @override
-  String get endDayAndClaimPoints => 'End Day & Claim Points';
+  String get endDayAndClaimPoints => 'Claim Points';
 
   @override
-  String get completedTasks => 'completed tasks';
+  String get completedTasks => '{count} tasks done';
 
   @override
-  String get alreadyClaimedToday => 'Already claimed today!';
+  String get alreadyClaimedToday => 'Already claimed today';
 
   @override
-  String get noCompletedTasks => 'No completed tasks!';
+  String get noCompletedTasks => 'No tasks done yet';
 
   @override
   String get sceneShop => 'Scene Shop';

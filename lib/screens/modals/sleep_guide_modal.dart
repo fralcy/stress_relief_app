@@ -12,6 +12,7 @@ import '../../core/utils/sleep_guide_service.dart';
 import '../../core/utils/sfx_service.dart';
 import '../../core/utils/asset_loader.dart';
 import '../../core/utils/notifier.dart';
+import '../../core/utils/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/constants/app_colors.dart';
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
@@ -51,6 +52,10 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   final GlobalKey _graphKey = GlobalKey();
   final GlobalKey _checkinKey = GlobalKey();
 
+  // Debug mode
+  bool _isDebugMode = false;
+  final AuthService _authService = AuthService();
+
   // 0 = today … 13 = 13 days ago (data index)
   int _selectedDayIndex = 0;
   int? _logBedtimeMinutes;
@@ -61,7 +66,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   int _mascotTipIndex = 0;
   Timer? _reminderTimer;
 
-  static const _qualityEmojis = ['😢', '😕', '😐', '🙂', '😊'];
+  static const _qualityEmojis = ['😩', '😕', '😐', '🙂', '😊'];
 
   @override
   void initState() {
@@ -72,6 +77,16 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       const Duration(minutes: 1),
       (_) => setState(() {}),
     );
+    _checkDebugMode();
+  }
+
+  Future<void> _checkDebugMode() async {
+    final isDebug = await _authService.isDebugMode;
+    if (mounted) {
+      setState(() {
+        _isDebugMode = isDebug;
+      });
+    }
   }
 
   @override
@@ -122,8 +137,8 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         .subtract(Duration(days: index));
   }
 
-  /// Only today (0) and yesterday (1) are editable
-  bool _canEdit(int dataIdx) => dataIdx <= 1;
+  /// Only today (0) and yesterday (1) are editable (all days in debug mode)
+  bool _canEdit(int dataIdx) => _isDebugMode || dataIdx <= 1;
 
   SleepLog? _logFor(int dataIdx) {
     final target = _dateFor(dataIdx);
@@ -577,10 +592,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       durationStr = m > 0 ? '${h}h ${m}m' : '${h}h';
     }
 
-    final canSave = canEdit &&
-        (_logBedtimeMinutes != null ||
-            _logWakeTimeMinutes != null ||
-            _logQuality != null);
+    final canSave = canEdit && _logQuality != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -593,7 +605,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
               style: AppTypography.bodyLarge(context)
                   .copyWith(fontWeight: FontWeight.bold),
             ),
-            if (!canEdit) ...[
+            if (!canEdit && !_isDebugMode) ...[
               const SizedBox(width: 6),
               Icon(Icons.lock_outline,
                   size: 14,
@@ -781,50 +793,84 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
     final bedtimeStr =
         '${bh.toString().padLeft(2, '0')}:${bm.toString().padLeft(2, '0')}';
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.sleepReminder,
-                style: AppTypography.bodyMedium(context)),
-            if (userSettings.sleepReminderEnabled)
-              Text(
-                bedtimeStr,
-                style: AppTypography.bodySmall(context).copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.sleepReminder,
+                    style: AppTypography.bodyMedium(context)),
+                if (userSettings.sleepReminderEnabled)
+                  Text(
+                    bedtimeStr,
+                    style: AppTypography.bodySmall(context).copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+              ],
+            ),
+            Switch(
+              value: userSettings.sleepReminderEnabled,
+              activeThumbColor: Theme.of(context).colorScheme.primary,
+              onChanged: (val) async {
+                if (val) {
+                  final permitted = await Notifier.requestPermissions();
+                  if (!mounted) return;
+                  if (!permitted) {
+                    SfxService().error();
+                    return;
+                  }
+                }
+                // Sync reminder time to bedtime from sleep schedule
+                final updated = userSettings.copyWith(
+                  sleepReminderEnabled: val,
+                  sleepReminderTimeMinutes: bedtimeMinutes,
+                );
+                await DataManager().saveUserSettings(updated);
+                if (!mounted) return;
+                if (val) {
+                  await Notifier.scheduleSleepReminder(updated);
+                } else {
+                  await Notifier.cancelSleepReminder();
+                }
+                setState(() {});
+              },
+            ),
           ],
         ),
-        Switch(
-          value: userSettings.sleepReminderEnabled,
-          activeThumbColor: Theme.of(context).colorScheme.primary,
-          onChanged: (val) async {
-            if (val) {
-              final permitted = await Notifier.requestPermissions();
-              if (!mounted) return;
-              if (!permitted) {
-                SfxService().error();
-                return;
+        if (_isDebugMode) ...[
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: () async {
+              await Notifier.debugScheduleSleepNotification();
+              SfxService().buttonClick();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('[DEBUG] Sleep notification sent immediately!'),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.deepPurple,
+                  ),
+                );
               }
-            }
-            // Sync reminder time to bedtime from sleep schedule
-            final updated = userSettings.copyWith(
-              sleepReminderEnabled: val,
-              sleepReminderTimeMinutes: bedtimeMinutes,
-            );
-            await DataManager().saveUserSettings(updated);
-            if (!mounted) return;
-            if (val) {
-              await Notifier.scheduleSleepReminder(updated);
-            } else {
-              await Notifier.cancelSleepReminder();
-            }
-            setState(() {});
-          },
-        ),
+            },
+            icon: const Icon(Icons.bug_report, size: 18),
+            label: const Text('[DEBUG] Test Sleep Notification'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -186,16 +186,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get expectedPoints => 'Điểm dự kiến';
 
   @override
-  String get endDayAndClaimPoints => 'Kết thúc ngày & Nhận điểm';
+  String get endDayAndClaimPoints => 'Nhận điểm';
 
   @override
-  String get completedTasks => 'công việc hoàn thành';
+  String get completedTasks => '{count} xong rồi';
 
   @override
-  String get alreadyClaimedToday => 'Đã nhận điểm hôm nay rồi!';
+  String get alreadyClaimedToday => 'Đã nhận điểm hôm nay';
 
   @override
-  String get noCompletedTasks => 'Chưa có công việc nào hoàn thành!';
+  String get noCompletedTasks => 'Chưa có việc nào xong';
 
   @override
   String get sceneShop => 'Cửa hàng bối cảnh';

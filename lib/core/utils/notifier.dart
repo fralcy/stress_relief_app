@@ -203,4 +203,18 @@ class Notifier {
       ),
     );
   }
+
+  /// [DEBUG] Trigger immediate sleep reminder notification
+  static Future<void> debugScheduleSleepNotification() async {
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 9997,
+        channelKey: sleepChannelKey,
+        title: '⚡ [DEBUG] Sleep Reminder',
+        body: 'Đã đến giờ đi ngủ! 😴 (test notification)',
+        notificationLayout: NotificationLayout.Default,
+        payload: {'type': 'sleep'},
+      ),
+    );
+  }
 }

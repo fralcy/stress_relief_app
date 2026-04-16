@@ -320,6 +320,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         TextField(
           controller: _titleController,
           decoration: InputDecoration(
+            filled: false,
             hintText: l10n.taskName,
             hintStyle: TextStyle(
               color: theme.border,
@@ -376,24 +377,24 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
               label: l10n.addTask,
               onPressed: _addTask,
             ),
-            if (_isDebugMode) ...[
-              const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: _debugTriggerDefaultNotification,
-                icon: const Icon(Icons.bug_report, size: 18),
-                label: const Text('Test Noti'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-            ],
           ],
         ),
+        if (_isDebugMode) ...[
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: _debugTriggerDefaultNotification,
+            icon: const Icon(Icons.bug_report, size: 18),
+            label: const Text('[DEBUG] Test Notification'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -517,6 +518,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                     ? TextField(
                         controller: _editControllers[index],
                         decoration: InputDecoration(
+                          filled: false,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: theme.border, width: 1.5),

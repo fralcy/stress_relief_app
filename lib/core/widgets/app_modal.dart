@@ -62,12 +62,17 @@ class AppModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: maxHeight,
-        minHeight: minHeight ?? 0,
-      ),
-      decoration: BoxDecoration(
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    // Wrap in Padding(bottom) so the Container floats ABOVE the keyboard.
+    // Also shrink maxHeight by the same amount so the top edge never moves.
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: (maxHeight - bottomInset).clamp(0.0, double.infinity),
+          minHeight: minHeight ?? 0,
+        ),
+        decoration: BoxDecoration(
         // M3 surface color
         color: context.surfaceColor,
 
@@ -100,9 +105,14 @@ class AppModal extends StatelessWidget {
           if (scrollable)
             Flexible(
               child: AppScroller(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: content,
+                // Dismiss keyboard when tapping empty space in the scroll area
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => FocusScope.of(context).unfocus(),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: content,
+                  ),
                 ),
               ),
             )
@@ -110,7 +120,8 @@ class AppModal extends StatelessWidget {
             Expanded(child: content),
         ],
       ),
-    );
+    ),   // Container
+    );   // Padding
   }
 
   Widget _buildHeader(BuildContext context) {

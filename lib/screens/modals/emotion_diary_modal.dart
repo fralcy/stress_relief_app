@@ -118,7 +118,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
   // Get emoji based on average likert score (1-5)
   String _getEmojiForScore(double? score) {
     if (score == null) return '';
-    if (score <= 1.5) return '😢';
+    if (score <= 1.5) return '😩';
     if (score <= 2.5) return '😕';
     if (score <= 3.5) return '😐';
     if (score <= 4.5) return '🙂';
@@ -166,11 +166,9 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // ========== HISTORY SECTION ==========
           KeyedSubtree(key: _historyKey, child: _buildHistorySection(l10n, theme)),
 
@@ -181,7 +179,6 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           // ========== CHECK-IN SECTION ==========
           _buildCheckInSection(l10n, theme),
         ],
-      ),
     );
   }
 
@@ -483,6 +480,7 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
           maxLength: _maxDiaryLength,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           decoration: InputDecoration(
+            filled: false,
             hintText: isReadOnly ? '' : l10n.writeYourThoughts,
             hintStyle: TextStyle(
               color: theme.border,
