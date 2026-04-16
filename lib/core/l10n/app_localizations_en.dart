@@ -67,7 +67,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useSample => 'Use this sample?';
   
   @override
-  String get selectTemplate => 'Select a Template';
+  String get selectTemplate => 'Select a Template'
+  ;
+  @override
+  String get selectTemplateHint => 'Tap any template\'s name to apply it to your drawing';
   
   @override
   String get selectSample => 'Select a Sample';

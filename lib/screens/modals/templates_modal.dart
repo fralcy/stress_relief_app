@@ -81,6 +81,13 @@ class _TemplatesModalState extends State<TemplatesModal> {
             l10n.selectTemplate,
             style: AppTypography.labelLarge(context, color: theme.text),
           ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.selectTemplateHint,
+            style: AppTypography.bodySmall(context,
+              color: theme.text.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 16),
           
           // Grid layout 2 cột
@@ -119,11 +126,13 @@ class _TemplatesModalState extends State<TemplatesModal> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: PixelCanvas(
-                                gridSize: 32,
-                                pixels: template.pixels,
-                                selectedColorIndex: -1, // Disable painting
-                                onPixelPaint: (_, __) {}, // No-op
+                              child: IgnorePointer(
+                                child: PixelCanvas(
+                                  gridSize: 32,
+                                  pixels: template.pixels,
+                                  selectedColorIndex: -1,
+                                  onPixelPaint: (r, c) {},
+                                ),
                               ),
                             ),
                           ),

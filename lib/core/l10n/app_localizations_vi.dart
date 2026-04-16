@@ -68,6 +68,8 @@ class AppLocalizationsVi extends AppLocalizations {
   
   @override
   String get selectTemplate => 'Chọn mẫu vẽ';
+  @override
+  String get selectTemplateHint => 'Nhấn vào tên mẫu bất kỳ để áp dụng vào tranh';
   
   @override
   String get selectSample => 'Chọn mẫu nhạc';

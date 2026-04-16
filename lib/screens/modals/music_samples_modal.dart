@@ -219,16 +219,16 @@ class _MusicSamplesModalState extends State<MusicSamplesModal> {
                   AppButton(
                     icon: isPreviewing ? Icons.pause : Icons.play_arrow,
                     onPressed: () => _onPreview(index),
-                    width: 48,
+                    width: 56,
                   ),
-                  
+
                   const SizedBox(width: 8),
-                  
+
                   // Load button
                   AppButton(
                     icon: Icons.download,
                     onPressed: () => _onLoad(index),
-                    width: 48,
+                    width: 56,
                   ),
                 ],
               ),

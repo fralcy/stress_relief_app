@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/widgets/app_modal.dart';
@@ -53,6 +54,7 @@ class ComposingModal extends StatefulWidget {
 
 class _ComposingModalState extends State<ComposingModal> {
   final TextEditingController _nameController = TextEditingController();
+  final ScrollController _timelineScrollController = ScrollController();
   final ComposingService _composingService = ComposingService();
 
   final GlobalKey _toolbarKey = GlobalKey();
@@ -135,6 +137,7 @@ class _ComposingModalState extends State<ComposingModal> {
   @override
   void dispose() {
     _nameController.dispose();
+    _timelineScrollController.dispose();
     _playbackTimer?.cancel();
     _composingService.stopAll();
     if (_noteChangeCount > 0) {
@@ -575,9 +578,22 @@ class _ComposingModalState extends State<ComposingModal> {
             border: Border.all(color: theme.border, width: 2),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+          child: Listener(
+            onPointerSignal: (event) {
+              if (event is PointerScrollEvent) {
+                final offset = (_timelineScrollController.offset +
+                        event.scrollDelta.dy)
+                    .clamp(
+                  0.0,
+                  _timelineScrollController.position.maxScrollExtent,
+                );
+                _timelineScrollController.jumpTo(offset);
+              }
+            },
+            child: SingleChildScrollView(
+                controller: _timelineScrollController,
+                scrollDirection: Axis.horizontal,
+                child: Row(
               children: [
                 Container(
                   width: 80,
@@ -651,6 +667,12 @@ class _ComposingModalState extends State<ComposingModal> {
               ],
             ),
           ),
+        ),
+      ),
+        Scrollbar(
+          controller: _timelineScrollController,
+          thumbVisibility: true,
+          child: const SizedBox(height: 12),
         ),
         const SizedBox(height: 8),
         Padding(

@@ -33,6 +33,7 @@ abstract class AppLocalizations {
   String get useTemplate;
   String get useSample;
   String get selectTemplate;
+  String get selectTemplateHint;
   String get selectSample;
   String currentWillBeReplaced(String type);
   

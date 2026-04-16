@@ -28,12 +28,12 @@ class DrawingModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    
+
     // Init default paintings nếu chưa có
     await PaintingService().initializeDefaultPaintings();
-    
+
     if (!context.mounted) return;
-    
+
     final modalKey = GlobalKey<_DrawingModalState>();
     return AppModal.show(
       context: context,
@@ -53,27 +53,31 @@ class _DrawingModalState extends State<DrawingModal> {
   final GlobalKey _canvasKey = GlobalKey();
   final GlobalKey _zoomKey = GlobalKey();
   final GlobalKey _paletteKey = GlobalKey();
-  
+
   late List<List<int>> _pixels;
   int _selectedColorIndex = 0;
   String _drawingName = 'My Drawing';
   bool _isLoading = true;
   bool _isEditingName = false;
-  
+
   // Undo history
   final List<List<List<int>>> _history = [];
   static const int _maxHistorySize = 20;
 
   // Achievement tracking — cumulative pixel changes this session
   int _pixelChangeCount = 0;
-  
+
   // Scroll control
   bool _isDrawing = false;
-  
+
   // Zoom and pan controls
   int _zoomLevel = 1; // 1, 2, 4
   double _panX = 0;
   double _panY = 0;
+
+  // Collapsible sections
+  bool _isZoomExpanded = false;
+  bool _isPaletteExpanded = true;
 
   @override
   void initState() {
@@ -101,7 +105,7 @@ class _DrawingModalState extends State<DrawingModal> {
 
   void _loadPainting() {
     final painting = _paintingService.getCurrentPainting();
-    
+
     if (painting != null) {
       setState(() {
         _pixels = painting.pixels.map((row) => List<int>.from(row)).toList();
@@ -117,15 +121,15 @@ class _DrawingModalState extends State<DrawingModal> {
         _isLoading = false;
       });
     }
-    
+
     // Save initial state to history
     _saveToHistory();
   }
-  
+
   void _saveToHistory() {
     final snapshot = _pixels.map((row) => List<int>.from(row)).toList();
     _history.add(snapshot);
-    
+
     if (_history.length > _maxHistorySize) {
       _history.removeAt(0);
     }
@@ -145,19 +149,19 @@ class _DrawingModalState extends State<DrawingModal> {
     _paintingService.savePainting(_pixels, name: _drawingName);
     _flushPixelAchievement();
   }
-  
+
   void _onUndo() {
     SfxService().buttonClick();
-    
+
     if (_history.length <= 1) return;
-    
+
     _history.removeLast();
-    
+
     final previousState = _history.last;
     setState(() {
       _pixels = previousState.map((row) => List<int>.from(row)).toList();
     });
-    
+
     // Auto-save
     _paintingService.savePainting(_pixels, name: _drawingName);
   }
@@ -200,7 +204,7 @@ class _DrawingModalState extends State<DrawingModal> {
 
   Future<void> _onOpen() async {
     SfxService().buttonClick();
-    
+
     // Show gallery modal
     await GalleryModal.show(
       context,
@@ -223,7 +227,7 @@ class _DrawingModalState extends State<DrawingModal> {
 
   Future<void> _onSaveName() async {
     SfxService().buttonClick();
-    
+
     final newName = _nameController.text.trim();
     if (newName.isEmpty) {
       _nameController.text = _drawingName;
@@ -232,15 +236,15 @@ class _DrawingModalState extends State<DrawingModal> {
       });
       return;
     }
-    
+
     setState(() {
       _drawingName = newName;
       _isEditingName = false;
     });
-    
+
     // Save name
     await _paintingService.updateCurrentPaintingName(newName);
-    
+
     // Re-save painting with new name
     await _paintingService.savePainting(_pixels, name: newName);
 
@@ -267,7 +271,7 @@ class _DrawingModalState extends State<DrawingModal> {
 
   Future<void> _onTemplates() async {
     SfxService().buttonClick();
-    
+
     // Show templates modal
     await TemplatesModal.show(
       context,
@@ -422,52 +426,115 @@ class _DrawingModalState extends State<DrawingModal> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // ========== ZOOM AND PAN CONTROLS ==========
-            KeyedSubtree(key: _zoomKey, child: _buildZoomPanControls(l10n, theme)),
-
-            const SizedBox(height: 16),
-
-            // ========== COLOR PALETTE LABEL ==========
-            Text(
-              l10n.colorPalette,
-              style: AppTypography.bodyLarge(context,
-                color: theme.text,
-                fontWeight: FontWeight.w600,
+            // ========== ZOOM & PAN (collapsible) ==========
+            KeyedSubtree(
+              key: _zoomKey,
+              child: _buildCollapsibleSection(
+                title: l10n.tutorialDrawZoomTitle,
+                isExpanded: _isZoomExpanded,
+                onToggle: () => setState(() => _isZoomExpanded = !_isZoomExpanded),
+                theme: theme,
+                child: _buildZoomPanControls(l10n, theme),
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
-            // Selected color indicator
-            Row(
-              children: [
-                Text(
-                  '${l10n.selected}: ',
-                  style: AppTypography.bodyMedium(context, color: theme.text),
+
+            // ========== COLOR PALETTE (collapsible) ==========
+            KeyedSubtree(
+              key: _paletteKey,
+              child: _buildCollapsibleSection(
+                title: l10n.colorPalette,
+                isExpanded: _isPaletteExpanded,
+                onToggle: () => setState(() => _isPaletteExpanded = !_isPaletteExpanded),
+                theme: theme,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Selected color indicator
+                    Row(
+                      children: [
+                        Text(
+                          '${l10n.selected}: ',
+                          style: AppTypography.bodyMedium(context, color: theme.text),
+                        ),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Color(DrawingPalette.hexToInt(
+                              DrawingPalette.getColorByIndex(_selectedColorIndex)
+                            )),
+                            border: Border.all(color: theme.border, width: 2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    _buildColorPalette(theme),
+                  ],
                 ),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Color(DrawingPalette.hexToInt(
-                      DrawingPalette.getColorByIndex(_selectedColorIndex)
-                    )),
-                    border: Border.all(color: theme.border, width: 2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
+              ),
             ),
-            
-            const SizedBox(height: 12),
-            
-            // ========== COLOR PALETTE GRID ==========
-            KeyedSubtree(key: _paletteKey, child: _buildColorPalette(theme)),
           ],
         ),
       ),
+    );
+  }
+
+  /// Collapsible section header + animated body
+  Widget _buildCollapsibleSection({
+    required String title,
+    required bool isExpanded,
+    required VoidCallback onToggle,
+    required dynamic theme,
+    required Widget child,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Header row (tap to toggle)
+        InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.bodyLarge(context,
+                    color: theme.text,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: theme.text,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Body (animated show/hide)
+        AnimatedCrossFade(
+          firstChild: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: child,
+          ),
+          secondChild: const SizedBox.shrink(),
+          crossFadeState: isExpanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          duration: const Duration(milliseconds: 200),
+        ),
+      ],
     );
   }
 
@@ -485,7 +552,7 @@ class _DrawingModalState extends State<DrawingModal> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            
+
             if (_isEditingName) ...[
               // Text field để edit
               Expanded(
@@ -516,8 +583,8 @@ class _DrawingModalState extends State<DrawingModal> {
               GestureDetector(
                 onTap: _onSaveName,
                 child: Container(
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                   alignment: Alignment.center,
                   child: Icon(Icons.check, color: context.theme.primary, size: 24),
                 ),
@@ -527,8 +594,8 @@ class _DrawingModalState extends State<DrawingModal> {
               GestureDetector(
                 onTap: _onCancelEdit,
                 child: Container(
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                   alignment: Alignment.center,
                   child: Icon(Icons.close, color: context.colorScheme.error, size: 24),
                 ),
@@ -546,8 +613,8 @@ class _DrawingModalState extends State<DrawingModal> {
               GestureDetector(
                 onTap: _onEditName,
                 child: Container(
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                   alignment: Alignment.center,
                   child: Icon(Icons.edit, color: theme.primary, size: 24),
                 ),
@@ -555,15 +622,15 @@ class _DrawingModalState extends State<DrawingModal> {
             ],
           ],
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         // Action buttons
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             AppButton(
-              icon: Icons.undo, 
+              icon: Icons.undo,
               onPressed: _onUndo,
               isDisabled: _history.length <= 1,
               width: 56,
@@ -579,20 +646,20 @@ class _DrawingModalState extends State<DrawingModal> {
 
   Widget _buildZoomPanControls(AppLocalizations l10n, dynamic theme) {
     final displayGridSize = 32 ~/ _zoomLevel;
-    
+
     return Column(
       children: [
         // Zoom info
         Text(
-          '${l10n.zoom}: ${_zoomLevel}x (${displayGridSize}x$displayGridSize pixels)',
+          '${l10n.zoom}: ${_zoomLevel}x ($displayGridSize×$displayGridSize pixels)',
           style: AppTypography.bodyMedium(context,
             color: theme.text,
             fontWeight: FontWeight.w500,
           ),
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         // Controls layout
         Column(
           children: [
@@ -604,14 +671,14 @@ class _DrawingModalState extends State<DrawingModal> {
                   icon: Icons.keyboard_arrow_up,
                   onPressed: _onPanUp,
                   isDisabled: _zoomLevel <= 1,
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Middle row: Left, Zoom controls, Right
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -620,10 +687,10 @@ class _DrawingModalState extends State<DrawingModal> {
                   icon: Icons.keyboard_arrow_left,
                   onPressed: _onPanLeft,
                   isDisabled: _zoomLevel <= 1,
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                 ),
-                
+
                 // Zoom controls
                 Row(
                   children: [
@@ -644,19 +711,19 @@ class _DrawingModalState extends State<DrawingModal> {
                     ),
                   ],
                 ),
-                
+
                 AppButton(
                   icon: Icons.keyboard_arrow_right,
                   onPressed: _onPanRight,
                   isDisabled: _zoomLevel <= 1,
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Bottom row: Down arrow
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -665,8 +732,8 @@ class _DrawingModalState extends State<DrawingModal> {
                   icon: Icons.keyboard_arrow_down,
                   onPressed: _onPanDown,
                   isDisabled: _zoomLevel <= 1,
-                  width: 48,
-                  height: 48,
+                  width: 56,
+                  height: 56,
                 ),
               ],
             ),
@@ -677,44 +744,75 @@ class _DrawingModalState extends State<DrawingModal> {
   }
 
   Widget _buildColorPalette(dynamic theme) {
-    int index = 0;
-    return Column(
-      children: DrawingPalette.colors.map((row) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: row.map((colorHex) {
-              final currentIndex = index++;
-              final isSelected = currentIndex == _selectedColorIndex;
-              return Semantics(
-                label: 'Color ${currentIndex + 1}${isSelected ? ", selected" : ""}',
-                button: true,
-                selected: isSelected,
-                child: GestureDetector(
-                  onTap: () => _onColorSelected(currentIndex),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      color: Color(DrawingPalette.hexToInt(colorHex)),
-                      border: Border.all(
-                        color: isSelected ? theme.primary : theme.border,
-                        width: isSelected ? 3 : 1.5,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: isSelected
-                          ? [BoxShadow(color: theme.primary.withOpacity(0.5), blurRadius: 8)]
-                          : null,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+    const itemSize = 48.0;
+    const minGap = 8.0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final itemsPerRow = ((width + minGap) / (itemSize + minGap)).floor().clamp(1, 32);
+        // Gap để các ô căn đều 2 lề
+        final gap = itemsPerRow > 1
+            ? (width - itemsPerRow * itemSize) / (itemsPerRow - 1)
+            : 0.0;
+
+        final colors = DrawingPalette.flatColors;
+        final rows = <List<int>>[];
+        for (var i = 0; i < colors.length; i += itemsPerRow) {
+          rows.add(List.generate(
+            (i + itemsPerRow).clamp(0, colors.length) - i,
+            (j) => i + j,
+          ));
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: rows.asMap().entries.map((entry) {
+            final indices = entry.value;
+            final rowGap = gap;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  for (var i = 0; i < indices.length; i++) ...[
+                    if (i > 0) SizedBox(width: rowGap),
+                    _buildSwatch(indices[i], theme, itemSize),
+                  ],
+                ],
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
+    );
+  }
+
+  Widget _buildSwatch(int currentIndex, dynamic theme, double size) {
+    final colorHex = DrawingPalette.flatColors[currentIndex];
+    final isSelected = currentIndex == _selectedColorIndex;
+    return Semantics(
+      label: 'Color ${currentIndex + 1}${isSelected ? ", selected" : ""}',
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: () => _onColorSelected(currentIndex),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: Color(DrawingPalette.hexToInt(colorHex)),
+            border: Border.all(
+              color: isSelected ? theme.primary : theme.border,
+              width: isSelected ? 3 : 1.5,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [BoxShadow(color: theme.primary.withOpacity(0.5), blurRadius: 8)]
+                : null,
+          ),
+        ),
+      ),
     );
   }
 }
