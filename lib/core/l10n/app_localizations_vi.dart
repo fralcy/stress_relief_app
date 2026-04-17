@@ -1295,6 +1295,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noTracksYet => 'Chưa có đoạn nhạc nào';
 
   @override
+  String get deleteAccount => 'Xóa tài khoản';
+  @override
+  String get deleteAccountWarning => 'Hành động này vĩnh viễn và không thể hoàn tác. Toàn bộ dữ liệu, tiến trình và vật phẩm đã mua sẽ bị xóa.';
+  @override
+  String get deleteAccountConfirmTitle => 'Xác nhận xóa';
+  @override
+  String get deleteAccountPasswordPrompt => 'Nhập mật khẩu để xác nhận';
+  @override
+  String get deleteAccountSuccess => 'Tài khoản đã được xóa thành công';
+  @override
+  String get deleteAccountFailed => 'Xóa tài khoản thất bại';
+  @override
+  String get deletingAccount => 'Đang xóa tài khoản…';
+
+  @override
   String get menu => 'Menu';
   @override
   String get menuProfile => 'Hồ sơ';

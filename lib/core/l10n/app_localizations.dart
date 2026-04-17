@@ -606,6 +606,15 @@ abstract class AppLocalizations {
   String get noPaintingsYet;
   String get noTracksYet;
 
+  // Delete account flow
+  String get deleteAccount;
+  String get deleteAccountWarning;
+  String get deleteAccountConfirmTitle;
+  String get deleteAccountPasswordPrompt;
+  String get deleteAccountSuccess;
+  String get deleteAccountFailed;
+  String get deletingAccount;
+
   // Helper method
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;

@@ -60,6 +60,9 @@ mixin MainScreenMixin<T extends StatefulWidget> on State<T> {
   Future<void> runRetroactiveCheck() async {
     if (!mounted) return;
     final score = context.read<ScoreProvider>();
+    // Re-sync ScoreProvider from Hive before any achievement checks so that
+    // a post-delete / post-logout state is always reflected correctly.
+    score.refresh();
     final achProvider = context.read<AchievementProvider>();
     await achProvider.retroactiveCheck(score);
     if (!mounted) return;

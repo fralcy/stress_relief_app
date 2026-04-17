@@ -1293,6 +1293,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noTracksYet => 'No tracks yet';
 
   @override
+  String get deleteAccount => 'Delete Account';
+  @override
+  String get deleteAccountWarning => 'This action is permanent and cannot be undone. All your data, progress, and purchases will be deleted.';
+  @override
+  String get deleteAccountConfirmTitle => 'Confirm deletion';
+  @override
+  String get deleteAccountPasswordPrompt => 'Enter your password to confirm';
+  @override
+  String get deleteAccountSuccess => 'Account deleted successfully';
+  @override
+  String get deleteAccountFailed => 'Failed to delete account';
+  @override
+  String get deletingAccount => 'Deleting account…';
+
+  @override
   String get menu => 'Menu';
   @override
   String get menuProfile => 'Profile';

@@ -197,6 +197,43 @@ class AuthService {
     };
   }
 
+  // Re-authenticate the current user (required before sensitive operations)
+  Future<void> reauthenticate({required String password}) async {
+    final user = currentUser;
+    if (user == null) throw 'No user signed in';
+    final email = user.email;
+    if (email == null) throw 'User has no email address';
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw 'Incorrect password';
+      } else {
+        throw e.message ?? 'Re-authentication failed';
+      }
+    } catch (e) {
+      throw 'Re-authentication failed: $e';
+    }
+  }
+
+  // Delete the current Firebase Auth account
+  // Caller MUST call reauthenticate() first, then deleteUserData(), then this.
+  Future<void> deleteAccount() async {
+    final user = currentUser;
+    if (user == null) throw 'No user signed in';
+    try {
+      await user.delete();
+    } on FirebaseAuthException catch (e) {
+      throw e.message ?? 'Failed to delete account';
+    } catch (e) {
+      throw 'Failed to delete account: $e';
+    }
+  }
+
   // Force clear all auth flags (for testing)
   Future<void> clearAuthFlags() async {
     final prefs = await SharedPreferences.getInstance();

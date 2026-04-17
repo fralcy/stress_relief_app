@@ -211,9 +211,10 @@ class _SettingsModalState extends State<SettingsModal> {
       final syncService = SyncService();
       await syncService.logoutAndSync();
 
-      // Refresh ScoreProvider to load default profile
+      // Refresh providers to reflect cleared state
       if (!mounted) return;
       context.read<ScoreProvider>().refresh();
+      context.read<AchievementProvider>().refresh();
       Navigator.pop(context); // Close loading dialog
       Navigator.pop(context); // Close settings modal
 
@@ -327,6 +328,111 @@ class _SettingsModalState extends State<SettingsModal> {
         SnackBar(
           content: Text('${l10n.operationFailed}: $e'),
           duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: errorColor,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    SfxService().buttonClick();
+    final l10n = AppLocalizations.of(context);
+    final errorColor = context.colorScheme.error;
+
+    // Step 1: Warning confirmation
+    final step1 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteAccount),
+        content: Text(l10n.deleteAccountWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: errorColor),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+
+    if (step1 != true || !mounted) return;
+
+    // Step 2: Password confirmation
+    final password = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _PasswordConfirmDialog(
+        title: l10n.deleteAccountConfirmTitle,
+        prompt: l10n.deleteAccountPasswordPrompt,
+        confirmLabel: l10n.deleteAccount,
+        cancelLabel: l10n.cancel,
+        confirmColor: errorColor,
+      ),
+    );
+
+    if (password == null || password.isEmpty || !mounted) return;
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(l10n.deletingAccount),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final authService = AuthService();
+      final syncService = SyncService();
+
+      // 1. Re-authenticate
+      await authService.reauthenticate(password: password);
+      // 2. Delete Firestore data
+      await syncService.deleteUserData();
+      // 3. Delete Firebase Auth account
+      await authService.deleteAccount();
+      // 4. Clear local Hive data and re-initialize to defaults
+      await DataManager().clearAll();
+      await DataManager().initialize();
+
+      if (!mounted) return;
+      // Refresh in-memory providers so UI reflects cleared state
+      context.read<ScoreProvider>().refresh();
+      context.read<AchievementProvider>().refresh();
+
+      Navigator.pop(context); // close loading
+      Navigator.pop(context); // close settings modal
+
+      NavigationService.navigateAndClearStack(
+        context,
+        const MobilePortraitWelcomeScreen(),
+      );
+
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.deleteAccountSuccess),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // close loading
+      NavigationService.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('${l10n.deleteAccountFailed}: $e'),
+          duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
           backgroundColor: errorColor,
         ),
@@ -620,6 +726,19 @@ class _SettingsModalState extends State<SettingsModal> {
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: _handleDeleteAccount,
+                child: Text(
+                  l10n.deleteAccount,
+                  style: TextStyle(
+                    color: context.colorScheme.error,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
           ] else ...[
             // Guest mode: Show login button
             Center(
@@ -835,6 +954,78 @@ class _SettingsModalState extends State<SettingsModal> {
         
         context.read<LocaleProvider>().setLocale(langCode);
       },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Password confirmation dialog used for the delete-account flow
+// ---------------------------------------------------------------------------
+
+class _PasswordConfirmDialog extends StatefulWidget {
+  final String title;
+  final String prompt;
+  final String confirmLabel;
+  final String cancelLabel;
+  final Color confirmColor;
+
+  const _PasswordConfirmDialog({
+    required this.title,
+    required this.prompt,
+    required this.confirmLabel,
+    required this.cancelLabel,
+    required this.confirmColor,
+  });
+
+  @override
+  State<_PasswordConfirmDialog> createState() => _PasswordConfirmDialogState();
+}
+
+class _PasswordConfirmDialogState extends State<_PasswordConfirmDialog> {
+  final _controller = TextEditingController();
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.prompt),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            obscureText: _obscure,
+            autofocus: true,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: Text(widget.cancelLabel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          style: TextButton.styleFrom(foregroundColor: widget.confirmColor),
+          child: Text(widget.confirmLabel),
+        ),
+      ],
     );
   }
 }

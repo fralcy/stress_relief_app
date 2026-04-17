@@ -266,7 +266,10 @@ class DataManager {
     await _aquariumProgressHive.clear();
     await _paintingProgressHive.clear();
     await _musicProgressHive.clear();
-    
+    await _breathingSessionsHive.clear();
+    await _sleepLogsHive.clear();
+    await _achievementProgressHive.clear();
+
     // Tạo lại default data theo user mode hiện tại
     await _initializeUserData();
   }

@@ -820,6 +820,40 @@ class SyncService {
     );
   }
 
+  // Delete all Firestore data for the current user.
+  // Call this AFTER reauthenticate() and BEFORE deleteAccount().
+  Future<void> deleteUserData() async {
+    final uid = _authService.currentUser?.uid;
+    if (uid == null) throw 'No user signed in';
+
+    try {
+      // 1. Delete scheduleTasks sub-collection docs first (Firestore rule: parent
+      //    doc deletion does NOT cascade to sub-collections)
+      final tasksCollection = _firestore
+          .collection('scheduleTasks')
+          .doc(uid)
+          .collection('tasks');
+      final taskDocs = await tasksCollection.get();
+      for (final doc in taskDocs.docs) {
+        await doc.reference.delete();
+      }
+
+      // 2. Delete all top-level user documents in parallel
+      await Future.wait([
+        _firestore.collection('users').doc(uid).delete(),
+        _firestore.collection('userSettings').doc(uid).delete(),
+        _firestore.collection('scheduleTasks').doc(uid).delete(),
+        _firestore.collection('emotionDiaries').doc(uid).delete(),
+        _firestore.collection('gardenProgress').doc(uid).delete(),
+        _firestore.collection('aquariumProgress').doc(uid).delete(),
+        _firestore.collection('paintingProgress').doc(uid).delete(),
+        _firestore.collection('musicProgress').doc(uid).delete(),
+      ]);
+    } catch (e) {
+      throw 'Failed to delete user data: $e';
+    }
+  }
+
   // Logout and sync data before clearing
   Future<void> logoutAndSync() async {
     try {
