@@ -295,6 +295,17 @@ class PaperShipWorld {
     var total = Offset.zero;
     final solid = _solidObstacles();
 
+    // Pre-pass: wave efficiency drops to 0.8× inside any whirlpool inner zone
+    double waveEfficiency = 1.0;
+    for (final o in _visibleObstacles().where(
+        (o) => o.type == ObstacleType.whirlpool)) {
+      final obsScreen = Offset(o.worldX, _scrollOffset - o.worldY);
+      if ((_boatPos - obsScreen).distance < o.radius) {
+        waveEfficiency = 0.8;
+        break;
+      }
+    }
+
     for (final w in _waves) {
       final sigma = _waveSpeedPx * w.age;
       final amplitude = _waveMaxForce * math.exp(-w.age * _waveDampingRate);
@@ -306,7 +317,7 @@ class PaperShipWorld {
       if (d < 0.1) continue;
 
       final pulseArg = (d - sigma) / _wavePulseWidth;
-      final F = amplitude * math.exp(-0.5 * pulseArg * pulseArg);
+      final F = amplitude * math.exp(-0.5 * pulseArg * pulseArg) * waveEfficiency;
       if (F < 0.5) continue;
 
       final dir = delta / d;
@@ -319,19 +330,34 @@ class PaperShipWorld {
       );
     }
 
-    // Whirlpool force: tangential spin + slight inward pull
+    // Whirlpool force: outer suction + inner spin/pull (inverse-square)
     for (final o in _visibleObstacles().where(
         (o) => o.type == ObstacleType.whirlpool)) {
       final obsScreen = Offset(o.worldX, _scrollOffset - o.worldY);
       final toBoat = _boatPos - obsScreen;
       final dist = toBoat.distance;
-      if (dist >= o.radius || dist < 1.0) continue;
-      final strength = (1.0 - dist / o.radius).clamp(0.0, 1.0);
-      // Counterclockwise tangent
-      final tangent = Offset(-toBoat.dy / dist, toBoat.dx / dist);
-      final spin = tangent * (200.0 * strength);
-      final pull = (-toBoat / dist) * (80.0 * strength);
-      total = Offset(total.dx + spin.dx + pull.dx, total.dy + spin.dy + pull.dy);
+      if (dist < 1.0) continue;
+      final attractRadius = o.radius * 2.2;
+      if (dist >= attractRadius) continue;
+      final inward = -toBoat / dist;
+      if (dist < o.radius) {
+        // Inner zone: inverse-square pull (peak 250 at 20% radius) + spin
+        const double pullPeak = 250.0;
+        const double minDistFrac = 0.20;
+        final minDist = o.radius * minDistFrac;
+        final clampedDist = dist.clamp(minDist, o.radius);
+        final pullMag = pullPeak * (minDist / clampedDist) * (minDist / clampedDist);
+        final strength = (1.0 - dist / o.radius).clamp(0.0, 1.0);
+        final tangent = Offset(-toBoat.dy / dist, toBoat.dx / dist);
+        final spin = tangent * (320.0 * strength);
+        final pull = inward * pullMag;
+        total = Offset(total.dx + spin.dx + pull.dx, total.dy + spin.dy + pull.dy);
+      } else {
+        // Outer zone: linear suction, fades toward attractRadius
+        final outerStrength = (1.0 - (dist - o.radius) / (attractRadius - o.radius)).clamp(0.0, 1.0);
+        final pull = inward * (110.0 * outerStrength);
+        total = Offset(total.dx + pull.dx, total.dy + pull.dy);
+      }
     }
 
     // Clamp total force to avoid velocity spike
@@ -460,12 +486,12 @@ class PaperShipWorld {
     for (final o in _visibleObstacles()) {
       final obsScreen = Offset(o.worldX, _scrollOffset - o.worldY);
 
-      // Whirlpool: force-only, no hard collision — just add shake
+      // Whirlpool: force-only, no hard collision — shake scales with proximity
       if (o.type == ObstacleType.whirlpool) {
         final dist = (_boatPos - obsScreen).distance;
         if (dist < o.radius) {
           final proximity = (1.0 - dist / o.radius).clamp(0.0, 1.0);
-          _shakeAmount = (_shakeAmount + proximity * 0.05).clamp(0.0, 6.0);
+          _shakeAmount = (_shakeAmount + proximity * 0.18).clamp(0.0, 6.0);
         }
         continue;
       }
