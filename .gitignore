@@ -51,6 +51,6 @@ app.*.map.json
 # Firebase & Secrets
 **/android/app/google-services.json
 **/ios/Runner/GoogleService-Info.plist
-lib/firebase_options.dart
+# lib/firebase_options.dart — intentionally tracked (Firebase web keys are public by design)
 *.env
 .env.*
