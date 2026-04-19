@@ -199,7 +199,49 @@ class SyncService {
           .collection('musicProgress')
           .doc(userId)
           .set(_musicProgressToMap(_dataManager.musicProgress));
-      
+
+      // 9. Upload Sleep Settings
+      await _firestore
+          .collection('sleepSettings')
+          .doc(userId)
+          .set(_sleepSettingsToMap(_dataManager.sleepSettings));
+
+      // 10. Upload Sleep Logs (encrypted)
+      final sleepLogsCollection = _firestore.collection('sleepLogs').doc(userId);
+      final sleepLogs = _dataManager.sleepLogs;
+      if (sleepLogs.isNotEmpty) {
+        final encryptedLogs = _encryption.encryptList(
+            sleepLogs.map((log) => _sleepLogToMap(log)).toList());
+        await sleepLogsCollection.set({
+          'data': encryptedLogs,
+          'count': sleepLogs.length,
+          'lastUpdated': Timestamp.fromDate(now),
+        });
+      } else {
+        await sleepLogsCollection.set({'count': 0, 'lastUpdated': Timestamp.fromDate(now)});
+      }
+
+      // 11. Upload Breathing Sessions (encrypted)
+      final breathingCollection = _firestore.collection('breathingSessions').doc(userId);
+      final breathingSessions = _dataManager.breathingSessions;
+      if (breathingSessions.isNotEmpty) {
+        final encryptedSessions = _encryption.encryptList(
+            breathingSessions.map((s) => _breathingSessionToMap(s)).toList());
+        await breathingCollection.set({
+          'data': encryptedSessions,
+          'count': breathingSessions.length,
+          'lastUpdated': Timestamp.fromDate(now),
+        });
+      } else {
+        await breathingCollection.set({'count': 0, 'lastUpdated': Timestamp.fromDate(now)});
+      }
+
+      // 12. Upload Achievement Progress
+      await _firestore
+          .collection('achievementProgress')
+          .doc(userId)
+          .set(_achievementProgressToMap(_dataManager.achievementProgress));
+
     } catch (e) {
       throw 'Upload failed: $e';
     }
@@ -223,7 +265,9 @@ class SyncService {
         final userData = userDoc.data() as Map<String, dynamic>;
         if (userData['userProfile'] != null) {
           final profile = _profileFromMap(userData['userProfile']);
-          await _dataManager.saveUserProfile(profile.copyWith(lastSyncedAt: now));
+          // Don't set lastSyncedAt here — resetSyncTimestamps() at the end
+          // will align both timestamps after all saves complete.
+          await _dataManager.saveUserProfile(profile);
         }
       }
 
@@ -346,7 +390,56 @@ class SyncService {
           await _dataManager.saveMusicProgress(musicProgress);
         }
       }
-      
+
+      // 9. Download Sleep Settings
+      final sleepSettingsDoc = await _firestore
+          .collection('sleepSettings')
+          .doc(userId)
+          .get();
+      if (sleepSettingsDoc.exists) {
+        await _dataManager.saveSleepSettings(_sleepSettingsFromMap(sleepSettingsDoc.data()!));
+      }
+
+      // 10. Download Sleep Logs (decrypt)
+      final sleepLogsDoc = await _firestore.collection('sleepLogs').doc(userId).get();
+      List<SleepLog> sleepLogs = [];
+      if (sleepLogsDoc.exists) {
+        try {
+          final encryptedData = sleepLogsDoc.data()!['data'] as String?;
+          if (encryptedData != null && encryptedData.isNotEmpty) {
+            sleepLogs = _encryption.decryptList(encryptedData)
+                .map((m) => _sleepLogFromMap(m as Map<String, dynamic>))
+                .toList();
+          }
+        } catch (_) {}
+      }
+      await _dataManager.saveSleepLogs(sleepLogs);
+
+      // 11. Download Breathing Sessions (decrypt)
+      final breathingDoc = await _firestore.collection('breathingSessions').doc(userId).get();
+      List<BreathingSession> breathingSessions = [];
+      if (breathingDoc.exists) {
+        try {
+          final encryptedData = breathingDoc.data()!['data'] as String?;
+          if (encryptedData != null && encryptedData.isNotEmpty) {
+            breathingSessions = _encryption.decryptList(encryptedData)
+                .map((m) => _breathingSessionFromMap(m as Map<String, dynamic>))
+                .toList();
+          }
+        } catch (_) {}
+      }
+      await _dataManager.saveBreathingSessions(breathingSessions);
+
+      // 12. Download Achievement Progress
+      final achievementDoc = await _firestore.collection('achievementProgress').doc(userId).get();
+      if (achievementDoc.exists) {
+        await _dataManager.saveAchievementProgress(
+            _achievementProgressFromMap(achievementDoc.data()!));
+      }
+
+      // Align both timestamps so the next smartSync doesn't see local as "newer"
+      await _dataManager.resetSyncTimestamps(now);
+
     } catch (e) {
       throw 'Download failed: $e';
     }
@@ -371,9 +464,10 @@ class SyncService {
           MapEntry('${key.sceneSet.name}_${key.sceneType.name}', value)),
       'currentPoints': profile.currentPoints,
       'totalPoints': profile.totalPoints,
-      'lastPointsClaimDate': profile.lastPointsClaimDate != null 
-          ? Timestamp.fromDate(profile.lastPointsClaimDate!) 
+      'lastPointsClaimDate': profile.lastPointsClaimDate != null
+          ? Timestamp.fromDate(profile.lastPointsClaimDate!)
           : null,
+      'avatarIndex': profile.avatarIndex,
     };
   }
 
@@ -409,9 +503,10 @@ class SyncService {
       unlockedScenes: unlockedScenes,
       currentPoints: map['currentPoints'] ?? 0,
       totalPoints: map['totalPoints'] ?? 0,
-      lastPointsClaimDate: map['lastPointsClaimDate'] != null 
-          ? (map['lastPointsClaimDate'] as Timestamp).toDate() 
+      lastPointsClaimDate: map['lastPointsClaimDate'] != null
+          ? (map['lastPointsClaimDate'] as Timestamp).toDate()
           : null,
+      avatarIndex: map['avatarIndex'] as int?,
     );
   }
 
@@ -560,11 +655,11 @@ class SyncService {
           : PlantCell(
               plantType: null,
               growthStage: 0,
-              lastWatered: DateTime.now(),
+              lastWatered: DateTime.fromMillisecondsSinceEpoch(0),
               needsWater: false,
               hasPest: false,
               plantedAt: null,
-            ); // Default empty cell
+            );
       })
     );
 
@@ -820,6 +915,82 @@ class SyncService {
     );
   }
 
+  // ==================== SLEEP SETTINGS CONVERSION ====================
+
+  Map<String, dynamic> _sleepSettingsToMap(SleepSettings settings) {
+    return {
+      'bedtimeMinutes': settings.bedtimeMinutes,
+      'wakeTimeMinutes': settings.wakeTimeMinutes,
+    };
+  }
+
+  SleepSettings _sleepSettingsFromMap(Map<String, dynamic> map) {
+    return SleepSettings(
+      bedtimeMinutes: map['bedtimeMinutes'],
+      wakeTimeMinutes: map['wakeTimeMinutes'],
+    );
+  }
+
+  // ==================== SLEEP LOG CONVERSION ====================
+
+  Map<String, dynamic> _sleepLogToMap(SleepLog log) {
+    return {
+      'date': log.date.toIso8601String(),
+      'bedtimeMinutes': log.bedtimeMinutes,
+      'wakeTimeMinutes': log.wakeTimeMinutes,
+      'quality': log.quality,
+    };
+  }
+
+  SleepLog _sleepLogFromMap(Map<String, dynamic> map) {
+    return SleepLog(
+      date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
+      bedtimeMinutes: map['bedtimeMinutes'],
+      wakeTimeMinutes: map['wakeTimeMinutes'],
+      quality: map['quality'],
+    );
+  }
+
+  // ==================== BREATHING SESSION CONVERSION ====================
+
+  Map<String, dynamic> _breathingSessionToMap(BreathingSession session) {
+    return {
+      'date': session.date.toIso8601String(),
+      'exerciseType': session.exerciseType,
+      'durationSeconds': session.durationSeconds,
+      'cyclesCompleted': session.cyclesCompleted,
+    };
+  }
+
+  BreathingSession _breathingSessionFromMap(Map<String, dynamic> map) {
+    return BreathingSession(
+      date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
+      exerciseType: map['exerciseType'] ?? '4-7-8',
+      durationSeconds: map['durationSeconds'] ?? 0,
+      cyclesCompleted: map['cyclesCompleted'] ?? 0,
+    );
+  }
+
+  // ==================== ACHIEVEMENT PROGRESS CONVERSION ====================
+
+  Map<String, dynamic> _achievementProgressToMap(AchievementProgress progress) {
+    return {
+      'unlockedIds': progress.unlockedIds,
+      'counters': progress.counters,
+      'unlockedAt': progress.unlockedAt,
+      // newlyUnlocked is device-local popup state — not synced
+    };
+  }
+
+  AchievementProgress _achievementProgressFromMap(Map<String, dynamic> map) {
+    return AchievementProgress(
+      unlockedIds: List<String>.from(map['unlockedIds'] ?? []),
+      counters: Map<String, int>.from(map['counters'] ?? {}),
+      unlockedAt: Map<String, int>.from(map['unlockedAt'] ?? {}),
+      newlyUnlocked: [],
+    );
+  }
+
   // Delete all Firestore data for the current user.
   // Call this AFTER reauthenticate() and BEFORE deleteAccount().
   Future<void> deleteUserData() async {
@@ -848,6 +1019,10 @@ class SyncService {
         _firestore.collection('aquariumProgress').doc(uid).delete(),
         _firestore.collection('paintingProgress').doc(uid).delete(),
         _firestore.collection('musicProgress').doc(uid).delete(),
+        _firestore.collection('sleepSettings').doc(uid).delete(),
+        _firestore.collection('sleepLogs').doc(uid).delete(),
+        _firestore.collection('breathingSessions').doc(uid).delete(),
+        _firestore.collection('achievementProgress').doc(uid).delete(),
       ]);
     } catch (e) {
       throw 'Failed to delete user data: $e';

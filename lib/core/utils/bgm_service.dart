@@ -172,6 +172,14 @@ class BgmService {
     _isFadeCancelling = true;
   }
 
+  /// Apply bgm + volume từ DataManager (gọi sau khi sync)
+  Future<void> applySettings() async {
+    if (!_isInitialized) return;
+    final settings = DataManager().userSettings;
+    await changeBgm(settings.bgm);
+    await changeVolume(settings.bgmVolume);
+  }
+
   /// Dispose khi app đóng
   void dispose() {
     _bgmPlayer.dispose();

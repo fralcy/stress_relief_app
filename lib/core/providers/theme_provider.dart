@@ -18,6 +18,12 @@ class ThemeProvider extends ChangeNotifier {
     _currentTheme = AppThemes.getById(themeId);
   }
 
+  /// Reload theme từ DataManager (sau khi sync)
+  void refresh() {
+    _loadTheme();
+    notifyListeners();
+  }
+
   /// Đổi theme và lưu vào DataManager
   void setTheme(String themeId) {
     final newTheme = AppThemes.getById(themeId);

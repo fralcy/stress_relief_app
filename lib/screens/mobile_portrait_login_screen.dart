@@ -8,6 +8,12 @@ import '../../core/utils/data_manager.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/navigation_service.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/scene_provider.dart';
+import '../../core/providers/theme_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/providers/locale_provider.dart';
+import '../../core/utils/bgm_service.dart';
+import '../../core/utils/sfx_service.dart';
 import 'mobile_portrait_register_screen.dart';
 import 'responsive_screen.dart';
 import 'mobile_portrait_forgot_password_screen.dart';
@@ -89,9 +95,18 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
           final syncResult = await syncService.smartSync();
 
           if (mounted) {
-            // Refresh ScoreProvider to load synced data
+            // Refresh providers to reflect synced data
             context.read<ScoreProvider>().refresh();
+            context.read<SceneProvider>().refresh();
+            context.read<ThemeProvider>().refresh();
+            context.read<LocaleProvider>().refresh();
+            await BgmService().applySettings();
+            SfxService().applySettings();
+            if (!mounted) return;
+            final score = context.read<ScoreProvider>();
+            await context.read<AchievementProvider>().retroactiveCheck(score);
 
+            if (!mounted) return;
             setState(() => _isLoading = false);
 
             // Show success message with sync info

@@ -8,6 +8,12 @@ import '../../core/utils/data_manager.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/navigation_service.dart';
 import '../../core/providers/score_provider.dart';
+import '../../core/providers/scene_provider.dart';
+import '../../core/providers/theme_provider.dart';
+import '../../core/providers/achievement_provider.dart';
+import '../../core/providers/locale_provider.dart';
+import '../../core/utils/bgm_service.dart';
+import '../../core/utils/sfx_service.dart';
 import 'responsive_screen.dart';
 
 /// Mobile Portrait Register Screen
@@ -80,10 +86,22 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
           final syncResult = await syncService.smartSync();
 
           if (mounted) {
-            // Refresh ScoreProvider to load synced data
+            // Refresh providers to reflect synced data
             context.read<ScoreProvider>().refresh();
+            context.read<SceneProvider>().refresh();
+            context.read<ThemeProvider>().refresh();
+            context.read<LocaleProvider>().refresh();
+            await BgmService().applySettings();
+            SfxService().applySettings();
+            if (!mounted) return;
+            final score = context.read<ScoreProvider>();
+            await context.read<AchievementProvider>().retroactiveCheck(score);
+          }
 
-            setState(() => _isLoading = false);
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+
+          if (mounted) {
 
             // Show success message with sync info
             String message = wasGuest

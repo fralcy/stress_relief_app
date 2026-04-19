@@ -7,6 +7,7 @@ import '../../core/providers/theme_provider.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
+import '../../core/providers/scene_provider.dart';
 import '../../core/widgets/app_modal.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_slider.dart';
@@ -135,6 +136,15 @@ class _SettingsModalState extends State<SettingsModal> {
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
 
+      // Refresh providers with synced data
+      context.read<ScoreProvider>().refresh();
+      context.read<SceneProvider>().refresh();
+      context.read<ThemeProvider>().refresh();
+      context.read<LocaleProvider>().refresh();
+      await BgmService().applySettings();
+      SfxService().applySettings();
+
+      if (!mounted) return;
       // Retroactive check: cloud download may have changed data counts
       final score = context.read<ScoreProvider>();
       await context.read<AchievementProvider>().retroactiveCheck(score);

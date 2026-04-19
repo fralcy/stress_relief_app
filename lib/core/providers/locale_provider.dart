@@ -18,6 +18,11 @@ class LocaleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reload locale từ DataManager (sau khi sync)
+  void refresh() {
+    _loadLocale();
+  }
+
   /// Đổi locale và lưu vào storage
   void setLocale(String languageCode) {
     if (languageCode == _currentLocale.languageCode) return;

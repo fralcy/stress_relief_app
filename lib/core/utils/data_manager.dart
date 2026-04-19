@@ -455,6 +455,24 @@ class DataManager {
 
   Future<void> saveAchievementProgress(AchievementProgress progress) async {
     await _achievementProgressHive.put('current', progress);
+    await _updateLastModifiedTime();
+  }
+
+  Future<void> saveBreathingSessions(List<BreathingSession> sessions) async {
+    await _breathingSessionsHive.clear();
+    for (final session in sessions) {
+      await _breathingSessionsHive.add(session);
+    }
+    await _updateLastModifiedTime();
+  }
+
+  /// Sets both lastSyncedAt and lastUpdatedAt to [time] without triggering
+  /// another _updateLastModifiedTime(). Call at the end of a download to
+  /// prevent the next smartSync from seeing local as "newer than cloud".
+  Future<void> resetSyncTimestamps(DateTime time) async {
+    final current = userProfile;
+    final updated = current.copyWith(lastSyncedAt: time, lastUpdatedAt: time);
+    await _userProfileHive.put(current.id, updated);
   }
 
   // Helper method to update lastUpdatedAt timestamp when any data changes

@@ -103,6 +103,13 @@ class SfxService {
     _isEnabled = enabled;
   }
 
+  /// Apply sfxEnabled + volume từ DataManager (gọi sau khi sync)
+  void applySettings() {
+    final settings = DataManager().userSettings;
+    setEnabled(settings.sfxEnabled);
+    changeVolume(settings.sfxVolume);
+  }
+
   /// Dispose khi app đóng
   void dispose() {
     _sfxPlayer.dispose();
