@@ -607,15 +607,12 @@ class _RockBalancingLobbyModalState extends State<RockBalancingLobbyModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ── Section: Settings ──────────────────────────────────
-        _buildRockCountConfig(theme, l10n),
-
-        const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
-
         // ── Section: Singleplayer ──────────────────────────────
         Text(l10n.singleplayer,
             style: AppTypography.bodyMedium(context,
                 color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        _buildRockCountConfig(theme, l10n),
         const SizedBox(height: 10),
         AppButton(label: l10n.start, onPressed: _onStartSolo),
 

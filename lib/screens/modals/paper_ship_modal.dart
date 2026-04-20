@@ -26,12 +26,14 @@ class PaperShipModal extends StatefulWidget {
   final int seed;
   final int localSlot;          // 1-based player slot
   final List<String> playerOrder; // uid list in slot order; empty = solo
+  final int scoreTarget;          // 0 = endless
 
   const PaperShipModal({
     super.key,
     required this.seed,
     this.localSlot = 1,
     this.playerOrder = const [],
+    this.scoreTarget = 0,
   });
 
   @override
@@ -42,6 +44,7 @@ class PaperShipModal extends StatefulWidget {
     required int seed,
     int localSlot = 1,
     List<String> playerOrder = const [],
+    int scoreTarget = 0,
   }) {
     final h = MediaQuery.of(context).size.height * 0.95;
     final l10n = AppLocalizations.of(context);
@@ -80,6 +83,7 @@ class PaperShipModal extends StatefulWidget {
         seed: seed,
         localSlot: localSlot,
         playerOrder: playerOrder,
+        scoreTarget: scoreTarget,
       ),
     );
   }
@@ -109,7 +113,9 @@ class _PaperShipModalState extends State<PaperShipModal>
         TutorialStep(
           targetKey: _infoBarKey,
           title: l10n.tutorialPaperShipGameInfoTitle,
-          description: l10n.tutorialPaperShipGameInfoDesc,
+          description: widget.scoreTarget > 0
+              ? l10n.tutorialPaperShipGameInfoTargetDesc
+              : l10n.tutorialPaperShipGameInfoDesc,
           tag: 'paper_ship_info',
         ),
       ],
@@ -162,6 +168,7 @@ class _PaperShipModalState extends State<PaperShipModal>
 
   // ── Game end ─────────────────────────────────────────────
   bool _gameEnded = false;
+  double _elapsedSeconds = 0.0;
 
   // ─────────────────────────────────────────────────────────
   // Lifecycle
@@ -293,6 +300,8 @@ class _PaperShipModalState extends State<PaperShipModal>
         (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(0.0, 0.25);
     _lastTick = now;
 
+    if (!_gameEnded) _elapsedSeconds += elapsed;
+
     _accumulator += elapsed;
     while (_accumulator >= _fixedDt) {
       if (_isHost || _isSolo) {
@@ -301,6 +310,13 @@ class _PaperShipModalState extends State<PaperShipModal>
         _world.stepClient(_fixedDt);
       }
       _accumulator -= _fixedDt;
+    }
+
+    // Auto-end when distance target reached (host/solo only)
+    if (!_gameEnded && widget.scoreTarget > 0 && (_isHost || _isSolo) &&
+        _worldReady && _canvasHeight > 0 &&
+        _world.buildRenderData().distanceTraveled / _canvasHeight * 100 >= widget.scoreTarget) {
+      _triggerAutoEnd();
     }
 
     setState(() {});
@@ -335,6 +351,27 @@ class _PaperShipModalState extends State<PaperShipModal>
   // Game end
   // ─────────────────────────────────────────────────────────
 
+  void _triggerAutoEnd() {
+    if (_gameEnded) return;
+    final dist = _worldReady && _canvasHeight > 0
+        ? _world.buildRenderData().distanceTraveled / _canvasHeight * 100
+        : 0.0;
+    if (!_isSolo) {
+      context.read<GameRoomProvider>().endGame({
+        'dist': dist,
+        'elapsedSeconds': _elapsedSeconds,
+      });
+    }
+    _onGameEnd({'dist': dist, 'elapsedSeconds': _elapsedSeconds});
+  }
+
+  String _formatTime(double s) {
+    final sec = s.toInt();
+    final m = sec ~/ 60;
+    final r = sec % 60;
+    return m > 0 ? '$m:${r.toString().padLeft(2, '0')}' : '${r}s';
+  }
+
   void _onGameEnd(Map<String, dynamic> data) {
     if (_gameEnded || !mounted) return;
     setState(() => _gameEnded = true);
@@ -342,6 +379,7 @@ class _PaperShipModalState extends State<PaperShipModal>
         ?? (_worldReady && _canvasHeight > 0
             ? (_world.buildRenderData().distanceTraveled / _canvasHeight * 100)
             : 0.0);
+    final elapsed = (data['elapsedSeconds'] as double?) ?? _elapsedSeconds;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
@@ -355,7 +393,9 @@ class _PaperShipModalState extends State<PaperShipModal>
               style: AppTypography.bodyLarge(context,
                   color: theme.text, fontWeight: FontWeight.bold)),
           content: Text(
-            '${dist.toStringAsFixed(1)} cm',
+            widget.scoreTarget > 0
+                ? '${dist.toStringAsFixed(1)} cm\n${l10n.time}: ${_formatTime(elapsed)}'
+                : '${dist.toStringAsFixed(1)} cm',
             style: AppTypography.bodyMedium(context, color: theme.text),
           ),
           actions: [
@@ -373,6 +413,7 @@ class _PaperShipModalState extends State<PaperShipModal>
                   Navigator.of(context).pop(); // close dialog
                   setState(() {
                     _gameEnded = false;
+                    _elapsedSeconds = 0.0;
                     _worldReady = false;
                     _canvasWidth = 0;
                     _canvasHeight = 0;
@@ -414,7 +455,9 @@ class _PaperShipModalState extends State<PaperShipModal>
               Expanded(
                 child: Text(
                   snap != null
-                      ? '${(_canvasHeight > 0 ? snap.distanceTraveled / _canvasHeight * 100 : 0.0).toStringAsFixed(1)} cm'
+                      ? (widget.scoreTarget > 0
+                          ? '${(_canvasHeight > 0 ? snap.distanceTraveled / _canvasHeight * 100 : 0.0).toStringAsFixed(1)}/${widget.scoreTarget} cm  |  ${l10n.time}: ${_formatTime(_elapsedSeconds)}'
+                          : '${(_canvasHeight > 0 ? snap.distanceTraveled / _canvasHeight * 100 : 0.0).toStringAsFixed(1)} cm')
                       : '0.0 cm',
                   style: AppTypography.bodySmall(context,
                       color: theme.primary, fontWeight: FontWeight.bold),
@@ -429,15 +472,7 @@ class _PaperShipModalState extends State<PaperShipModal>
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  onPressed: () {
-                    final dist = _canvasHeight > 0
-                        ? (snap?.distanceTraveled ?? 0) / _canvasHeight * 100
-                        : 0.0;
-                    if (!_isSolo) {
-                      context.read<GameRoomProvider>().endGame({'dist': dist});
-                    }
-                    _onGameEnd({'dist': dist});
-                  },
+                  onPressed: _triggerAutoEnd,
                   child: Text(l10n.endGame,
                       style: TextStyle(color: theme.primary)),
                 ),

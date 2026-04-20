@@ -414,6 +414,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get roleLamp => 'Người cầm đèn';
   @override String get switchTool => 'Đổi';
   @override String get selectStartingRole => 'Chọn vai trò khởi đầu';
+  @override String get endless => 'Không giới hạn';
+  @override String get target => 'Mục tiêu';
+  @override String get catchTarget => 'bắt';
 
   // Painting Room
   @override
@@ -1011,9 +1014,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   // Tutorial - Firefly Lobby
   @override
-  String get tutorialFireflyLobbyConfigTitle => 'Số lượng đom đóm';
+  String get tutorialFireflyLobbyConfigTitle => 'Cài đặt trò chơi';
   @override
-  String get tutorialFireflyLobbyConfigDesc => 'Chọn số đom đóm xuất hiện cùng lúc. Càng nhiều đom đóm, không khí càng nhộn nhịp.';
+  String get tutorialFireflyLobbyConfigDesc => 'Đặt số đom đóm trên màn hình và mốc bắt cần đạt. Đặt mốc về 0 để chơi không giới hạn.';
   @override
   String get tutorialFireflyLobbyRoomTitle => 'Tạo hoặc tham gia';
   @override
@@ -1047,6 +1050,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tutorialFireflyGameCaughtDesc => 'Chiếu Đèn làm đom đóm phát sáng, sau đó dùng Lọ hứng lấy chúng.';
   @override
+  String get tutorialFireflyGameCaughtTargetDesc => 'Thanh thông tin hiển thị số đã bắt so với mốc và thời gian đã chơi. Đạt đủ mốc để kết thúc trò chơi.';
+  @override
   String get tutorialFireflyGameBrightnessTitle => 'Hút hoặc đẩy';
   @override
   String get tutorialFireflyGameBrightnessDesc => 'Chuyển giữa Hút (đèn mờ) và Đẩy (đèn sáng) để dồn đom đóm về phía Lọ.';
@@ -1059,6 +1064,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override String get tutorialPaperShipGameCanvasDesc => 'Chạm để tạo sóng đẩy thuyền. Mỗi người chơi đóng góp sóng — cùng nhau đưa thuyền đi càng xa càng tốt!';
   @override String get tutorialPaperShipGameInfoTitle => 'Khoảng cách';
   @override String get tutorialPaperShipGameInfoDesc => 'Khoảng cách thuyền đã đi được hiển thị ở đây.';
+  @override String get tutorialPaperShipGameInfoTargetDesc => 'Hiển thị khoảng cách so với mốc và thời gian đã chơi. Đạt đủ mốc để kết thúc trò chơi.';
+  @override String get tutorialPaperShipLobbyScoreTargetTitle => 'Mốc khoảng cách';
+  @override String get tutorialPaperShipLobbyScoreTargetDesc => 'Đặt mục tiêu khoảng cách tính bằng cm. Thuyền đạt đến mốc thì trò chơi tự kết thúc. Đặt về 0 để chơi không giới hạn.';
 
   @override
 

@@ -20,6 +20,7 @@ import '../../core/utils/sfx_service.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_modal.dart';
+import '../../core/widgets/app_slider.dart';
 import 'paper_ship_modal.dart';
 
 // ──────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
   final GlobalKey _playerListKey = GlobalKey();
   final GlobalKey _startKey      = GlobalKey();
   final GlobalKey _readyKey      = GlobalKey();
+  final GlobalKey _sliderKey     = GlobalKey();
 
   void _showTutorial() {
     final l10n = AppLocalizations.of(context);
@@ -88,7 +90,8 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
         ];
       default:
         steps = [
-          TutorialStep(targetKey: _createJoinKey, title: l10n.tutorialRockLobbyRoomTitle, description: l10n.tutorialRockLobbyRoomDesc, tag: 'ship_lobby_room'),
+          TutorialStep(targetKey: _sliderKey,     title: l10n.tutorialPaperShipLobbyScoreTargetTitle, description: l10n.tutorialPaperShipLobbyScoreTargetDesc, tag: 'ship_lobby_target'),
+          TutorialStep(targetKey: _createJoinKey, title: l10n.tutorialRockLobbyRoomTitle,             description: l10n.tutorialRockLobbyRoomDesc,             tag: 'ship_lobby_room'),
         ];
     }
     final theme = context.theme;
@@ -119,6 +122,9 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
   // ── FSM ──────────────────────────────────────────────────────
   _LobbyState _state = _LobbyState.idle;
   bool _transitioning = false;
+
+  // ── Config ───────────────────────────────────────────────────
+  int _scoreTarget = 0;
 
   // ── Metadata ─────────────────────────────────────────────────
   bool _gameStarted = false;
@@ -287,15 +293,15 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     if (_gameStarted) return;
     SfxService().buttonClick();
     final seed = math.Random().nextInt(0x7FFFFFFF);
-    _openGame({'seed': seed});
+    _openGame({'seed': seed, 'scoreTarget': _scoreTarget});
   }
 
   void _onStartGame() {
     if (_gameStarted) return;
     final seed = math.Random().nextInt(0x7FFFFFFF);
-    context.read<GameRoomProvider>().startGame({'seed': seed});
+    context.read<GameRoomProvider>().startGame({'seed': seed, 'scoreTarget': _scoreTarget});
     SfxService().buttonClick();
-    _openGame({'seed': seed});
+    _openGame({'seed': seed, 'scoreTarget': _scoreTarget});
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -474,6 +480,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     if (_gameStarted) return;
     _gameStarted = true;
     final seed = gs['seed'] as int? ?? 0;
+    final scoreTarget = gs['scoreTarget'] as int? ?? 0;
     final isHostOrSolo = LanService().role == LanRole.host || !LanService().isActive;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -489,6 +496,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
           seed: seed,
           localSlot: localSlot.clamp(1, 4),
           playerOrder: playerOrder,
+          scoreTarget: scoreTarget,
         );
         if (!mounted) return;
         _gameStarted = false;
@@ -504,6 +512,7 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
           seed: seed,
           localSlot: localSlot.clamp(1, 4),
           playerOrder: playerOrder,
+          scoreTarget: scoreTarget,
         );
         if (!mounted) return;
         _gameStarted = false;
@@ -570,6 +579,8 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
         Text(l10n.singleplayer,
             style: AppTypography.bodyMedium(context,
                 color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        _buildScoreTargetConfig(theme, l10n),
         const SizedBox(height: 10),
         AppButton(label: l10n.start, onPressed: _onStartSolo),
 
@@ -803,6 +814,20 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
           child: _chip(theme, '>', theme.primary),
         ),
       ]),
+    );
+  }
+
+  Widget _buildScoreTargetConfig(AppTheme theme, AppLocalizations l10n) {
+    return AppSlider(
+      key: _sliderKey,
+      label: _scoreTarget == 0
+          ? l10n.endless
+          : '${l10n.target}: $_scoreTarget cm',
+      value: _scoreTarget.toDouble(),
+      min: 0,
+      max: 1000,
+      onChanged: (v) =>
+          setState(() => _scoreTarget = (v / 200).round() * 200),
     );
   }
 

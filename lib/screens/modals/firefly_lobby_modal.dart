@@ -171,6 +171,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
 
   // ── Config ───────────────────────────────────────────────
   int _fireflyCount = 10;
+  int _scoreTarget = 0;
   FireflyRole _hostRole = FireflyRole.lamp;
   FireflyRole _clientRole = FireflyRole.jar; // client's chosen role
   bool _gameStarted = false;
@@ -406,6 +407,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       'fireflySeed': seed,
       'playerOrder': playerOrder,
       'roles': roles,
+      'scoreTarget': _scoreTarget,
     });
     SfxService().buttonClick();
     _openGame({
@@ -413,6 +415,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
       'fireflySeed': seed,
       'playerOrder': playerOrder,
       'roles': roles,
+      'scoreTarget': _scoreTarget,
     });
   }
 
@@ -570,6 +573,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     _gameStarted = true;
     final count = gs['maxOnScreen'] as int? ?? _fireflyCount;
     final seed = gs['fireflySeed'] as int? ?? 0;
+    final scoreTarget = gs['scoreTarget'] as int? ?? 0;
     final playerOrder = (gs['playerOrder'] as List<dynamic>? ?? []).cast<String>();
 
     final rolesRaw = gs['roles'] as Map<String, dynamic>? ?? {};
@@ -613,7 +617,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
             role: role,
             localToolId: localToolId,
             playerOrder: playerOrder,
-            allRoles: allRoles);
+            allRoles: allRoles,
+            scoreTarget: scoreTarget);
         if (!mounted) return;
         _gameStarted = false;
         if (LanService().isActive) {
@@ -629,7 +634,8 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
             role: role,
             localToolId: localToolId,
             playerOrder: playerOrder,
-            allRoles: allRoles);
+            allRoles: allRoles,
+            scoreTarget: scoreTarget);
         if (!mounted) return;
         _gameStarted = false;
         setState(() => _state =
@@ -642,7 +648,7 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     if (_gameStarted) return;
     SfxService().buttonClick();
     final seed = DateTime.now().millisecondsSinceEpoch;
-    _openGame({'maxOnScreen': _fireflyCount, 'fireflySeed': seed, 'playerOrder': <String>[]});
+    _openGame({'maxOnScreen': _fireflyCount, 'fireflySeed': seed, 'playerOrder': <String>[], 'scoreTarget': _scoreTarget});
   }
 
   // ─────────────────────────────────────────────────────────
@@ -702,11 +708,22 @@ class _FireflyLobbyModalState extends State<FireflyLobbyModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildFireflyCountConfig(theme, l10n),
-        const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),
         Text(l10n.singleplayer,
             style: AppTypography.bodyMedium(context,
                 color: theme.text, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        _buildFireflyCountConfig(theme, l10n),
+        const SizedBox(height: 8),
+        AppSlider(
+          label: _scoreTarget == 0
+              ? l10n.endless
+              : '${l10n.target}: ${l10n.catchTarget} $_scoreTarget',
+          value: _scoreTarget.toDouble(),
+          min: 0,
+          max: 250,
+          onChanged: (v) =>
+              setState(() => _scoreTarget = (v / 50).round() * 50),
+        ),
         const SizedBox(height: 10),
         AppButton(label: l10n.startGame, onPressed: _onStartSolo),
         const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Divider()),

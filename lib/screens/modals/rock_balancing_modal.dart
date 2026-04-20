@@ -754,6 +754,24 @@ class _RockBalancingModalState extends State<RockBalancingModal>
             ..pop(),
           child: Text(l10n.ok, style: TextStyle(color: theme.primary)),
         ),
+        if (_isSolo)
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (_physicsReady) _physicsWorld.dispose();
+              setState(() {
+                _gameEnded = false;
+                _bestHeight = 0;
+                _physicsReady = false;
+                _canvasWidth = 0;
+                _canvasHeight = 0;
+                _lastTick = null;
+                _accumulator = 0.0;
+                _celebs.clear();
+              });
+            },
+            child: Text(l10n.tapToReplay, style: TextStyle(color: theme.primary)),
+          ),
       ],
     );
   }

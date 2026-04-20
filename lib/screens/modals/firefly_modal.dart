@@ -29,6 +29,7 @@ class FireflyModal extends StatefulWidget {
   final int localToolId;           // 1-based slot (solo: 1 = lamp finger, LAN: player slot)
   final List<String> playerOrder;  // uid list in slot order; empty for solo
   final Map<int, FireflyRole> allRoles; // toolId → initial role; empty = solo
+  final int scoreTarget;           // 0 = endless
 
   const FireflyModal({
     super.key,
@@ -38,6 +39,7 @@ class FireflyModal extends StatefulWidget {
     this.localToolId = 1,
     this.playerOrder = const [],
     this.allRoles = const {},
+    this.scoreTarget = 0,
   });
 
   @override
@@ -51,6 +53,7 @@ class FireflyModal extends StatefulWidget {
     int localToolId = 1,
     List<String> playerOrder = const [],
     Map<int, FireflyRole> allRoles = const {},
+    int scoreTarget = 0,
   }) {
     final modalKey = GlobalKey<_FireflyModalState>();
     final h = MediaQuery.of(context).size.height * 0.95;
@@ -92,6 +95,7 @@ class FireflyModal extends StatefulWidget {
         localToolId: localToolId,
         playerOrder: playerOrder,
         allRoles: allRoles,
+        scoreTarget: scoreTarget,
       ),
     );
   }
@@ -107,6 +111,9 @@ class _FireflyModalState extends State<FireflyModal>
 
   void _showTutorial() {
     final l10n = AppLocalizations.of(context);
+    final caughtDesc = widget.scoreTarget > 0
+        ? l10n.tutorialFireflyGameCaughtTargetDesc
+        : l10n.tutorialFireflyGameCaughtDesc;
     final List<TutorialStep> steps;
     if (_isSolo) {
       steps = [
@@ -125,7 +132,7 @@ class _FireflyModalState extends State<FireflyModal>
         TutorialStep(
           targetKey: _caughtKey,
           title: l10n.tutorialFireflyGameCaughtTitle,
-          description: l10n.tutorialFireflyGameCaughtDesc,
+          description: caughtDesc,
           tag: 'firefly_caught',
         ),
       ];
@@ -152,7 +159,7 @@ class _FireflyModalState extends State<FireflyModal>
         TutorialStep(
           targetKey: _caughtKey,
           title: l10n.tutorialFireflyGameCaughtTitle,
-          description: l10n.tutorialFireflyGameCaughtDesc,
+          description: caughtDesc,
           tag: 'firefly_caught',
         ),
       ];
@@ -173,7 +180,7 @@ class _FireflyModalState extends State<FireflyModal>
         TutorialStep(
           targetKey: _caughtKey,
           title: l10n.tutorialFireflyGameCaughtTitle,
-          description: l10n.tutorialFireflyGameCaughtDesc,
+          description: caughtDesc,
           tag: 'firefly_caught',
         ),
       ];
@@ -239,6 +246,7 @@ class _FireflyModalState extends State<FireflyModal>
 
   // ── Game end ─────────────────────────────────────────────
   bool _gameEnded = false;
+  double _elapsedSeconds = 0.0;
 
   // ─────────────────────────────────────────────────────────
   // Lifecycle
@@ -450,6 +458,8 @@ class _FireflyModalState extends State<FireflyModal>
         (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(0.0, 0.25);
     _lastTick = now;
 
+    if (!_gameEnded) _elapsedSeconds += elapsed;
+
     _accumulator += elapsed;
     bool dirty = false;
     while (_accumulator >= _fixedDt) {
@@ -468,6 +478,11 @@ class _FireflyModalState extends State<FireflyModal>
         for (final id in newly) {
           _sendCatchEvent(id, _localId);
         }
+      }
+      // Auto-end when score target reached
+      if (!_gameEnded && widget.scoreTarget > 0 &&
+          _worldReady && _world.buildRenderData().totalCaught >= widget.scoreTarget) {
+        _triggerAutoEnd();
       }
     }
 
@@ -489,11 +504,31 @@ class _FireflyModalState extends State<FireflyModal>
   // Game end
   // ─────────────────────────────────────────────────────────
 
+  void _triggerAutoEnd() {
+    if (_gameEnded) return;
+    final caught = _worldReady ? _world.buildRenderData().totalCaught : 0;
+    if (!_isSolo) {
+      context.read<GameRoomProvider>().endGame({
+        'caughtCount': caught,
+        'elapsedSeconds': _elapsedSeconds,
+      });
+    }
+    _onGameEnd({'caughtCount': caught, 'elapsedSeconds': _elapsedSeconds});
+  }
+
+  String _formatTime(double s) {
+    final sec = s.toInt();
+    final m = sec ~/ 60;
+    final r = sec % 60;
+    return m > 0 ? '$m:${r.toString().padLeft(2, '0')}' : '${r}s';
+  }
+
   void _onGameEnd(Map<String, dynamic> data) {
     if (_gameEnded || !mounted) return;
     setState(() => _gameEnded = true);
     final caughtCount = (data['caughtCount'] as num?)?.toInt()
         ?? (_worldReady ? _world.buildRenderData().totalCaught : 0);
+    final elapsed = (data['elapsedSeconds'] as double?) ?? _elapsedSeconds;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
@@ -507,7 +542,9 @@ class _FireflyModalState extends State<FireflyModal>
               style: AppTypography.bodyLarge(context,
                   color: theme.text, fontWeight: FontWeight.bold)),
           content: Text(
-            '${l10n.caught}: $caughtCount',
+            widget.scoreTarget > 0
+                ? '${l10n.caught}: $caughtCount\n${l10n.time}: ${_formatTime(elapsed)}'
+                : '${l10n.caught}: $caughtCount',
             style: AppTypography.bodyMedium(context, color: theme.text),
           ),
           actions: [
@@ -517,33 +554,26 @@ class _FireflyModalState extends State<FireflyModal>
                 ..pop(),
               child: Text(l10n.ok, style: TextStyle(color: theme.primary)),
             ),
+            if (_isSolo)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  setState(() {
+                    _gameEnded = false;
+                    _elapsedSeconds = 0.0;
+                    _worldReady = false;
+                    _canvasWidth = 0;
+                    _canvasHeight = 0;
+                    _lastTick = null;
+                    _accumulator = 0.0;
+                  });
+                },
+                child: Text(l10n.tapToReplay, style: TextStyle(color: theme.primary)),
+              ),
           ],
         ),
       );
     });
-  }
-
-  void _confirmExit() {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (dCtx) => AlertDialog(
-        title: Text(l10n.endGame),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dCtx).pop(),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dCtx).pop();
-              Navigator.of(context).pop();
-            },
-            child: Text(l10n.ok),
-          ),
-        ],
-      ),
-    );
   }
 
   // ─────────────────────────────────────────────────────────
@@ -659,7 +689,9 @@ class _FireflyModalState extends State<FireflyModal>
               Expanded(
                 child: Text(
                   key: _caughtKey,
-                  '${l10n.caught}: ${snap?.totalCaught ?? 0}',
+                  widget.scoreTarget > 0
+                      ? '${l10n.caught}: ${snap?.totalCaught ?? 0}/${widget.scoreTarget}  |  ${l10n.time}: ${_formatTime(_elapsedSeconds)}'
+                      : '${l10n.caught}: ${snap?.totalCaught ?? 0}',
                   style: AppTypography.bodySmall(context,
                       color: theme.primary, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
@@ -702,31 +734,14 @@ class _FireflyModalState extends State<FireflyModal>
                   ),
                 ),
               // End game (host LAN or solo)
-              if (_isSolo)
+              if ((_isSolo || _isHost) && !_gameEnded)
                 TextButton(
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  onPressed: _confirmExit,
-                  child: Text(l10n.endGame,
-                      style: TextStyle(color: theme.primary)),
-                ),
-              if (!_isSolo && _isHost && !_gameEnded)
-                TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () {
-                    final caught = snap?.totalCaught ?? 0;
-                    context.read<GameRoomProvider>().endGame(
-                          {'caughtCount': caught},
-                        );
-                    _onGameEnd({'caughtCount': caught});
-                  },
+                  onPressed: _triggerAutoEnd,
                   child: Text(l10n.endGame,
                       style: TextStyle(color: theme.primary)),
                 ),

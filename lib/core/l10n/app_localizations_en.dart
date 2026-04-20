@@ -412,6 +412,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get roleLamp => 'Lamp holder';
   @override String get switchTool => 'Switch';
   @override String get selectStartingRole => 'Choose starting role';
+  @override String get endless => 'Endless';
+  @override String get target => 'Target';
+  @override String get catchTarget => 'catch';
 
   // Painting Room
   @override
@@ -1009,9 +1012,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   // Tutorial - Firefly Lobby
   @override
-  String get tutorialFireflyLobbyConfigTitle => 'Firefly Count';
+  String get tutorialFireflyLobbyConfigTitle => 'Game Settings';
   @override
-  String get tutorialFireflyLobbyConfigDesc => 'Choose the number of fireflies. More fireflies mean more action on screen.';
+  String get tutorialFireflyLobbyConfigDesc => 'Set the number of fireflies on screen and the catch target. Set the target to 0 for endless mode.';
   @override
   String get tutorialFireflyLobbyRoomTitle => 'Create or Join';
   @override
@@ -1045,6 +1048,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialFireflyGameCaughtDesc => 'Use the Lamp to light up fireflies, then scoop them up with the Jar.';
   @override
+  String get tutorialFireflyGameCaughtTargetDesc => 'The info bar shows your catch count vs. the target and time elapsed. Reach the target to end the game.';
+  @override
   String get tutorialFireflyGameBrightnessTitle => 'Attract or Repel';
   @override
   String get tutorialFireflyGameBrightnessDesc => 'Switch between Attract (dim light) and Repel (bright light) to herd fireflies toward the Jar.';
@@ -1057,6 +1062,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get tutorialPaperShipGameCanvasDesc => 'Tap to create waves and push the ship. Everyone contributes waves — work together to go as far as possible!';
   @override String get tutorialPaperShipGameInfoTitle => 'Distance';
   @override String get tutorialPaperShipGameInfoDesc => 'The distance your paper ship has traveled is shown here.';
+  @override String get tutorialPaperShipGameInfoTargetDesc => 'Shows distance vs. the target and time elapsed. Reach the target distance to end the game.';
+  @override String get tutorialPaperShipLobbyScoreTargetTitle => 'Distance Target';
+  @override String get tutorialPaperShipLobbyScoreTargetDesc => 'Set a distance goal in cm. When the ship reaches it, the game ends automatically. Set to 0 for endless mode.';
 
   @override
 

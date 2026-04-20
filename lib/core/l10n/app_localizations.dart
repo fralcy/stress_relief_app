@@ -217,6 +217,9 @@ abstract class AppLocalizations {
   String get roleLamp;
   String get switchTool;
   String get selectStartingRole;
+  String get endless;
+  String get target;
+  String get catchTarget;
 
   // Painting Room
   String get art;
@@ -465,6 +468,7 @@ abstract class AppLocalizations {
   String get tutorialFireflyGameCanvasSoloDesc;
   String get tutorialFireflyGameCaughtTitle;
   String get tutorialFireflyGameCaughtDesc;
+  String get tutorialFireflyGameCaughtTargetDesc;
   String get tutorialFireflyGameBrightnessTitle;
   String get tutorialFireflyGameBrightnessDesc;
   String get tutorialFireflyGameSwitchTitle;
@@ -474,6 +478,9 @@ abstract class AppLocalizations {
   String get tutorialPaperShipGameCanvasDesc;
   String get tutorialPaperShipGameInfoTitle;
   String get tutorialPaperShipGameInfoDesc;
+  String get tutorialPaperShipGameInfoTargetDesc;
+  String get tutorialPaperShipLobbyScoreTargetTitle;
+  String get tutorialPaperShipLobbyScoreTargetDesc;
 
   // Breathing Exercise
   String get breathing;
