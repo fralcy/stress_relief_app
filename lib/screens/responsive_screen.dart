@@ -4,8 +4,8 @@ import 'desktop_landscape_screen.dart';
 
 /// Responsive wrapper — picks layout based on screen dimensions.
 ///
-/// Desktop landscape: width >= 720px AND width > height
-/// Otherwise: mobile portrait (including phones in landscape)
+/// Desktop landscape: width >= 720px AND width > height AND height >= 600px
+/// Otherwise: mobile portrait (includes phones in landscape, tablets in portrait)
 class ResponsiveScreen extends StatelessWidget {
   const ResponsiveScreen({super.key});
 

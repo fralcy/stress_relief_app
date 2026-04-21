@@ -4,7 +4,7 @@ import 'desktop_landscape_splash_screen.dart';
 
 /// Responsive splash wrapper — chọn splash theo kích thước màn hình.
 ///
-/// Desktop landscape (width >= 720 AND width > height): DesktopLandscapeSplashScreen
+/// Desktop landscape (width >= 720 AND width > height AND height >= 600): DesktopLandscapeSplashScreen
 /// Còn lại: MobilePortraitSplashScreen
 class ResponsiveSplashScreen extends StatelessWidget {
   const ResponsiveSplashScreen({super.key});
@@ -14,7 +14,8 @@ class ResponsiveSplashScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isLandscape = constraints.maxWidth >= 720 &&
-            constraints.maxWidth > constraints.maxHeight;
+            constraints.maxWidth > constraints.maxHeight &&
+            constraints.maxHeight >= 600;
         if (isLandscape) {
           return const DesktopLandscapeSplashScreen();
         }

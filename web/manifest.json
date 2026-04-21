@@ -7,7 +7,7 @@
     "background_color": "#F8FAFD",
     "theme_color": "#2563EB",
     "description": "A gamification app to help you create good daily habits.",
-    "orientation": "any",
+    "orientation": "portrait",
     "prefer_related_applications": false,
     "icons": [
         {
