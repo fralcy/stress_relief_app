@@ -59,10 +59,8 @@ void main() async {
     await SfxService().initialize();
     debugPrint('[INIT] SfxService OK');
 
-    // Init Notifier
-    if (!kIsWeb) {
-      await Notifier.initialize();
-    }
+    // Init Notifier (web: reinitializes timers from saved settings; mobile: sets up channels)
+    await Notifier.initialize();
     debugPrint('[INIT] All services initialized');
   } catch (e, stackTrace) {
     debugPrint('[INIT ERROR] $e');

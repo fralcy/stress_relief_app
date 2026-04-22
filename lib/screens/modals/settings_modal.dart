@@ -681,6 +681,39 @@ class _SettingsModalState extends State<SettingsModal> {
               },
               theme,
             ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${l10n.sleepReminder}:',
+                style: AppTypography.bodyLarge(context, color: theme.text),
+              ),
+              Switch(
+                value: _settings.sleepReminderEnabled,
+                activeThumbColor: theme.primary,
+                onChanged: (val) async {
+                  if (val) {
+                    final permitted = await Notifier.requestPermissions();
+                    if (!mounted) return;
+                    if (!permitted) {
+                      SfxService().error();
+                      return;
+                    }
+                  }
+                  setState(() {
+                    _settings = _settings.copyWith(sleepReminderEnabled: val);
+                    _saveSettings();
+                  });
+                  if (val) {
+                    await Notifier.scheduleSleepReminder(_settings);
+                  } else {
+                    await Notifier.cancelSleepReminder();
+                  }
+                },
+              ),
+            ],
+          ),
         ]),
 
         const SizedBox(height: 32),
