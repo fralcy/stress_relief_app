@@ -37,6 +37,8 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   final _authService = AuthService();
   
   bool _isPasswordVisible = false;
@@ -46,6 +48,8 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -299,15 +303,17 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                   // Email field
                   _buildTextField(
                     controller: _emailController,
+                    focusNode: _emailFocusNode,
                     label: l10n.email,
                     hint: l10n.enterEmail,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
                     prefixIcon: Icons.email_outlined,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.invalidEmail;
                       }
-                      // Simple email validation
                       if (!value.contains('@') || !value.contains('.')) {
                         return l10n.invalidEmail;
                       }
@@ -320,10 +326,13 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                   // Password field
                   _buildTextField(
                     controller: _passwordController,
+                    focusNode: _passwordFocusNode,
                     label: l10n.password,
                     hint: l10n.enterPassword,
                     prefixIcon: Icons.lock_outline,
                     obscureText: !_isPasswordVisible,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _login(),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -420,8 +429,8 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                         style: AppTypography.bodyLarge(context, color: theme.border),
                       ),
                       const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
+                     TextButton(
+                        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -429,14 +438,15 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
                             ),
                           );
                         },
-                        child: Container(
-                          constraints: const BoxConstraints(minHeight: 48),
-                          alignment: Alignment.center,
-                          child: Builder(
-                            builder: (context) => Text(
-                              l10n.signUp,
-                              style: AppTypography.button(context, color: theme.primary),
-                            ),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: EdgeInsets.zero,
+                          foregroundColor: theme.primary,
+                        ),
+                        child: Builder(
+                          builder: (context) => Text(
+                            l10n.signUp,
+                            style: AppTypography.button(context, color: theme.primary),
                           ),
                         ),
                       ),
@@ -458,9 +468,12 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
     required String label,
     required String hint,
     required IconData prefixIcon,
+    FocusNode? focusNode,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
     bool obscureText = false,
     Widget? suffixIcon,
+    void Function(String)? onFieldSubmitted,
     String? Function(String?)? validator,
   }) {
     final theme = context.theme;
@@ -475,9 +488,12 @@ class _MobilePortraitLoginScreenState extends State<MobilePortraitLoginScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          focusNode: focusNode,
           keyboardType: keyboardType,
+          textInputAction: textInputAction,
           obscureText: obscureText,
           style: TextStyle(color: theme.text),
+          onFieldSubmitted: onFieldSubmitted,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: theme.border),

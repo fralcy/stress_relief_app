@@ -127,11 +127,12 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                       hint: l10n.enterEmail,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _resetPassword(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return l10n.invalidEmail;
                         }
-                        // Simple email validation
                         if (!value.contains('@') || !value.contains('.')) {
                           return l10n.invalidEmail;
                         }
@@ -236,18 +237,17 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
                         style: AppTypography.bodyLarge(context, color: theme.border),
                       ),
                       const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          constraints: const BoxConstraints(minHeight: 48),
-                          alignment: Alignment.center,
-                          child: Builder(
-                            builder: (context) => Text(
-                              l10n.backToLogin,
-                              style: AppTypography.button(context, color: theme.primary),
-                            ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: EdgeInsets.zero,
+                          foregroundColor: theme.primary,
+                        ),
+                        child: Builder(
+                          builder: (context) => Text(
+                            l10n.backToLogin,
+                            style: AppTypography.button(context, color: theme.primary),
                           ),
                         ),
                       ),
@@ -270,6 +270,8 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
     required String hint,
     required IconData prefixIcon,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    void Function(String)? onFieldSubmitted,
     String? Function(String?)? validator,
   }) {
     final theme = context.theme;
@@ -285,6 +287,8 @@ class _MobilePortraitForgotPasswordScreenState extends State<MobilePortraitForgo
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onFieldSubmitted,
           style: TextStyle(color: theme.text),
           decoration: InputDecoration(
             hintText: hint,

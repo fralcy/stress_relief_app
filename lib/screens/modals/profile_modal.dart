@@ -118,6 +118,7 @@ class _ProfileContentState extends State<_ProfileContent> {
           ),
           maxLength: 20,
           textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _save(),
         ),
         const SizedBox(height: 16),
 

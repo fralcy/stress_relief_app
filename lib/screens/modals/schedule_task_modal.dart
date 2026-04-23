@@ -340,6 +340,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _addTask(),
         ),
         
         const SizedBox(height: 12),

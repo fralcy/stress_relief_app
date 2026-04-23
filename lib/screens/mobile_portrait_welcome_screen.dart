@@ -911,7 +911,7 @@ class _MobilePortraitWelcomeScreenState extends State<MobilePortraitWelcomeScree
             ),
             maxLength: 20,
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _nameFocusNode.unfocus(),
+            onSubmitted: (_) => _nextStep(),
           ),
           const SizedBox(height: 12),
           Align(

@@ -37,6 +37,9 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
   final _authService = AuthService();
   
   bool _isPasswordVisible = false;
@@ -48,6 +51,9 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
@@ -207,10 +213,13 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                   // Email field
                   _buildTextField(
                     controller: _emailController,
+                    focusNode: _emailFocusNode,
                     label: l10n.email,
                     hint: l10n.enterEmail,
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icons.email_outlined,
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.invalidEmail;
@@ -228,9 +237,12 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                   // Password field
                   _buildTextField(
                     controller: _passwordController,
+                    focusNode: _passwordFocusNode,
                     label: l10n.password,
                     hint: l10n.enterPassword,
                     prefixIcon: Icons.lock_outline,
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
                     obscureText: !_isPasswordVisible,
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -257,9 +269,12 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                   // Confirm password field
                   _buildTextField(
                     controller: _confirmPasswordController,
+                    focusNode: _confirmPasswordFocusNode,
                     label: l10n.confirmPassword,
                     hint: l10n.enterPassword,
                     prefixIcon: Icons.lock_outline,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _register(),
                     obscureText: !_isConfirmPasswordVisible,
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -323,18 +338,17 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
                         style: AppTypography.bodyLarge(context, color: theme.border),
                       ),
                       const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          constraints: const BoxConstraints(minHeight: 48),
-                          alignment: Alignment.center,
-                          child: Builder(
-                            builder: (context) => Text(
-                              l10n.signIn,
-                              style: AppTypography.button(context, color: theme.primary),
-                            ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: EdgeInsets.zero,
+                          foregroundColor: theme.primary,
+                        ),
+                        child: Builder(
+                          builder: (context) => Text(
+                            l10n.signIn,
+                            style: AppTypography.button(context, color: theme.primary),
                           ),
                         ),
                       ),
@@ -356,9 +370,12 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
     required String label,
     required String hint,
     required IconData prefixIcon,
+    FocusNode? focusNode,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
     bool obscureText = false,
     Widget? suffixIcon,
+    void Function(String)? onFieldSubmitted,
     String? Function(String?)? validator,
   }) {
     final theme = context.theme;
@@ -373,9 +390,12 @@ class _MobilePortraitRegisterScreenState extends State<MobilePortraitRegisterScr
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          focusNode: focusNode,
           keyboardType: keyboardType,
+          textInputAction: textInputAction,
           obscureText: obscureText,
           style: TextStyle(color: theme.text),
+          onFieldSubmitted: onFieldSubmitted,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: theme.border),
