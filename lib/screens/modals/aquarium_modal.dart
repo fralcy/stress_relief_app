@@ -28,14 +28,44 @@ class AquariumModal extends StatefulWidget {
   State<AquariumModal> createState() => _AquariumModalState();
 
   static Future<void> show(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_AquariumModalState>();
     return AppModal.show(
       context: context,
       title: l10n.aquarium,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: size.height * 0.92,
       content: AquariumModal(key: modalKey),
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_AquariumModalState>();
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = (size.width * 0.92).clamp(0.0, 1100.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.aquarium,
+            scrollable: false,
+            content: AquariumModal(key: modalKey),
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -406,6 +436,15 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape = constraints.maxWidth >= 560;
+        return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
+      },
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
     final currentPoints = context.watch<ScoreProvider>().currentPoints;
@@ -424,8 +463,60 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
         const SizedBox(height: 16),
         Divider(color: theme.border, height: 1, thickness: 1.5),
         const SizedBox(height: 16),
+        _buildFishShop(theme, l10n, currentPoints),
+      ],
+    );
+  }
+
+  Widget _buildLandscape(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context);
+    final currentPoints = context.watch<ScoreProvider>().currentPoints;
+
+    final totalFish = _progress.fishes.length;
+    final totalPointsPerHour = _progress.fishes.fold<int>(0, (sum, fish) {
+      final config = FishConfigs.getConfig(fish.type);
+      return sum + (config?.pointsPerHour ?? 0);
+    });
+    final hungryCount = _progress.fishes.where(AquariumService.isHungry).length;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Left: tank viewport
         Expanded(
+          flex: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: LayoutBuilder(
+              builder: (ctx, constraints) {
+                final side = min(constraints.maxWidth, constraints.maxHeight);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTankInfoBar(theme, l10n, totalFish, totalPointsPerHour, hungryCount),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: SizedBox(
+                        width: side,
+                        height: side,
+                        child: _buildTankViewport(theme),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+
+        VerticalDivider(width: 1, thickness: 1, color: theme.border),
+
+        // Right: fish shop
+        Expanded(
+          flex: 2,
           child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
             child: _buildFishShop(theme, l10n, currentPoints),
           ),
         ),
@@ -443,86 +534,96 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Info bar
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '🐟 $totalFish/10 • $totalPointsPerHour ${l10n.points}/${l10n.hour}',
-              style: AppTypography.bodyMedium(context,
-                color: theme.text,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (hungryCount > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.primary.withOpacity(0.4)),
-                ),
-                child: Text(
-                  '🐟 $hungryCount ${l10n.fishHungry}',
-                  style: AppTypography.captionSmall(context,
-                    color: theme.primary,
-                  ).copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-          ],
-        ),
-
+        _buildTankInfoBar(theme, l10n, totalFish, totalPointsPerHour, hungryCount),
         const SizedBox(height: 12),
-
-        // Bể cá — viền cố định màu primary
         AspectRatio(
-          key: _tankKey,
           aspectRatio: 1.0,
-          child: Container(
+          child: _buildTankViewport(theme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTankInfoBar(
+    AppTheme theme,
+    AppLocalizations l10n,
+    int totalFish,
+    int totalPointsPerHour,
+    int hungryCount,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '🐟 $totalFish/10 • $totalPointsPerHour ${l10n.points}/${l10n.hour}',
+          style: AppTypography.bodyMedium(context,
+            color: theme.text,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (hungryCount > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              border: Border.all(color: theme.primary, width: 2),
+              color: theme.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.primary.withOpacity(0.4)),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final newSize = constraints.maxWidth;
-                  if (_tankSize != newSize) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        setState(() {
-                          _tankSize = newSize;
-                          _initializeFishAnimations();
-                        });
-                      }
-                    });
-                  }
-                  return Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Semantics(
-                          image: true,
-                          label: 'Aquarium tank background',
-                          child: Image.asset(
-                            AssetLoader.getTankAsset(
-                              DataManager().userSettings.currentScenes[2].sceneSet,
-                            ),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      if (_tankSize > 0) ..._buildAnimatedFish(),
-                      ..._buildFeedParticles(),
-                      ..._buildCoinAnimations(),
-                    ],
-                  );
-                },
-              ),
-            ),
+            child: Text(
+              '🐟 $hungryCount ${l10n.fishHungry}',
+              style: AppTypography.captionSmall(context,
+                color: theme.primary,
+              ).copyWith(fontWeight: FontWeight.bold),
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildTankViewport(AppTheme theme) {
+    return Container(
+      key: _tankKey,
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.primary, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final newSize = constraints.maxWidth;
+            if (_tankSize != newSize) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {
+                    _tankSize = newSize;
+                    _initializeFishAnimations();
+                  });
+                }
+              });
+            }
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: Semantics(
+                    image: true,
+                    label: 'Aquarium tank background',
+                    child: Image.asset(
+                      AssetLoader.getTankAsset(
+                        DataManager().userSettings.currentScenes[2].sceneSet,
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                if (_tankSize > 0) ..._buildAnimatedFish(),
+                ..._buildFeedParticles(),
+                ..._buildCoinAnimations(),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 

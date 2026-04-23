@@ -26,9 +26,13 @@ class GardenModal extends StatefulWidget {
   State<GardenModal> createState() => _GardenModalState();
 
   static Future<void> show(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_GardenModalState>();
-    final fixedHeight = MediaQuery.of(context).size.height * 0.92;
+    final fixedHeight = size.height * 0.92;
     return AppModal.show(
       context: context,
       title: l10n.garden,
@@ -36,6 +40,32 @@ class GardenModal extends StatefulWidget {
       minHeight: fixedHeight,
       content: GardenModal(key: modalKey),
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_GardenModalState>();
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = (size.width * 0.92).clamp(0.0, 1100.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.garden,
+            scrollable: false,
+            content: GardenModal(key: modalKey),
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -376,6 +406,15 @@ class _GardenModalState extends State<GardenModal>
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape = constraints.maxWidth >= 560;
+        return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
+      },
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
     final theme = context.theme;
 
     return Column(
@@ -445,6 +484,102 @@ class _GardenModalState extends State<GardenModal>
     );
   }
 
+  Widget _buildLandscape(BuildContext context) {
+    final theme = context.theme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Left: garden grid viewport
+        Expanded(
+          flex: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: LayoutBuilder(
+              builder: (ctx, constraints) {
+                final side = math.min(constraints.maxWidth, constraints.maxHeight);
+                return Center(
+                  child: SizedBox(
+                    width: side,
+                    height: side,
+                    child: _buildGridContent(theme),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+
+        VerticalDivider(width: 1, thickness: 1, color: theme.border),
+
+        // Right: inventory + debug
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInventorySection(theme),
+                if (_isDebugMode) ...[
+                  const SizedBox(height: 16),
+                  Divider(color: theme.border, height: 1, thickness: 1.5),
+                  const SizedBox(height: 16),
+                  Text(
+                    'DEBUG MODE',
+                    style: AppTypography.bodyLarge(
+                      context,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _debugAdvanceGrowth,
+                          icon: const Icon(Icons.bug_report, size: 18),
+                          label: const Text('+20 Hours'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _debugInstantGrowth,
+                          icon: const Icon(Icons.bug_report, size: 18),
+                          label: const Text('Instant Grow'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ==================== GRID SECTION ====================
 
   Widget _buildGridSection(AppTheme theme) {
@@ -462,9 +597,16 @@ class _GardenModalState extends State<GardenModal>
         ),
         const SizedBox(height: 12),
         AspectRatio(
-          key: _gridKey,
           aspectRatio: 1,
-          child: Container(
+          child: _buildGridContent(theme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGridContent(AppTheme theme) {
+    return Container(
+          key: _gridKey,
             decoration: BoxDecoration(
               border: Border.all(color: theme.border, width: 2),
               borderRadius: BorderRadius.circular(8),
@@ -518,10 +660,7 @@ class _GardenModalState extends State<GardenModal>
                 );
               },
             ),
-          ),
-        ),
-      ],
-    );
+          );
   }
 
   // ==================== PLOT CELL ====================

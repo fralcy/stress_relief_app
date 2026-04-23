@@ -19,6 +19,7 @@ class AppModal extends StatelessWidget {
   final VoidCallback? onHelpPressed;
   final VoidCallback? onClose;
   final bool scrollable;
+  final bool isDialog;
 
   const AppModal({
     super.key,
@@ -29,6 +30,7 @@ class AppModal extends StatelessWidget {
     this.onHelpPressed,
     this.onClose,
     this.scrollable = true,
+    this.isDialog = false,
   });
 
   /// Show modal helper
@@ -62,6 +64,7 @@ class AppModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isDialog) return _buildDialogBody(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     // Wrap in Padding(bottom) so the Container floats ABOVE the keyboard.
     // Also shrink maxHeight by the same amount so the top edge never moves.
@@ -122,6 +125,38 @@ class AppModal extends StatelessWidget {
       ),
     ),   // Container
     );   // Padding
+  }
+
+  Widget _buildDialogBody(BuildContext context) {
+    const radius = Radius.circular(28);
+    return ClipRRect(
+      borderRadius: const BorderRadius.all(radius),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.surfaceColor,
+          borderRadius: const BorderRadius.all(radius),
+          border: Border.all(color: context.outline, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            _buildHeader(context),
+            Divider(color: context.outlineVariant, height: 1, thickness: 1),
+            if (scrollable)
+              Flexible(
+                child: AppScroller(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: content,
+                  ),
+                ),
+              )
+            else
+              Expanded(child: content),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {

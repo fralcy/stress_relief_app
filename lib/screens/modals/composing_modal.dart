@@ -29,24 +29,49 @@ class ComposingModal extends StatefulWidget {
   /// Helper để show modal
   static Future<void> show(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    
+
     // Init default tracks nếu chưa có
     await ComposingService().initializeDefaultTracks();
-    
+
     if (!context.mounted) return;
 
     // Pause BGM khi mở modal
     await BgmService().pause();
-    
+
+    final size = MediaQuery.of(context).size;
     final modalKey = GlobalKey<_ComposingModalState>();
-    await AppModal.show(
-      context: context,
-      title: l10n.music,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
-      onHelpPressed: () => modalKey.currentState?._showTutorial(),
-      content: ComposingModal(key: modalKey),
-    );
-    
+
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      final dialogWidth = (size.width * 0.92).clamp(0.0, 1100.0);
+      final dialogHeight = size.height * 0.92;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: SizedBox(
+            width: dialogWidth,
+            height: dialogHeight,
+            child: AppModal(
+              isDialog: true,
+              title: l10n.music,
+              scrollable: true,
+              content: ComposingModal(key: modalKey),
+              onHelpPressed: () => modalKey.currentState?._showTutorial(),
+            ),
+          ),
+        ),
+      );
+    } else {
+      await AppModal.show(
+        context: context,
+        title: l10n.music,
+        maxHeight: size.height * 0.92,
+        onHelpPressed: () => modalKey.currentState?._showTutorial(),
+        content: ComposingModal(key: modalKey),
+      );
+    }
+
     // Resume BGM khi đóng modal
     await BgmService().resume();
   }

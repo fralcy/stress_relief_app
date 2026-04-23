@@ -27,20 +27,48 @@ class DrawingModal extends StatefulWidget {
 
   /// Helper để show modal
   static Future<void> show(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-
-    // Init default paintings nếu chưa có
     await PaintingService().initializeDefaultPaintings();
-
     if (!context.mounted) return;
 
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
+
+    final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_DrawingModalState>();
     return AppModal.show(
       context: context,
       title: l10n.art,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: size.height * 0.92,
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
       content: DrawingModal(key: modalKey),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_DrawingModalState>();
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = (size.width * 0.92).clamp(0.0, 1100.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.art,
+            scrollable: false,
+            content: DrawingModal(key: modalKey),
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -382,12 +410,18 @@ class _DrawingModalState extends State<DrawingModal> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape = constraints.maxWidth >= 560;
+        return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
+      },
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
-
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
@@ -484,6 +518,112 @@ class _DrawingModalState extends State<DrawingModal> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLandscape(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Left: toolbar + canvas only
+        Expanded(
+          flex: 3,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Toolbar
+                KeyedSubtree(key: _toolbarKey, child: _buildToolbar(l10n, theme)),
+
+                const SizedBox(height: 16),
+
+                // Canvas
+                KeyedSubtree(
+                  key: _canvasKey,
+                  child: Listener(
+                    onPointerDown: (_) => setState(() => _isDrawing = true),
+                    onPointerUp: (_) => setState(() => _isDrawing = false),
+                    onPointerCancel: (_) => setState(() => _isDrawing = false),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: PixelCanvas(
+                        gridSize: 32,
+                        pixels: _pixels,
+                        selectedColorIndex: _selectedColorIndex,
+                        onPixelPaint: _onPixelPaint,
+                        zoomLevel: _zoomLevel,
+                        panX: _panX,
+                        panY: _panY,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        VerticalDivider(width: 1, thickness: 1, color: theme.border),
+
+        // Right: zoom/pan + palette (always expanded)
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Zoom & pan
+                KeyedSubtree(
+                  key: _zoomKey,
+                  child: _buildZoomPanControls(l10n, theme),
+                ),
+
+                const SizedBox(height: 16),
+                Divider(color: theme.border, height: 1, thickness: 1),
+                const SizedBox(height: 16),
+
+                // Color palette
+                KeyedSubtree(
+                  key: _paletteKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '${l10n.selected}: ',
+                            style: AppTypography.bodyMedium(context, color: theme.text),
+                          ),
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Color(DrawingPalette.hexToInt(
+                                DrawingPalette.getColorByIndex(_selectedColorIndex)
+                              )),
+                              border: Border.all(color: theme.border, width: 2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      _buildColorPalette(theme),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
