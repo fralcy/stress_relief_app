@@ -83,6 +83,33 @@
         loader.style.opacity = '0';
         setTimeout(function () { loader.remove(); }, 300);
       }
+
+      // Pre-cache all image assets through the SW so subsequent loads are instant.
+      // Runs during idle time to avoid competing with app startup.
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        var startPrecache = function () {
+          fetch('flutter_assets/AssetManifest.json')
+            .then(function (r) { return r.json(); })
+            .then(function (manifest) {
+              var urls = Object.keys(manifest)
+                .filter(function (k) { return /\.(webp|png|jpg|jpeg|gif|svg)$/i.test(k); })
+                .map(function (k) { return 'flutter_assets/' + k; });
+              var i = 0;
+              // 3 concurrent fetch streams — low contention, fast drain
+              function pump() {
+                if (i >= urls.length) return;
+                fetch(urls[i++], { cache: 'default' }).then(pump, pump);
+              }
+              pump(); pump(); pump();
+            })
+            .catch(function () {});
+        };
+        if (window.requestIdleCallback) {
+          requestIdleCallback(startPrecache, { timeout: 8000 });
+        } else {
+          setTimeout(startPrecache, 2000);
+        }
+      }
     });
 
     // Show update banner when SW updates and takes control
