@@ -25,11 +25,41 @@ class LibraryModal extends StatefulWidget {
     required Function() onTrackSelected,
   }) {
     final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context, onTrackSelected: onTrackSelected);
+    }
     return AppModal.show(
       context: context,
       title: l10n.library,
-      maxHeight: MediaQuery.of(context).size.height * 0.8,
+      maxHeight: size.height * 0.8,
       content: LibraryModal(onTrackSelected: onTrackSelected),
+    );
+  }
+
+  static Future<void> _showLandscape(
+    BuildContext context, {
+    required Function() onTrackSelected,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = size.width.clamp(0.0, 640.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.library,
+            content: LibraryModal(onTrackSelected: onTrackSelected),
+          ),
+        ),
+      ),
     );
   }
 }
