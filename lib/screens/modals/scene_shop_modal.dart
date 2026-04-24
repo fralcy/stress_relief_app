@@ -22,11 +22,38 @@ class SceneShopModal extends StatefulWidget {
   /// Show scene shop modal
   static Future<void> show(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
     return AppModal.show(
       context: context,
       title: l10n.sceneShop,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: size.height * 0.92,
       content: const SceneShopModal(),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = size.width.clamp(0.0, 640.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.sceneShop,
+            content: const SceneShopModal(),
+          ),
+        ),
+      ),
     );
   }
 
