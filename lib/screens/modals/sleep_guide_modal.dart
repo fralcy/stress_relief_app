@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
+import '../../core/widgets/app_time_picker.dart';
 
 /// Modal for sleep guide
 class SleepGuideModal extends StatefulWidget {
@@ -392,7 +393,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           Row(
             children: [
               Expanded(
-                child: _buildTimePickerTile(
+                child: AppTimePicker(
                   label: l10n.bedtime,
                   time: sleepSettings.bedtimeMinutes != null
                       ? _sleepService
@@ -409,7 +410,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildTimePickerTile(
+                child: AppTimePicker(
                   label: l10n.wakeTime,
                   time: sleepSettings.wakeTimeMinutes != null
                       ? _sleepService
@@ -495,7 +496,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTimePickerTile(
+                      child: AppTimePicker(
                         label: l10n.bedtime,
                         time: sleepSettings.bedtimeMinutes != null
                             ? _sleepService.minutesToTimeOfDay(
@@ -512,7 +513,7 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _buildTimePickerTile(
+                      child: AppTimePicker(
                         label: l10n.wakeTime,
                         time: sleepSettings.wakeTimeMinutes != null
                             ? _sleepService.minutesToTimeOfDay(
@@ -778,41 +779,38 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
         const SizedBox(height: 12),
 
         // Bedtime + Wake time
-        Opacity(
-          opacity: canEdit ? 1.0 : 0.5,
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildTimePickerTile(
-                  label: l10n.actualBedtime,
-                  time: _logBedtimeMinutes != null
-                      ? _sleepService.minutesToTimeOfDay(_logBedtimeMinutes!)
-                      : const TimeOfDay(hour: 22, minute: 0),
-                  onChanged: canEdit
-                      ? (t) => setState(() {
-                            _logBedtimeMinutes =
-                                _sleepService.timeOfDayToMinutes(t);
-                          })
-                      : null,
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: AppTimePicker(
+                label: l10n.actualBedtime,
+                time: _logBedtimeMinutes != null
+                    ? _sleepService.minutesToTimeOfDay(_logBedtimeMinutes!)
+                    : const TimeOfDay(hour: 22, minute: 0),
+                onChanged: canEdit
+                    ? (t) => setState(() {
+                          _logBedtimeMinutes =
+                              _sleepService.timeOfDayToMinutes(t);
+                        })
+                    : null,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildTimePickerTile(
-                  label: l10n.actualWakeTime,
-                  time: _logWakeTimeMinutes != null
-                      ? _sleepService.minutesToTimeOfDay(_logWakeTimeMinutes!)
-                      : const TimeOfDay(hour: 7, minute: 0),
-                  onChanged: canEdit
-                      ? (t) => setState(() {
-                            _logWakeTimeMinutes =
-                                _sleepService.timeOfDayToMinutes(t);
-                          })
-                      : null,
-                ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: AppTimePicker(
+                label: l10n.actualWakeTime,
+                time: _logWakeTimeMinutes != null
+                    ? _sleepService.minutesToTimeOfDay(_logWakeTimeMinutes!)
+                    : const TimeOfDay(hour: 7, minute: 0),
+                onChanged: canEdit
+                    ? (t) => setState(() {
+                          _logWakeTimeMinutes =
+                              _sleepService.timeOfDayToMinutes(t);
+                        })
+                    : null,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
 
         const SizedBox(height: 16),
@@ -1067,60 +1065,4 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
   }
 
   // ==================== SHARED WIDGET ====================
-
-  Widget _buildTimePickerTile({
-    required String label,
-    required TimeOfDay time,
-    required Function(TimeOfDay)? onChanged,
-  }) {
-    final isEnabled = onChanged != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTypography.bodySmall(context)),
-        const SizedBox(height: 4),
-        InkWell(
-          onTap: isEnabled
-              ? () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime: time,
-                  );
-                  if (picked != null) {
-                    onChanged(picked);
-                    SfxService().buttonClick();
-                  }
-                }
-              : null,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  time.format(context),
-                  style: AppTypography.labelMedium(context)
-                      .copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.arrow_drop_down,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

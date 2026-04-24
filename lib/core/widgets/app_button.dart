@@ -42,9 +42,9 @@ class AppButton extends StatelessWidget {
     Color foregroundColor;
 
     if (isDisabled) {
-      // Disabled state colors
-      backgroundColor = theme.border;
-      foregroundColor = theme.background;
+      // Disabled state: recede into background
+      backgroundColor = theme.background;
+      foregroundColor = theme.border;
     } else if (isActive) {
       // Active state uses secondary color
       backgroundColor = theme.secondary;

@@ -15,6 +15,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
+import '../../core/widgets/app_time_picker.dart';
 import '../../models/schedule_task.dart';
 
 // Export
@@ -61,6 +62,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   @override
   void initState() {
     super.initState();
+    _titleController.addListener(() => setState(() {}));
     _loadTasks();
     _updateNotifications();
     _checkDebugMode();
@@ -101,7 +103,7 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
   }
 
   Future<void> _addTask() async {
-    if (_titleController.text.trim().isEmpty) {
+    if (_titleController.text.trim().isEmpty || !_isAddValid) {
       SfxService().error();
       return;
     }
@@ -150,8 +152,8 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
 
   Future<void> _updateTask(int index) async {
     final controller = _editControllers[index];
-    
-    if (controller == null || controller.text.trim().isEmpty) {
+
+    if (controller == null || controller.text.trim().isEmpty || !_isEditValid(index)) {
       SfxService().error();
       return;
     }
@@ -265,20 +267,17 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     }
   }
 
-  Future<void> _pickTime({
-    required TimeOfDay initialTime,
-    required Function(TimeOfDay) onPicked,
-  }) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-    );
-    if (picked != null) {
-      SfxService().buttonClick();
-      setState(() {
-        onPicked(picked);
-      });
-    }
+  int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  bool get _isAddValid =>
+      _titleController.text.trim().isNotEmpty &&
+      _toMinutes(_startTime) < _toMinutes(_endTime);
+
+  bool _isEditValid(int index) {
+    final title = _editControllers[index]?.text.trim() ?? '';
+    final start = _editStartTimes[index] ?? _tasks[index].startTime;
+    final end = _editEndTimes[index] ?? _tasks[index].endTime;
+    return title.isNotEmpty && _toMinutes(start) < _toMinutes(end);
   }
 
   String _formatTime(TimeOfDay time) => ScheduleTaskService.formatTime(time);
@@ -349,13 +348,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
         Row(
           children: [
             Expanded(
-              child: _buildTimePicker(
+              child: AppTimePicker(
                 time: _startTime,
-                onTap: () => _pickTime(
-                  initialTime: _startTime,
-                  onPicked: (time) => _startTime = time,
-                ),
-                theme: theme,
+                onChanged: (t) => setState(() => _startTime = t),
               ),
             ),
             Padding(
@@ -365,19 +360,16 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
               ),
             ),
             Expanded(
-              child: _buildTimePicker(
+              child: AppTimePicker(
                 time: _endTime,
-                onTap: () => _pickTime(
-                  initialTime: _endTime,
-                  onPicked: (time) => _endTime = time,
-                ),
-                theme: theme,
+                onChanged: (t) => setState(() => _endTime = t),
               ),
             ),
             const SizedBox(width: 8),
             AppButton(
               label: l10n.addTask,
               onPressed: _addTask,
+              isDisabled: !_isAddValid,
             ),
           ],
         ),
@@ -398,46 +390,6 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildTimePicker({
-    required TimeOfDay time,
-    required VoidCallback onTap,
-    required AppTheme theme,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.primary,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: theme.border, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Builder(
-              builder: (context) => Text(
-                _formatTime(time),
-                style: AppTypography.labelMedium(context,
-                  color: theme.background,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              Icons.arrow_drop_down,
-              color: theme.background,
-              size: 18,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -474,7 +426,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
     final hasOverlap = _overlappingIndexes.contains(index);
     
     if (!_editControllers.containsKey(index)) {
-      _editControllers[index] = TextEditingController(text: task.title);
+      final ctrl = TextEditingController(text: task.title);
+      ctrl.addListener(() => setState(() {}));
+      _editControllers[index] = ctrl;
     }
     
     if (isEditing && !_editStartTimes.containsKey(index)) {
@@ -567,17 +521,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                 Expanded(
                   child: Row(
                     children: [
-                      _buildTimePicker(
+                      AppTimePicker(
                         time: _editStartTimes[index] ?? task.startTime,
-                        onTap: () => _pickTime(
-                          initialTime: _editStartTimes[index] ?? task.startTime,
-                          onPicked: (time) {
-                            setState(() {
-                              _editStartTimes[index] = time;
-                            });
-                          },
-                        ),
-                        theme: theme,
+                        onChanged: (t) => setState(() => _editStartTimes[index] = t),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
@@ -585,17 +531,9 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                           builder: (ctx) => Text('-', style: AppTypography.bodyMedium(ctx, color: theme.text)),
                         ),
                       ),
-                      _buildTimePicker(
+                      AppTimePicker(
                         time: _editEndTimes[index] ?? task.endTime,
-                        onTap: () => _pickTime(
-                          initialTime: _editEndTimes[index] ?? task.endTime,
-                          onPicked: (time) {
-                            setState(() {
-                              _editEndTimes[index] = time;
-                            });
-                          },
-                        ),
-                        theme: theme,
+                        onChanged: (t) => setState(() => _editEndTimes[index] = t),
                       ),
                     ],
                   ),
@@ -609,8 +547,11 @@ class _ScheduleTaskModalState extends State<ScheduleTaskModal> {
                 ),
               if (isEditing)
                 IconButton(
-                  onPressed: () => _updateTask(index),
-                  icon: Icon(Icons.check, color: theme.primary),
+                  onPressed: _isEditValid(index) ? () => _updateTask(index) : null,
+                  icon: Icon(
+                    Icons.check,
+                    color: _isEditValid(index) ? theme.primary : theme.border,
+                  ),
                   constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   padding: EdgeInsets.zero,
                 )
