@@ -535,6 +535,7 @@ abstract class AppLocalizations {
   String get sleepLogSaved;
   String get hoursUnit;
   String get noSleepData;
+  String get selectQualityToSave;
 
   // Sleep tips card
   String get sleepTipsCardTitle;

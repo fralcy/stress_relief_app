@@ -24,16 +24,45 @@ class EmotionDiaryModal extends StatefulWidget {
   @override
   State<EmotionDiaryModal> createState() => _EmotionDiaryModalState();
 
-  /// Helper để show modal
   static Future<void> show(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_EmotionDiaryModalState>();
     return AppModal.show(
       context: context,
       title: l10n.emotionDiary,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: size.height * 0.92,
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
       content: EmotionDiaryModal(key: modalKey),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_EmotionDiaryModalState>();
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = (size.width * 0.92).clamp(0.0, 1100.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.emotionDiary,
+            scrollable: false,
+            content: EmotionDiaryModal(key: modalKey),
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -163,22 +192,58 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape = constraints.maxWidth >= 560;
+        return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
+      },
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          // ========== HISTORY SECTION ==========
-          KeyedSubtree(key: _historyKey, child: _buildHistorySection(l10n, theme)),
+        KeyedSubtree(key: _historyKey, child: _buildHistorySection(l10n, theme)),
 
-          const SizedBox(height: 24),
-          Divider(color: theme.border, height: 1, thickness: 1.5),
-          const SizedBox(height: 16),
+        const SizedBox(height: 24),
+        Divider(color: theme.border, height: 1, thickness: 1.5),
+        const SizedBox(height: 16),
 
-          // ========== CHECK-IN SECTION ==========
-          _buildCheckInSection(l10n, theme),
-        ],
+        _buildCheckInSection(l10n, theme),
+      ],
+    );
+  }
+
+  Widget _buildLandscape(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 3,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: KeyedSubtree(
+              key: _historyKey,
+              child: _buildHistorySection(l10n, theme),
+            ),
+          ),
+        ),
+        VerticalDivider(width: 1, thickness: 1, color: theme.border),
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: _buildCheckInSection(l10n, theme),
+          ),
+        ),
+      ],
     );
   }
 

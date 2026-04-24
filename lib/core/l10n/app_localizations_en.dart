@@ -1214,6 +1214,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSleepData => 'No sleep data yet';
 
   @override
+  String get selectQualityToSave => 'Select sleep quality to enable saving';
+
+  @override
   String get sleepTipsCardTitle => 'Sleep Tips';
 
   @override

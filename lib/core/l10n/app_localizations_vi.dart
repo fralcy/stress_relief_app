@@ -1216,6 +1216,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noSleepData => 'Chưa có dữ liệu giấc ngủ';
 
   @override
+  String get selectQualityToSave => 'Chọn chất lượng giấc ngủ để lưu';
+
+  @override
   String get sleepTipsCardTitle => 'Mẹo ngủ ngon';
 
   @override

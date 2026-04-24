@@ -32,14 +32,44 @@ class SleepGuideModal extends StatefulWidget {
   State<SleepGuideModal> createState() => _SleepGuideModalState();
 
   static Future<void> show(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_SleepGuideModalState>();
     return AppModal.show(
       context: context,
       title: l10n.sleepGuide,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      maxHeight: size.height * 0.92,
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
       content: SleepGuideModal(key: modalKey),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final modalKey = GlobalKey<_SleepGuideModalState>();
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = (size.width * 0.92).clamp(0.0, 1100.0);
+    final dialogHeight = size.height * 0.92;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.sleepGuide,
+            scrollable: false,
+            content: SleepGuideModal(key: modalKey),
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -285,6 +315,41 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape = constraints.maxWidth >= 560;
+        return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
+      },
+    );
+  }
+
+  Widget _buildMascotTip(AppLocalizations l10n, SleepSettings sleepSettings) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Image.asset(
+            AssetLoader.getMascotAsset(_tipMascotExpression(sleepSettings)),
+            width: 80,
+            height: 80,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _getMascotTip(l10n, sleepSettings),
+              style: AppTypography.bodyMedium(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sleepSettings = DataManager().sleepSettings;
 
@@ -292,39 +357,15 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Mascot tip
           KeyedSubtree(
             key: _tipKey,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    AssetLoader.getMascotAsset(_tipMascotExpression(sleepSettings)),
-                    width: 80,
-                    height: 80,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _getMascotTip(l10n, sleepSettings),
-                      style: AppTypography.bodyMedium(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: _buildMascotTip(l10n, sleepSettings),
           ),
 
           const SizedBox(height: 12),
           _buildSleepTipsCard(l10n),
           const SizedBox(height: 24),
 
-          // ── Sleep Log ──
           Text(l10n.sleepLog, style: AppTypography.h4(context)),
           const SizedBox(height: 4),
           Text(
@@ -345,7 +386,6 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           const Divider(),
           const SizedBox(height: 16),
 
-          // ── Sleep Schedule & Reminder ──
           Text(l10n.sleepSchedule, style: AppTypography.h4(context)),
           const SizedBox(height: 12),
 
@@ -391,6 +431,111 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
           _buildReminderRow(l10n),
         ],
       ),
+    );
+  }
+
+  Widget _buildLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final sleepSettings = DataManager().sleepSettings;
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Left: tip + tips card + day grid + graph
+        Expanded(
+          flex: 3,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                KeyedSubtree(
+                  key: _tipKey,
+                  child: _buildMascotTip(l10n, sleepSettings),
+                ),
+                const SizedBox(height: 12),
+                _buildSleepTipsCard(l10n),
+                const SizedBox(height: 24),
+                Text(l10n.sleepLog, style: AppTypography.h4(context)),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.tapDayToLogSleep,
+                  style: AppTypography.bodySmall(context).copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                KeyedSubtree(key: _gridKey, child: _buildDayGrid()),
+                const SizedBox(height: 16),
+                KeyedSubtree(key: _graphKey, child: _buildSleepGraph(l10n)),
+              ],
+            ),
+          ),
+        ),
+
+        VerticalDivider(
+            width: 1, thickness: 1, color: theme.colorScheme.outline),
+
+        // Right: check-in form + schedule & reminder
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                KeyedSubtree(
+                    key: _checkinKey, child: _buildCheckInForm(l10n)),
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+                Text(l10n.sleepSchedule, style: AppTypography.h4(context)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTimePickerTile(
+                        label: l10n.bedtime,
+                        time: sleepSettings.bedtimeMinutes != null
+                            ? _sleepService.minutesToTimeOfDay(
+                                sleepSettings.bedtimeMinutes!)
+                            : const TimeOfDay(hour: 22, minute: 0),
+                        onChanged: (time) {
+                          final updated = sleepSettings.copyWith(
+                              bedtimeMinutes:
+                                  _sleepService.timeOfDayToMinutes(time));
+                          DataManager().saveSleepSettings(updated);
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTimePickerTile(
+                        label: l10n.wakeTime,
+                        time: sleepSettings.wakeTimeMinutes != null
+                            ? _sleepService.minutesToTimeOfDay(
+                                sleepSettings.wakeTimeMinutes!)
+                            : const TimeOfDay(hour: 7, minute: 0),
+                        onChanged: (time) {
+                          final updated = sleepSettings.copyWith(
+                              wakeTimeMinutes:
+                                  _sleepService.timeOfDayToMinutes(time));
+                          DataManager().saveSleepSettings(updated);
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildReminderRow(l10n),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -683,8 +828,20 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
             child: AppButton(
               label: l10n.save,
               onPressed: canSave ? _saveLog : null,
+              isDisabled: !canSave,
             ),
           ),
+          if (_logQuality == null) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                l10n.selectQualityToSave,
+                style: AppTypography.bodySmall(context).copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ],
       ],
     );
