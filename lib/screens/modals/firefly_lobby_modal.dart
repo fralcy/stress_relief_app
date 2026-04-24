@@ -54,15 +54,47 @@ class FireflyLobbyModal extends StatefulWidget {
   State<FireflyLobbyModal> createState() => _FireflyLobbyModalState();
 
   static Future<void> show(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context);
+    }
     final modalKey = GlobalKey<_FireflyLobbyModalState>();
     return AppModal.show(
       context: context,
-      title: AppLocalizations.of(context).fireflyCatching,
-      maxHeight: MediaQuery.of(context).size.height * 0.92,
+      title: l10n.fireflyCatching,
+      maxHeight: size.height * 0.92,
       enableDrag: false,
       onClose: () => Navigator.of(context).pop(),
       onHelpPressed: () => modalKey.currentState?._showTutorial(),
       content: FireflyLobbyModal(key: modalKey),
+    );
+  }
+
+  static Future<void> _showLandscape(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = size.width.clamp(0.0, 640.0);
+    final dialogHeight = size.height * 0.92;
+    final modalKey = GlobalKey<_FireflyLobbyModalState>();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            title: l10n.fireflyCatching,
+            onClose: () => Navigator.of(context).pop(),
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+            content: FireflyLobbyModal(key: modalKey),
+          ),
+        ),
+      ),
     );
   }
 }
