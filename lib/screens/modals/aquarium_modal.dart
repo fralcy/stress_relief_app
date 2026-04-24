@@ -436,12 +436,10 @@ class _AquariumModalState extends State<AquariumModal> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isLandscape = constraints.maxWidth >= 560;
-        return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
-      },
-    );
+    final size = MediaQuery.of(context).size;
+    final isLandscape =
+        size.width >= 720 && size.width > size.height && size.height >= 600;
+    return isLandscape ? _buildLandscape(context) : _buildPortrait(context);
   }
 
   Widget _buildPortrait(BuildContext context) {
