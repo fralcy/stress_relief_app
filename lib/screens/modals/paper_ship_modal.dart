@@ -46,7 +46,15 @@ class PaperShipModal extends StatefulWidget {
     List<String> playerOrder = const [],
     int scoreTarget = 0,
   }) {
-    final h = MediaQuery.of(context).size.height * 0.95;
+    final size = MediaQuery.of(context).size;
+    if (size.width >= 720 && size.width > size.height && size.height >= 600) {
+      return _showLandscape(context,
+          seed: seed,
+          localSlot: localSlot,
+          playerOrder: playerOrder,
+          scoreTarget: scoreTarget);
+    }
+    final h = size.height * 0.95;
     final l10n = AppLocalizations.of(context);
     final modalKey = GlobalKey<_PaperShipModalState>();
     return AppModal.show(
@@ -84,6 +92,66 @@ class PaperShipModal extends StatefulWidget {
         localSlot: localSlot,
         playerOrder: playerOrder,
         scoreTarget: scoreTarget,
+      ),
+    );
+  }
+
+  static Future<void> _showLandscape(
+    BuildContext context, {
+    required int seed,
+    int localSlot = 1,
+    List<String> playerOrder = const [],
+    int scoreTarget = 0,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
+    final dialogWidth = size.width.clamp(0.0, 640.0);
+    final dialogHeight = size.height * 0.92;
+    final modalKey = GlobalKey<_PaperShipModalState>();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: AppModal(
+            isDialog: true,
+            scrollable: false,
+            title: l10n.paperShip,
+            onHelpPressed: () => modalKey.currentState?._showTutorial(),
+            onClose: () {
+              showDialog(
+                context: context,
+                builder: (dCtx) => AlertDialog(
+                  title: Text(l10n.endGame),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dCtx).pop(),
+                      child: Text(l10n.cancel),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(dCtx).pop();
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(l10n.ok),
+                    ),
+                  ],
+                ),
+              );
+            },
+            content: PaperShipModal(
+              key: modalKey,
+              seed: seed,
+              localSlot: localSlot,
+              playerOrder: playerOrder,
+              scoreTarget: scoreTarget,
+            ),
+          ),
+        ),
       ),
     );
   }
