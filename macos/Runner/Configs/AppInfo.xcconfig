@@ -8,7 +8,7 @@
 PRODUCT_NAME = stress_relief_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.stressReliefApp
+PRODUCT_BUNDLE_IDENTIFIER = com.fralcy.peacepal
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 fralcy. All rights reserved.

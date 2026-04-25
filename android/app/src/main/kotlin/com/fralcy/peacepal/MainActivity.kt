@@ -1,4 +1,4 @@
-package com.example.stress_relief_app
+package com.fralcy.peacepal
 
 import io.flutter.embedding.android.FlutterActivity
 
