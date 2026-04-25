@@ -129,14 +129,16 @@ class _PaperShipLobbyModalState extends State<PaperShipLobbyModal> {
     final theme = context.theme;
     TutorialOverlay(
       context: context,
+      blurOpacity: kIsWeb ? 0 : 20,
+      blurSigma: kIsWeb ? 0 : 6,
       steps: steps,
       nextText: l10n.tutorialNext,
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
-      tooltipBackgroundColor: theme.background,
-      titleTextColor: theme.text,
-      descriptionTextColor: theme.text,
+      tooltipBackgroundColor: kIsWeb ? theme.text : theme.background,
+      titleTextColor: kIsWeb ? theme.background : theme.text,
+      descriptionTextColor: kIsWeb ? theme.background : theme.text,
       nextButtonStyle: ElevatedButton.styleFrom(
         backgroundColor: theme.primary,
         foregroundColor: theme.background,

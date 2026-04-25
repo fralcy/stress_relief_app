@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -161,6 +162,8 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
     final theme = context.theme;
     TutorialOverlay(
       context: context,
+      blurOpacity: kIsWeb ? 0 : 20,
+      blurSigma: kIsWeb ? 0 : 6,
       steps: [
         TutorialStep(targetKey: _historyKey, title: l10n.tutorialDiaryHistoryTitle, description: l10n.tutorialDiaryHistoryDesc, tag: 'diary_history'),
         TutorialStep(targetKey: _questionsKey, title: l10n.tutorialDiaryQuestionsTitle, description: l10n.tutorialDiaryQuestionsDesc, tag: 'diary_questions'),
@@ -171,9 +174,9 @@ class _EmotionDiaryModalState extends State<EmotionDiaryModal> {
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
-      tooltipBackgroundColor: theme.background,
-      titleTextColor: theme.text,
-      descriptionTextColor: theme.text,
+      tooltipBackgroundColor: kIsWeb ? theme.text : theme.background,
+      titleTextColor: kIsWeb ? theme.background : theme.text,
+      descriptionTextColor: kIsWeb ? theme.background : theme.text,
       nextButtonStyle: ElevatedButton.styleFrom(
         backgroundColor: theme.primary,
         foregroundColor: theme.background,

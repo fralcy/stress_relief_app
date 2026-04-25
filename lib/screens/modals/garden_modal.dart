@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tutorial_overlay/flutter_tutorial_overlay.dart';
@@ -208,6 +209,8 @@ class _GardenModalState extends State<GardenModal>
     final theme = context.theme;
     TutorialOverlay(
       context: context,
+      blurOpacity: kIsWeb ? 0 : 20,
+      blurSigma: kIsWeb ? 0 : 6,
       steps: [
         TutorialStep(
           targetKey: _gridKey,
@@ -226,9 +229,9 @@ class _GardenModalState extends State<GardenModal>
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
-      tooltipBackgroundColor: theme.background,
-      titleTextColor: theme.text,
-      descriptionTextColor: theme.text,
+      tooltipBackgroundColor: kIsWeb ? theme.text : theme.background,
+      titleTextColor: kIsWeb ? theme.background : theme.text,
+      descriptionTextColor: kIsWeb ? theme.background : theme.text,
       nextButtonStyle: ElevatedButton.styleFrom(
         backgroundColor: theme.primary,
         foregroundColor: theme.background,

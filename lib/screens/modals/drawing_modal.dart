@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -379,6 +380,8 @@ class _DrawingModalState extends State<DrawingModal> {
     final theme = context.theme;
     TutorialOverlay(
       context: context,
+      blurOpacity: kIsWeb ? 0 : 20,
+      blurSigma: kIsWeb ? 0 : 6,
       steps: [
         TutorialStep(targetKey: _toolbarKey, title: l10n.tutorialDrawToolbarTitle, description: l10n.tutorialDrawToolbarDesc, tag: 'draw_toolbar'),
         TutorialStep(targetKey: _canvasKey, title: l10n.tutorialDrawCanvasTitle, description: l10n.tutorialDrawCanvasDesc, tag: 'draw_canvas'),
@@ -389,9 +392,9 @@ class _DrawingModalState extends State<DrawingModal> {
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
-      tooltipBackgroundColor: theme.background,
-      titleTextColor: theme.text,
-      descriptionTextColor: theme.text,
+      tooltipBackgroundColor: kIsWeb ? theme.text : theme.background,
+      titleTextColor: kIsWeb ? theme.background : theme.text,
+      descriptionTextColor: kIsWeb ? theme.background : theme.text,
       nextButtonStyle: ElevatedButton.styleFrom(
         backgroundColor: theme.primary,
         foregroundColor: theme.background,

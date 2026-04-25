@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
@@ -169,6 +170,8 @@ class _PaperShipModalState extends State<PaperShipModal>
     final theme = context.theme;
     TutorialOverlay(
       context: context,
+      blurOpacity: kIsWeb ? 0 : 20,
+      blurSigma: kIsWeb ? 0 : 6,
       steps: [
         TutorialStep(
           targetKey: _canvasKey,
@@ -191,9 +194,9 @@ class _PaperShipModalState extends State<PaperShipModal>
       skipText: l10n.tutorialSkip,
       finshText: l10n.tutorialGotIt,
       onComplete: () => SfxService().buttonClick(),
-      tooltipBackgroundColor: theme.background,
-      titleTextColor: theme.text,
-      descriptionTextColor: theme.text,
+      tooltipBackgroundColor: kIsWeb ? theme.text : theme.background,
+      titleTextColor: kIsWeb ? theme.background : theme.text,
+      descriptionTextColor: kIsWeb ? theme.background : theme.text,
       nextButtonStyle: ElevatedButton.styleFrom(
         backgroundColor: theme.primary,
         foregroundColor: theme.background,
