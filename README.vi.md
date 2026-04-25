@@ -1,12 +1,12 @@
-# PeacePal 🕊️
+# PeacePal
 
-**Người Bạn Đồng Hành Giảm Stress Của Bạn**
+**Ứng dụng gamification giúp bạn xây dựng thói quen tốt mỗi ngày.**
 
 ![Phiên bản](https://img.shields.io/badge/phiên_bản-0.9.0-blue)
-![Nền tảng](https://img.shields.io/badge/nền_tảng-Android-green)
+![Nền tảng](https://img.shields.io/badge/nền_tảng-Android%20%7C%20Web-green)
 ![Giấy phép](https://img.shields.io/badge/giấy_phép-CC_BY--NC_4.0-orange)
 
-[🇬🇧 English Version](README.md)
+[🇬🇧 English](README.md)
 
 ---
 
@@ -14,289 +14,127 @@
 
 ---
 
-## 📖 Giới Thiệu PeacePal
+## Tính Năng
 
-**PeacePal** là ứng dụng di động đơn giản giúp giảm stress và theo dõi tâm trạng. Ứng dụng có một số minigame, nhật ký hàng ngày và quản lý công việc để bạn thư giãn và sắp xếp thời gian.
-
-Đây là dự án cá nhân được làm để học tập và chia sẻ. Bạn có thể thử nếu đang tìm cách đơn giản để nghỉ ngơi và ghi lại tâm trạng.
-
----
-
-## ✨ Tính Năng
-
-- 🐾 **Linh Vật** - Nhân vật hiển thị các cảm xúc khác nhau
-- 🏠 **5 Phòng** - Phòng Khách, Vườn, Hồ Cá, Phòng Vẽ, Phòng Nhạc
-- 🎮 **Minigame** - Trồng cây, chăm sóc cá, vẽ pixel art, tạo giai điệu
-- 📔 **Nhật Ký Cảm Xúc** - Theo dõi tâm trạng hàng ngày với câu hỏi đơn giản
-- ✅ **Quản Lý Công Việc** - Ghi lại công việc hàng ngày
-- 🎨 **Tùy Chỉnh** - 8 theme, 5 bộ cảnh (mở khóa bằng điểm), 2 ngôn ngữ
-- 🎵 **Nhạc Nền** - 8 bản nhạc lofi/thư giãn có thể phát khi dùng app
-- ☁️ **Đồng Bộ** - Lưu tiến trình online (cần tài khoản)
+- 🐾 **Linh Vật** — Người bạn đồng hành với nhiều cảm xúc, phản ứng theo tâm trạng của bạn
+- 🏠 **5 Phòng** — Phòng Khách, Vườn Cây, Hồ Cá, Phòng Vẽ, Phòng Nhạc
+- 📔 **Công Cụ Hàng Ngày** — Nhật ký cảm xúc, quản lý công việc, luyện thở, ghi chú giấc ngủ
+- 🎮 **Minigame Solo** — Trồng cây, nuôi cá, vẽ pixel art, soạn giai điệu
+- 🤝 **Trò Chơi Hợp Tác** — Chơi cùng bạn bè, không cần đăng nhập
+- 🏆 **Thành Tích** — Mở khóa huy hiệu qua các hoạt động hàng ngày
+- 🎨 **Tùy Chỉnh** — 8 theme, 8 bộ cảnh, 2 ngôn ngữ
+- 🎵 **Nhạc Nền** — 8 bản nhạc lofi/thư giãn
+- ☁️ **Đồng Bộ** — Tùy chọn tài khoản để lưu tiến trình online
 
 ---
 
-## 🐾 Gặp Gỡ Linh Vật
+## Các Phòng & Hoạt Động
 
-Linh vật với nhiều cảm xúc đa dạng.
+### Phòng Khách
 
-<p align="center">
-  <img src="assets/images/mascot/idle.png" width="100" alt="Bình thường"/>
-  <img src="assets/images/mascot/happy.png" width="100" alt="Vui vẻ"/>
-  <img src="assets/images/mascot/calm.png" width="100" alt="Thư thái"/>
-  <img src="assets/images/mascot/sad.png" width="100" alt="Buồn"/>
-  <img src="assets/images/mascot/sleepy.png" width="100" alt="Buồn ngủ"/>
-  <img src="assets/images/mascot/surprised.png" width="100" alt="Ngạc nhiên"/>
-</p>
+Trung tâm hàng ngày của bạn. Quản lý danh sách công việc, ghi lại tâm trạng, luyện thở và xây dựng thói quen ngủ tốt hơn.
 
----
+### Vườn Cây & Hồ Cá
 
-## 🎮 Minigame & Hoạt Động
+Chăm sóc cây ảo hoặc nuôi cá để tích lũy điểm thưởng. Tưới cây mỗi 20 giờ, cho cá ăn đều đặn. Dùng điểm để mở khóa bối cảnh phòng mới tại Cửa Hàng Bối Cảnh.
 
-### 🌱 Vườn Cây
+### Phòng Vẽ
 
-Trồng và thu hoạch cây ảo.
+Vẽ trên khung 64×64 pixel với bảng màu và các mẫu có sẵn. Lưu tranh vào thư viện cá nhân.
 
-- 10 loại cây với thời gian sinh trưởng khác nhau (40-140 giờ)
-- Tưới nước mỗi 20 giờ để cây lớn
-- Thỉnh thoảng có sâu bệnh
-- Kiếm điểm khi thu hoạch
+### Phòng Nhạc
 
-### 🐠 Hồ Cá
-
-Nuôi và cho cá ăn.
-
-- Tối đa 10 con cá
-- Cho ăn đều đặn để kiếm điểm
-- Cá bơi trong các cảnh nền khác nhau
-
-### 🎨 Phòng Vẽ
-
-Vẽ pixel art đơn giản.
-
-- Khung vẽ 64×64 pixel
-- Bảng màu cơ bản
-- Có mẫu sẵn (Trái Tim, Ngôi Sao, Hoa, Mèo, Cây, Táo)
-- Lưu tranh vào thư viện
-
-### 🎵 Phòng Nhạc
-
-Tạo giai điệu đơn giản.
-
-- 5 nhạc cụ: Piano, Guitar, Bass, Trống, Synth
-- Giao diện tạo nhạc đơn giản
-- Lưu bản nhạc vào thư viện
-- Có bản nhạc mẫu
+Soạn giai điệu với 5 nhạc cụ (Piano, Guitar, Bass, Trống, Synth). Lưu bản nhạc vào thư viện hoặc nghe các bản nhạc mẫu đi kèm.
 
 ---
 
-## 📔 Công Cụ Hàng Ngày
+## Trò Chơi Hợp Tác
 
-### Nhật Ký Cảm Xúc
+Cùng chơi hợp tác với bạn bè — không cần đăng nhập. Ba trò chơi:
 
-Theo dõi tâm trạng mỗi ngày:
+- **Xếp Đá** — Cân bằng tháp đá cùng nhau
+- **Bắt Đom Đóm** — Hợp tác bắt đom đóm
+- **Thuyền Giấy** — Cùng đưa thuyền giấy ngược dòng
 
-- 3 câu hỏi đơn giản đánh giá 1-5
-- Ghi chú tùy chọn
-- Xem lại các mục cũ
-- Dữ liệu lưu local hoặc được mã hóa khi đồng bộ lên cloud
+**Di động:** Kết nối cùng mạng Wi-Fi, tạo hoặc tham gia phòng.
 
-### Quản Lý Công Việc
-
-Theo dõi công việc cơ bản:
-
-- Tạo công việc hàng ngày
-- Đặt thời gian bắt đầu/kết thúc
-- Nhắc nhở tùy chọn
-- Đánh dấu hoàn thành
-- Hỗ trợ công việc lặp lại
+**Web:** Chia sẻ mã phòng — bạn bè có thể tham gia từ bất kỳ đâu, không cần cùng mạng.
 
 ---
 
-## 🎨 Tùy Chỉnh
+## Tùy Chỉnh
 
-### 8 Theme
+**8 Theme** — 4 theme sáng (Pastel Blue, Lavender, Sunny Yellow, Minty) và 4 theme tối (Midnight Blue, Purple Night, Warm Sunset, Green Night).
 
-4 theme sáng và 4 theme tối:
+**8 Bộ Cảnh** — Mặc định (miễn phí) + 7 bộ có thể mở khóa. Mỗi bộ thay đổi hình nền cho cả 5 phòng.
 
-**Theme Sáng:**
-- 🌊 Pastel Blue Breeze (Mặc định)
-- 💜 Calm Lavender
-- ☀️ Sunny Pastel Yellow
-- 🌿 Minty Fresh
-
-**Theme Tối:**
-- 🌙 Midnight Blue
-- 🌸 Soft Purple Night
-- 🌅 Warm Sunset
-- 🌲 Serene Green Night
-
-### 5 Bộ Cảnh
-
-Mở khóa bằng điểm kiếm từ minigame:
-
-1. **Mặc Định** (Miễn phí)
-2. **Phong Cách Nhật Bản**
-3. **Bãi Biển/Nhiệt Đới**
-4. **Mùa Đông/Tuyết**
-5. **Rừng/Thiên Nhiên**
-
-Mỗi bộ có hình nền khác nhau cho cả 5 phòng.
-
-### Hỗ Trợ Ngôn Ngữ
-
-- 🇬🇧 English (Tiếng Anh)
-- 🇻🇳 Tiếng Việt
+**Ngôn Ngữ** — Tiếng Việt và English.
 
 ---
 
-## 🎵 Âm Thanh
+## Âm Thanh
 
-### Nhạc Nền
+8 bản nhạc nền: Lofi Beats, Tiếng Mưa, Nhạc Piano, Ballad Acoustic, Dân Ca, Indie Vibes, Soft Pop, Chill Acoustic.
 
-8 bản nhạc có thể phát:
-- Lofi Beats
-- Tiếng Mưa
-- Nhạc Piano
-- Ballad Acoustic
-- Dân Ca
-- Indie Vibes
-- Soft Pop
-- Chill Acoustic
-
-### Hiệu Ứng Âm Thanh
-
-Âm thanh cơ bản cho nút bấm, hoàn thành công việc, v.v.
-
-### Điều Khiển
-
-- Chỉnh âm lượng riêng cho nhạc và hiệu ứng
-- Bật/tắt độc lập
+Chỉnh âm lượng riêng cho nhạc nền và hiệu ứng âm thanh.
 
 ---
 
-## 📱 Cài Đặt
+## Cài Đặt
 
-### Yêu Cầu Hệ Thống
+### Web (PWA)
 
-- **Nền tảng:** Android 5.0+ (API level 21+)
-- **Dung lượng:** ~250MB dung lượng trống
-- **Internet:** Cần thiết cho tạo tài khoản và đồng bộ đám mây
+Mở trên trình duyệt và cài đặt như PWA. Bạn bè có thể tham gia phòng hợp tác từ bất kỳ thiết bị nào.
 
-### Bắt Đầu Nhanh
+### Android
 
-Tải APK từ GitHub Release để dùng trên thiết bị di động.
+Tải APK từ trang [GitHub Releases](https://github.com/fralcy/peacepal/releases).
 
 ### Build Từ Mã Nguồn
 
-Nếu muốn tự build:
-
 ```bash
-# Clone repository
-git clone https://github.com/[your-username]/peacepal.git
+git clone https://github.com/fralcy/peacepal.git
 cd stress_relief_app
-
-# Cài đặt dependencies Flutter
 flutter pub get
-
-# Tạo Hive adapters (nếu cần)
 flutter pub run build_runner build
-
-# Chạy trên thiết bị hoặc emulator
 flutter run
-
-# Build APK release
-flutter build apk --release
 ```
 
-**Yêu cầu:**
-- Flutter SDK (Phiên bản stable mới nhất)
-- Dart 3.9.2+
-- Android SDK
-- Thiết lập Firebase project (cho tính năng đám mây)
+**Yêu cầu:** Flutter SDK (stable), Dart 3.9.2+, Firebase project (cho tính năng đám mây).
 
 ---
 
-## 📚 Hướng Dẫn
+## Công Nghệ
 
-### Thiết Lập Lần Đầu
-
-1. Tạo tài khoản (hoặc bỏ qua để dùng offline)
-2. Chọn theme
-3. Chọn nhạc nền
-4. Xem hướng dẫn
-
-### Cách Sử Dụng
-
-- Dùng nhật ký cảm xúc để ghi lại tâm trạng
-- Thêm công việc để sắp xếp
-- Chơi minigame khi muốn nghỉ ngơi
-- Tưới cây vườn và cho cá ăn mỗi 20 giờ nếu đang chơi
-- Kiếm điểm để mở khóa cảnh mới
-
-### Mẹo
-
-- Bật thông báo cho công việc nếu cần
-- Thử các theme khác nhau để xem cái nào hợp
+- **Flutter** — Framework đa nền tảng
+- **Firebase** — Xác thực và đồng bộ đám mây
+- **Hive** — Lưu trữ local
+- **Forge2D** — Vật lý
+- **flutter_webrtc** — Hợp tác thời gian thực qua WebRTC
+- **Rive** — Hoạt ảnh
+- **Provider** — Quản lý state
 
 ---
 
-## 🛠️ Công Nghệ
+## Hỗ Trợ & Pháp Lý
 
-- **Flutter** - Framework ứng dụng di động
-- **Firebase** - Xác thực và đồng bộ đám mây
-- **Hive** - Cơ sở dữ liệu local
-- **Material Design 3** - Thiết kế UI
-- **Provider** - Quản lý state
+**Trang web hỗ trợ:** https://fralcy.github.io/PeacePal-Center/
 
----
+- [Chính sách bảo mật](https://fralcy.github.io/PeacePal-Center/privacy_policy.html) — Dữ liệu thu thập, cách lưu trữ, quyền của bạn
+- [Xóa tài khoản](https://fralcy.github.io/PeacePal-Center/delete_account.html) — Xóa tài khoản và dữ liệu đám mây qua web (không cần cài app)
 
-## 🤝 Hỗ Trợ & Phản Hồi
+Báo lỗi & đề xuất: [GitHub Issues](https://github.com/fralcy/peacepal/issues)
 
-### Cần Giúp Đỡ?
-
-- 🐛 **Báo Lỗi** - [GitHub Issues](https://github.com/fralcy/stress_relief_app/issues)
-- 💡 **Đề Xuất Tính Năng** - [GitHub Issues](https://github.com/fralcy/stress_relief_app/issues)
-- 📧 **Email** - [quangthinh2924@gmail.com]
-
-### Đóng Góp
-
-Đây là dự án học tập cá nhân. Bạn có thể mở issue nếu tìm thấy lỗi hoặc có đề xuất.
+Email: quangthinh2924@gmail.com
 
 ---
 
-## 📄 Giấy Phép
+## Giấy Phép
 
-Dự án này được cấp phép theo **Giấy phép Creative Commons Ghi công-Phi thương mại 4.0 Quốc tế (CC BY-NC 4.0)**.
-
-**Điều này có nghĩa:**
-- ✅ Bạn có thể sử dụng, chia sẻ và chỉnh sửa ứng dụng này cho **mục đích cá nhân, giáo dục hoặc phi thương mại**
-- ✅ Bạn phải ghi công tác giả gốc
-- ❌ Bạn **không được** sử dụng ứng dụng này hoặc mã nguồn của nó cho **mục đích thương mại** mà không có sự cho phép
-
-Xem file [LICENSE](LICENSE) để biết chi tiết đầy đủ hoặc truy cập [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — Miễn phí cho mục đích cá nhân và giáo dục. Không dùng cho mục đích thương mại khi chưa được phép.
 
 ---
 
-## 🙏 Lời Cảm Ơn
+## Lời Cảm Ơn
 
-- Được làm như một dự án học tập
-- Cảm ơn cộng đồng Flutter và Firebase về tài liệu và nguồn tài nguyên
-- Nhạc nền được tạo bởi Suno AI
-
----
-
-## 🌟 Có Thể Cập Nhật Sau
-
-Một số ý tưởng có thể thêm sau (không cam kết):
-
-- Phiên bản Web
-- Phiên bản iOS
-- Hệ thống thành tích
-- Biểu đồ theo dõi cảm xúc
-- Thêm minigame hoặc tính năng
-
----
-
-<p align="center">
-  Ứng dụng giảm stress đơn giản được làm để học tập và chia sẻ.
-</p>
+Được làm như một dự án học tập. Nhạc nền tạo bởi Suno AI. Cảm ơn cộng đồng Flutter và Firebase về tài liệu và nguồn tài nguyên.

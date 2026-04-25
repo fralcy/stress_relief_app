@@ -126,7 +126,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     return MaterialApp(
       scaffoldMessengerKey: NavigationService.scaffoldMessengerKey,
-      title: 'PeacePal - Stress Relief App',
+      title: 'PeacePal',
 
       // Material 3 Theme with full M3 support
       theme: ThemeData(

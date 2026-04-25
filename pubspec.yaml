@@ -1,5 +1,5 @@
 name: stress_relief_app
-description: "PeacePal - Your personal stress relief companion with minigames, mood tracking, and relaxation features."
+description: "A gamification app to help you create good daily habits."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -168,7 +168,7 @@ flutter_launcher_icons:
   android: true
   ios: false
   web:
-    generate: true
+    generate: false
     image_path: "assets/images/app_icon.png"
     background_color: "#F8FAFD"
     theme_color: "#2563EB"
