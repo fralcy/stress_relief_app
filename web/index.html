@@ -84,16 +84,27 @@
         setTimeout(function () { loader.remove(); }, 300);
       }
 
-      // Pre-cache all image assets through the SW so subsequent loads are instant.
+      // Pre-cache all image/audio assets through the SW so they work offline.
       // Runs during idle time to avoid competing with app startup.
+      // Flutter 3.x uses AssetManifest.bin.json (base64-encoded binary) —
+      // we decode it and extract asset paths via regex instead of JSON.parse.
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         var startPrecache = function () {
-          fetch('flutter_assets/AssetManifest.json')
+          fetch('assets/AssetManifest.bin.json')
             .then(function (r) { return r.json(); })
-            .then(function (manifest) {
-              var urls = Object.keys(manifest)
-                .filter(function (k) { return /\.(webp|png|jpg|jpeg|gif|svg)$/i.test(k); })
-                .map(function (k) { return 'flutter_assets/' + k; });
+            .then(function (base64) {
+              var binary = atob(base64);
+              var bytes = new Uint8Array(binary.length);
+              for (var j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+              var text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+              var seen = {};
+              var urls = [];
+              var re = /[a-z0-9_\-\/]+\.(webp|png|jpg|jpeg|gif|svg|mp3)/gi;
+              var m;
+              while ((m = re.exec(text)) !== null) {
+                var u = 'assets/' + m[0];
+                if (!seen[u]) { seen[u] = true; urls.push(u); }
+              }
               var i = 0;
               // 3 concurrent fetch streams — low contention, fast drain
               function pump() {
