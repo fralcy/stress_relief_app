@@ -11,7 +11,6 @@ import '../../core/widgets/line_graph.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/sleep_guide_service.dart';
 import '../../core/utils/sfx_service.dart';
-import '../../core/utils/asset_loader.dart';
 import '../../core/utils/notifier.dart';
 import '../../core/utils/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -25,6 +24,7 @@ import '../../core/providers/score_provider.dart';
 import '../../core/providers/achievement_provider.dart';
 import '../../core/widgets/achievement_popup.dart';
 import '../../core/widgets/app_time_picker.dart';
+import '../../core/widgets/mascot_sprite_widget.dart';
 
 /// Modal for sleep guide
 class SleepGuideModal extends StatefulWidget {
@@ -334,10 +334,9 @@ class _SleepGuideModalState extends State<SleepGuideModal> {
       ),
       child: Row(
         children: [
-          Image.asset(
-            AssetLoader.getMascotAsset(_tipMascotExpression(sleepSettings)),
-            width: 80,
-            height: 80,
+          MascotSpriteWidget(
+            expression: _tipMascotExpression(sleepSettings),
+            size: 96,
           ),
           const SizedBox(width: 12),
           Expanded(

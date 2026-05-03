@@ -199,8 +199,8 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
         // Responsive circle + mascot
         LayoutBuilder(
           builder: (context, constraints) {
-            final circleSize = math.min(constraints.maxWidth * 0.75, 220.0);
-            final mascotSize = circleSize * 0.67;
+            final circleSize = math.min(constraints.maxWidth * 0.55, 160.0);
+            final mascotSize = math.min(constraints.maxWidth * 0.65, 190.0);
             final mascotAreaHeight = mascotSize * 1.3;
 
             return Column(
@@ -220,24 +220,21 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
                         ),
                       ),
                       if (_isActive)
-                        Positioned(
-                          top: circleSize * 0.07,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              _getPhaseText(_currentPhase, l10n),
-                              style: AppTypography.bodyLarge(context).copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _getPhaseText(_currentPhase, l10n),
+                            style: AppTypography.bodyLarge(context).copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
