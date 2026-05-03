@@ -8,6 +8,7 @@ import '../core/utils/sfx_service.dart';
 import '../core/widgets/app_header.dart';
 import '../core/widgets/main_feature_buttons.dart';
 import '../core/widgets/nav_menu_footer.dart';
+import '../core/widgets/mascot_sprite_widget.dart';
 import '../core/widgets/speech_bubble.dart';
 import '../core/providers/scene_provider.dart';
 import 'modals/scene_shop_modal.dart';
@@ -209,24 +210,9 @@ class _MobilePortraitScreenState extends State<MobilePortraitScreen>
                 left: (sceneSize - mascotSize) / 2,
                 child: GestureDetector(
                   onTap: onMascotTapped,
-                  child: Image.asset(
-                    mascotAssetPath,
-                    width: mascotSize,
-                    height: mascotSize,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: mascotSize,
-                        height: mascotSize,
-                        decoration: BoxDecoration(
-                          color: context.theme.secondary,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text('🐱',
-                            style: TextStyle(fontSize: mascotSize / 2)),
-                      );
-                    },
+                  child: MascotSpriteWidget(
+                    expression: currentExpression,
+                    size: mascotSize,
                   ),
                 ),
               ),

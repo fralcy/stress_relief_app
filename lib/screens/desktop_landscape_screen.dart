@@ -7,6 +7,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_typography.dart';
 import '../core/mixins/main_screen_mixin.dart';
 import '../core/widgets/app_button.dart';
+import '../core/widgets/mascot_sprite_widget.dart';
 import '../core/widgets/speech_bubble.dart';
 import '../core/providers/scene_provider.dart';
 import '../core/providers/score_provider.dart';
@@ -272,22 +273,9 @@ class _DesktopLandscapeScreenState extends State<DesktopLandscapeScreen>
                 left: (sceneSize - mascotSize) / 2,
                 child: GestureDetector(
                   onTap: onMascotTapped,
-                  child: Image.asset(
-                    mascotAssetPath,
-                    width: mascotSize,
-                    height: mascotSize,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, _) => Container(
-                      width: mascotSize,
-                      height: mascotSize,
-                      decoration: BoxDecoration(
-                        color: context.theme.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text('🐱',
-                          style: TextStyle(fontSize: mascotSize / 2)),
-                    ),
+                  child: MascotSpriteWidget(
+                    expression: currentExpression,
+                    size: mascotSize,
                   ),
                 ),
               ),

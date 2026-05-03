@@ -205,6 +205,34 @@ class AppAssets {
     MascotExpression.surprised: mascotSurprised,
   };
 
+  /// Frame lists cho sprite animation.
+  static const Map<MascotExpression, List<String>> mascotFrames = {
+    MascotExpression.idle: [
+      mascotIdle,
+      'assets/images/mascot/idle_2.webp',
+      'assets/images/mascot/idle_3.webp',
+      'assets/images/mascot/idle_4.webp',
+    ],
+    MascotExpression.happy: [
+      mascotHappy,
+      'assets/images/mascot/happy_2.webp',
+      'assets/images/mascot/happy_3.webp',
+      'assets/images/mascot/happy_4.webp',
+    ],
+    MascotExpression.calm: [
+      mascotCalm,
+      'assets/images/mascot/calm_2.webp',
+      'assets/images/mascot/calm_3.webp',
+      'assets/images/mascot/calm_4.webp',
+    ],
+    MascotExpression.sleepy: [
+      mascotSleepy,
+      'assets/images/mascot/sleepy_2.webp',
+      'assets/images/mascot/sleepy_3.webp',
+      'assets/images/mascot/sleepy_4.webp',
+    ],
+  };
+
   /// Map BGM name → asset path
   static const Map<String, String> bgmAssets = {
     'Lofi Beats': bgmLofiBeats,

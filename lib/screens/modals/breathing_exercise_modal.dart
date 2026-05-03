@@ -7,8 +7,8 @@ import '../../core/widgets/app_button.dart';
 import '../../core/utils/data_manager.dart';
 import '../../core/utils/breathing_exercise_service.dart';
 import '../../core/utils/sfx_service.dart';
-import '../../core/utils/asset_loader.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/widgets/mascot_sprite_widget.dart';
 import '../../models/breathing_session.dart';
 import '../../models/scene_models.dart';
 import 'package:provider/provider.dart';
@@ -79,6 +79,11 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   String _currentPhase = 'inhale';
   double _currentProgress = 0.0;
 
+  // Breathing sprite animation
+  int _breathingFrame = 0;
+  Timer? _breathingFrameTimer;
+  String _lastBreathingPhase = '';
+
   // Speech bubble
   String? _cycleMessage;
   Timer? _bubbleTimer;
@@ -108,6 +113,7 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
   void dispose() {
     _timer?.cancel();
     _bubbleTimer?.cancel();
+    _breathingFrameTimer?.cancel();
     _scaleController.dispose();
     super.dispose();
   }
@@ -251,10 +257,10 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
                           child: ScaleTransition(
                             scale: _scaleAnimation,
                             alignment: Alignment.bottomCenter,
-                            child: Image.asset(
-                              AssetLoader.getMascotAsset(MascotExpression.calm),
-                              width: mascotSize,
-                              height: mascotSize,
+                            child: MascotSpriteWidget(
+                              expression: MascotExpression.calm,
+                              size: mascotSize,
+                              frameIndex: _breathingFrame,
                             ),
                           ),
                         ),
@@ -367,6 +373,10 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
       _cycleMessage = null;
     });
     _scaleController.reset();
+    _breathingFrameTimer?.cancel();
+    _breathingFrameTimer = null;
+    _breathingFrame = 0;
+    _lastBreathingPhase = '';
     _updatePhaseAndAnimation();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -404,6 +414,36 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
     });
   }
 
+  /// Cycling frame theo phase: inhale loop f0↔f1, hold=f2, exhale loop f2↔f3, pause=f0.
+  void _updateBreathingFrame(String phase) {
+    if (phase == _lastBreathingPhase) return;
+    _lastBreathingPhase = phase;
+    _breathingFrameTimer?.cancel();
+    _breathingFrameTimer = null;
+    switch (phase) {
+      case 'inhale':
+        _breathingFrame = 0;
+        _breathingFrameTimer = Timer.periodic(
+          const Duration(milliseconds: 500), // 2fps
+          (_) {
+            if (mounted) setState(() => _breathingFrame = _breathingFrame == 0 ? 1 : 0);
+          },
+        );
+      case 'hold':
+        _breathingFrame = 2;
+      case 'exhale':
+        _breathingFrame = 2;
+        _breathingFrameTimer = Timer.periodic(
+          const Duration(milliseconds: 500),
+          (_) {
+            if (mounted) setState(() => _breathingFrame = _breathingFrame == 2 ? 3 : 2);
+          },
+        );
+      default: // pause
+        _breathingFrame = 0;
+    }
+  }
+
   /// Updates current phase, progress, and mascot animation
   /// Called from timer callback instead of build() for better performance
   void _updatePhaseAndAnimation() {
@@ -426,12 +466,19 @@ class _BreathingExerciseModalState extends State<BreathingExerciseModal>
         duration: const Duration(milliseconds: 500),
       );
     }
+    _updateBreathingFrame(_currentPhase);
   }
 
   Future<void> _stopSession() async {
     _timer?.cancel();
+    _breathingFrameTimer?.cancel();
+    _breathingFrameTimer = null;
+    _lastBreathingPhase = '';
     if (!mounted) return;
-    setState(() => _isActive = false);
+    setState(() {
+      _isActive = false;
+      _breathingFrame = 0;
+    });
 
     // Save session if at least 30s
     if (_elapsedSeconds >= 30) {
