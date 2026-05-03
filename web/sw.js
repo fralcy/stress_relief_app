@@ -94,14 +94,14 @@ async function networkFirstNavigation(request) {
 async function cacheFirstAsset(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
-  if (cached) return cached;
-  try {
-    const networkResponse = await fetch(request);
+
+  // Always revalidate in background so next load gets fresh asset
+  const fetchPromise = fetch(request).then((networkResponse) => {
     if (networkResponse && networkResponse.status === 200) {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
-  } catch (_) {
-    return new Response('', { status: 503, statusText: 'Offline' });
-  }
+  }).catch(() => null);
+
+  return cached ?? (await fetchPromise) ?? new Response('', { status: 503, statusText: 'Offline' });
 }
