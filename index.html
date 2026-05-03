@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/PeacePal/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A gamification app to help you create good daily habits.">
+  <meta name="theme-color" content="#2563EB">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PeacePal">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>PeacePal</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #F8FAFD;
+      height: 100%;
+    }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #F8FAFD;
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #D1E3FF;
+      border-top-color: #2563EB;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var loader = document.getElementById('loading-screen');
+      if (loader) {
+        loader.style.transition = 'opacity 0.3s ease';
+        loader.style.opacity = '0';
+        setTimeout(function () { loader.remove(); }, 300);
+      }
+
+      // Pre-cache all image/audio assets through the SW so they work offline.
+      // Runs during idle time to avoid competing with app startup.
+      // Flutter 3.x uses AssetManifest.bin.json (base64-encoded binary) —
+      // we decode it and extract asset paths via regex instead of JSON.parse.
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        var startPrecache = function () {
+          fetch('assets/AssetManifest.bin.json')
+            .then(function (r) { return r.json(); })
+            .then(function (base64) {
+              var binary = atob(base64);
+              var bytes = new Uint8Array(binary.length);
+              for (var j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+              var text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+              var seen = {};
+              var urls = [];
+              var re = /[a-z0-9_\-\/]+\.(webp|png|jpg|jpeg|gif|svg|mp3)/gi;
+              var m;
+              while ((m = re.exec(text)) !== null) {
+                var u = 'assets/' + m[0];
+                if (!seen[u]) { seen[u] = true; urls.push(u); }
+              }
+              var i = 0;
+              // 3 concurrent fetch streams — low contention, fast drain
+              function pump() {
+                if (i >= urls.length) return;
+                fetch(urls[i++], { cache: 'default' }).then(pump, pump);
+              }
+              pump(); pump(); pump();
+            })
+            .catch(function () {});
+        };
+        if (window.requestIdleCallback) {
+          requestIdleCallback(startPrecache, { timeout: 8000 });
+        } else {
+          setTimeout(startPrecache, 2000);
+        }
+      }
+    });
+
+    // Show update banner when SW updates and takes control
+    if ('serviceWorker' in navigator) {
+      var firstController = navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        // Only show banner if there was already a SW (i.e. this is an update, not first install)
+        if (!firstController) return;
+        var isVi = navigator.language && navigator.language.startsWith('vi');
+        var msgEl = document.getElementById('update-banner-msg');
+        var btnEl = document.getElementById('update-banner-btn');
+        if (msgEl) msgEl.textContent = isVi ? 'Có phiên bản mới' : 'New version available';
+        if (btnEl) btnEl.textContent = isVi ? 'Tải lại' : 'Reload';
+        var banner = document.getElementById('update-banner');
+        if (banner) banner.style.display = 'flex';
+      });
+    }
+
+    // Show install banner via beforeinstallprompt (Chromium browsers only)
+    var deferredPrompt;
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+
+    if (!isStandalone) {
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        var isVi = navigator.language && navigator.language.startsWith('vi');
+        var msgEl = document.getElementById('install-banner-msg');
+        var btnEl = document.getElementById('install-banner-btn');
+        if (msgEl) msgEl.textContent = isVi ? 'Cài đặt ứng dụng' : 'Install app';
+        if (btnEl) btnEl.textContent = isVi ? 'Cài đặt' : 'Install';
+        var banner = document.getElementById('install-banner');
+        if (banner) banner.style.display = 'flex';
+      });
+
+      window.addEventListener('appinstalled', function () {
+        var banner = document.getElementById('install-banner');
+        if (banner) banner.style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+
+    function triggerInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function () {
+        document.getElementById('install-banner').style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+  </script>
+
+  <div id="install-banner" style="
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1E3A5F;
+    color: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-family: sans-serif;
+    font-size: 14px;
+    align-items: center;
+    gap: 16px;
+    z-index: 99998;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    white-space: nowrap;
+  ">
+    <span id="install-banner-msg"></span>
+    <button id="install-banner-btn" onclick="triggerInstall()" style="
+      background: #2563EB;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    "></button>
+    <button onclick="document.getElementById('install-banner').style.display='none'" style="
+      background: transparent;
+      color: #AAAAAA;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    ">×</button>
+  </div>
+
+  <div id="update-banner" style="
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1E3A5F;
+    color: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-family: sans-serif;
+    font-size: 14px;
+    align-items: center;
+    gap: 16px;
+    z-index: 99999;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    white-space: nowrap;
+  ">
+    <span id="update-banner-msg"></span>
+    <button id="update-banner-btn" onclick="window.location.reload()" style="
+      background: #2563EB;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    "></button>
+  </div>
+</body>
+</html>
